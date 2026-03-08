@@ -49,7 +49,6 @@ npm i -D @types/react @types/react-dom
 
 ## 3. 配置
 
-1. _tsconfig.json_ 中需要加上：
 
 ```json
 {
@@ -60,7 +59,6 @@ npm i -D @types/react @types/react-dom
 }
 ```
 
-2. 添加 _App.tsx_ 到 _src_ 文件夹中
 
 ```tsx
 export default function App() {
@@ -68,7 +66,6 @@ export default function App() {
 }
 ```
 
-3. _index.ts_ 改为 _index.tsx_
 
 ```tsx
 import ReactDOM from 'react-dom/client'
@@ -77,7 +74,6 @@ import App from './App'
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(<App />)
 ```
 
-4. _index.html_ 加入 id 为 `root` 的 Element
 
 ```html
 <body>
@@ -85,7 +81,6 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(<App 
 </body>
 ```
 
-5. _webpack.config.js_ 的 entry 改下
 
 ```js
 const config = {
