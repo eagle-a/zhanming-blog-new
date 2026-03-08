@@ -911,14 +911,16 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
+// 默认占位图
+const FALLBACK_AVATAR = '/images/avatar.png';
 function BloggerCard(t0) {
     _s();
-    const $ = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$compiler$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["c"])(90);
-    if ($[0] !== "809310116263ba439ee3bd7d3a122d06396bac5c2e6d4b4395c927175c852768") {
-        for(let $i = 0; $i < 90; $i += 1){
+    const $ = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$compiler$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["c"])(91);
+    if ($[0] !== "f3fedd29653897dbea2574365d61988f0705d614909236c57513e62d266fe199") {
+        for(let $i = 0; $i < 91; $i += 1){
             $[$i] = Symbol.for("react.memo_cache_sentinel");
         }
-        $[0] = "809310116263ba439ee3bd7d3a122d06396bac5c2e6d4b4395c927175c852768";
+        $[0] = "f3fedd29653897dbea2574365d61988f0705d614909236c57513e62d266fe199";
     }
     const { blogger, isEditMode: t1, onUpdate, onDelete } = t0;
     const isEditMode = t1 === undefined ? false : t1;
@@ -928,6 +930,7 @@ function BloggerCard(t0) {
     const [localBlogger, setLocalBlogger] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(blogger);
     const [showAvatarDialog, setShowAvatarDialog] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [avatarItem, setAvatarItem] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [avatarError, setAvatarError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     let t2;
     if ($[1] !== avatarItem || $[2] !== blogger || $[3] !== localBlogger || $[4] !== onUpdate) {
         t2 = ({
@@ -961,6 +964,7 @@ function BloggerCard(t0) {
                 };
                 setLocalBlogger(updated_0);
                 onUpdate?.(updated_0, blogger, avatar);
+                setAvatarError(false);
             }
         })["BloggerCard[handleAvatarSubmit]"];
         $[6] = blogger;
@@ -1027,7 +1031,7 @@ function BloggerCard(t0) {
                         children: "取消"
                     }, void 0, false, {
                         fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-                        lineNumber: 130,
+                        lineNumber: 135,
                         columnNumber: 95
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1038,7 +1042,7 @@ function BloggerCard(t0) {
                         children: "完成"
                     }, void 0, false, {
                         fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-                        lineNumber: 130,
+                        lineNumber: 135,
                         columnNumber: 232
                     }, this)
                 ]
@@ -1052,7 +1056,7 @@ function BloggerCard(t0) {
                         children: "编辑"
                     }, void 0, false, {
                         fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-                        lineNumber: 132,
+                        lineNumber: 137,
                         columnNumber: 159
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1061,14 +1065,14 @@ function BloggerCard(t0) {
                         children: "删除"
                     }, void 0, false, {
                         fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-                        lineNumber: 134,
+                        lineNumber: 139,
                         columnNumber: 151
                     }, this)
                 ]
             }, void 0, true)
         }, void 0, false, {
             fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 130,
+            lineNumber: 135,
             columnNumber: 24
         }, this);
         $[15] = handleCancel;
@@ -1079,7 +1083,7 @@ function BloggerCard(t0) {
     } else {
         t7 = $[19];
     }
-    const t8 = localBlogger.avatar;
+    const t8 = avatarError ? FALLBACK_AVATAR : localBlogger.avatar;
     const t9 = localBlogger.name;
     const t10 = canEdit && "cursor-pointer";
     let t11;
@@ -1101,109 +1105,119 @@ function BloggerCard(t0) {
         t12 = $[23];
     }
     let t13;
-    if ($[24] !== localBlogger.avatar || $[25] !== localBlogger.name || $[26] !== t11 || $[27] !== t12) {
-        t13 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
+    if ($[24] === Symbol.for("react.memo_cache_sentinel")) {
+        t13 = ({
+            "BloggerCard[<img>.onError]": ()=>setAvatarError(true)
+        })["BloggerCard[<img>.onError]"];
+        $[24] = t13;
+    } else {
+        t13 = $[24];
+    }
+    let t14;
+    if ($[25] !== localBlogger.name || $[26] !== t11 || $[27] !== t12 || $[28] !== t8) {
+        t14 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
             src: t8,
             alt: t9,
             className: t11,
-            onClick: t12
+            onClick: t12,
+            onError: t13
         }, void 0, false, {
             fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 166,
+            lineNumber: 180,
             columnNumber: 11
         }, this);
-        $[24] = localBlogger.avatar;
         $[25] = localBlogger.name;
         $[26] = t11;
         $[27] = t12;
-        $[28] = t13;
+        $[28] = t8;
+        $[29] = t14;
     } else {
-        t13 = $[28];
+        t14 = $[29];
     }
-    let t14;
-    if ($[29] !== canEdit) {
-        t14 = canEdit && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+    let t15;
+    if ($[30] !== canEdit) {
+        t15 = canEdit && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "ev pointer-events-none absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100",
             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                 className: "text-xs text-white",
                 children: "更换"
             }, void 0, false, {
                 fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-                lineNumber: 177,
+                lineNumber: 191,
                 columnNumber: 190
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 177,
+            lineNumber: 191,
             columnNumber: 22
         }, this);
-        $[29] = canEdit;
-        $[30] = t14;
+        $[30] = canEdit;
+        $[31] = t15;
     } else {
-        t14 = $[30];
+        t15 = $[31];
     }
-    let t15;
-    if ($[31] !== t13 || $[32] !== t14) {
-        t15 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+    let t16;
+    if ($[32] !== t14 || $[33] !== t15) {
+        t16 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "group relative",
             children: [
-                t13,
-                t14
+                t14,
+                t15
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 185,
+            lineNumber: 199,
             columnNumber: 11
         }, this);
-        $[31] = t13;
         $[32] = t14;
         $[33] = t15;
+        $[34] = t16;
     } else {
-        t15 = $[33];
+        t16 = $[34];
     }
-    let t16;
-    if ($[34] !== handleFieldChange) {
-        t16 = ({
+    let t17;
+    if ($[35] !== handleFieldChange) {
+        t17 = ({
             "BloggerCard[<h3>.onBlur]": (e)=>handleFieldChange("name", e.currentTarget.textContent || "")
         })["BloggerCard[<h3>.onBlur]"];
-        $[34] = handleFieldChange;
-        $[35] = t16;
-    } else {
-        t16 = $[35];
-    }
-    const t17 = canEdit && "cursor-text";
-    let t18;
-    if ($[36] !== t17) {
-        t18 = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("group-hover:text-brand text-lg font-bold transition-colors focus:outline-none", t17);
+        $[35] = handleFieldChange;
         $[36] = t17;
-        $[37] = t18;
     } else {
-        t18 = $[37];
+        t17 = $[36];
     }
+    const t18 = canEdit && "cursor-text";
     let t19;
-    if ($[38] !== canEdit || $[39] !== localBlogger.name || $[40] !== t16 || $[41] !== t18) {
-        t19 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+    if ($[37] !== t18) {
+        t19 = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("group-hover:text-brand text-lg font-bold transition-colors focus:outline-none", t18);
+        $[37] = t18;
+        $[38] = t19;
+    } else {
+        t19 = $[38];
+    }
+    let t20;
+    if ($[39] !== canEdit || $[40] !== localBlogger.name || $[41] !== t17 || $[42] !== t19) {
+        t20 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
             contentEditable: canEdit,
             suppressContentEditableWarning: true,
-            onBlur: t16,
-            className: t18,
+            onBlur: t17,
+            className: t19,
             children: localBlogger.name
         }, void 0, false, {
             fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 213,
+            lineNumber: 227,
             columnNumber: 11
         }, this);
-        $[38] = canEdit;
-        $[39] = localBlogger.name;
-        $[40] = t16;
-        $[41] = t18;
+        $[39] = canEdit;
+        $[40] = localBlogger.name;
+        $[41] = t17;
         $[42] = t19;
+        $[43] = t20;
     } else {
-        t19 = $[42];
+        t20 = $[43];
     }
-    let t20;
-    if ($[43] !== canEdit || $[44] !== handleFieldChange || $[45] !== localBlogger.url) {
-        t20 = canEdit ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+    let t21;
+    if ($[44] !== canEdit || $[45] !== handleFieldChange || $[46] !== localBlogger.url) {
+        t21 = canEdit ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             contentEditable: true,
             suppressContentEditableWarning: true,
             onBlur: {
@@ -1213,7 +1227,7 @@ function BloggerCard(t0) {
             children: localBlogger.url
         }, void 0, false, {
             fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 224,
+            lineNumber: 238,
             columnNumber: 21
         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
             href: localBlogger.url,
@@ -1223,57 +1237,57 @@ function BloggerCard(t0) {
             children: localBlogger.url
         }, void 0, false, {
             fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 226,
+            lineNumber: 240,
             columnNumber: 164
         }, this);
-        $[43] = canEdit;
-        $[44] = handleFieldChange;
-        $[45] = localBlogger.url;
-        $[46] = t20;
+        $[44] = canEdit;
+        $[45] = handleFieldChange;
+        $[46] = localBlogger.url;
+        $[47] = t21;
     } else {
-        t20 = $[46];
-    }
-    let t21;
-    if ($[47] !== t19 || $[48] !== t20) {
-        t21 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-            className: "flex-1",
-            children: [
-                t19,
-                t20
-            ]
-        }, void 0, true, {
-            fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 236,
-            columnNumber: 11
-        }, this);
-        $[47] = t19;
-        $[48] = t20;
-        $[49] = t21;
-    } else {
-        t21 = $[49];
+        t21 = $[47];
     }
     let t22;
-    if ($[50] !== t15 || $[51] !== t21) {
+    if ($[48] !== t20 || $[49] !== t21) {
         t22 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-            className: "mb-4 flex items-center gap-4",
+            className: "flex-1",
             children: [
-                t15,
+                t20,
                 t21
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 245,
+            lineNumber: 250,
             columnNumber: 11
         }, this);
-        $[50] = t15;
-        $[51] = t21;
-        $[52] = t22;
+        $[48] = t20;
+        $[49] = t21;
+        $[50] = t22;
     } else {
-        t22 = $[52];
+        t22 = $[50];
     }
     let t23;
-    if ($[53] !== canEdit || $[54] !== handleFieldChange || $[55] !== localBlogger.stars) {
-        t23 = canEdit ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$editable$2d$star$2d$rating$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+    if ($[51] !== t16 || $[52] !== t22) {
+        t23 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "mb-4 flex items-center gap-4",
+            children: [
+                t16,
+                t22
+            ]
+        }, void 0, true, {
+            fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
+            lineNumber: 259,
+            columnNumber: 11
+        }, this);
+        $[51] = t16;
+        $[52] = t22;
+        $[53] = t23;
+    } else {
+        t23 = $[53];
+    }
+    let t24;
+    if ($[54] !== canEdit || $[55] !== handleFieldChange || $[56] !== localBlogger.stars) {
+        t24 = canEdit ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$editable$2d$star$2d$rating$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
             stars: localBlogger.stars,
             editable: true,
             onChange: {
@@ -1281,25 +1295,25 @@ function BloggerCard(t0) {
             }["BloggerCard[<EditableStarRating>.onChange]"]
         }, void 0, false, {
             fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 254,
+            lineNumber: 268,
             columnNumber: 21
         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$star$2d$rating$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
             stars: localBlogger.stars
         }, void 0, false, {
             fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 256,
+            lineNumber: 270,
             columnNumber: 59
         }, this);
-        $[53] = canEdit;
-        $[54] = handleFieldChange;
-        $[55] = localBlogger.stars;
-        $[56] = t23;
+        $[54] = canEdit;
+        $[55] = handleFieldChange;
+        $[56] = localBlogger.stars;
+        $[57] = t24;
     } else {
-        t23 = $[56];
+        t24 = $[57];
     }
-    let t24;
-    if ($[57] !== canEdit || $[58] !== handleFieldChange || $[59] !== localBlogger.status) {
-        t24 = canEdit && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+    let t25;
+    if ($[58] !== canEdit || $[59] !== handleFieldChange || $[60] !== localBlogger.status) {
+        t25 = canEdit && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "mt-2 flex gap-2",
             children: [
                 "recent",
@@ -1314,35 +1328,35 @@ function BloggerCard(t0) {
                         children: status === "recent" ? "\u8FD1\u671F\u66F4\u65B0" : "\u957F\u671F\u5931\u8054"
                     }, status, false, {
                         fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-                        lineNumber: 267,
+                        lineNumber: 281,
                         columnNumber: 49
                     }, this)
             }["BloggerCard[(anonymous)()]"])
         }, void 0, false, {
             fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 266,
+            lineNumber: 280,
             columnNumber: 22
         }, this);
-        $[57] = canEdit;
-        $[58] = handleFieldChange;
-        $[59] = localBlogger.status;
-        $[60] = t24;
+        $[58] = canEdit;
+        $[59] = handleFieldChange;
+        $[60] = localBlogger.status;
+        $[61] = t25;
     } else {
-        t24 = $[60];
-    }
-    let t25;
-    if ($[61] !== handleFieldChange) {
-        t25 = ({
-            "BloggerCard[<p>.onBlur]": (e_1)=>handleFieldChange("description", e_1.currentTarget.textContent || "")
-        })["BloggerCard[<p>.onBlur]"];
-        $[61] = handleFieldChange;
-        $[62] = t25;
-    } else {
-        t25 = $[62];
+        t25 = $[61];
     }
     let t26;
-    if ($[63] !== canEdit || $[64] !== expanded) {
+    if ($[62] !== handleFieldChange) {
         t26 = ({
+            "BloggerCard[<p>.onBlur]": (e_1)=>handleFieldChange("description", e_1.currentTarget.textContent || "")
+        })["BloggerCard[<p>.onBlur]"];
+        $[62] = handleFieldChange;
+        $[63] = t26;
+    } else {
+        t26 = $[63];
+    }
+    let t27;
+    if ($[64] !== canEdit || $[65] !== expanded) {
+        t27 = ({
             "BloggerCard[<p>.onClick]": (e_2)=>{
                 if (!canEdit) {
                     e_2.preventDefault();
@@ -1350,71 +1364,71 @@ function BloggerCard(t0) {
                 }
             }
         })["BloggerCard[<p>.onClick]"];
-        $[63] = canEdit;
-        $[64] = expanded;
-        $[65] = t26;
-    } else {
-        t26 = $[65];
-    }
-    const t27 = canEdit ? "cursor-text" : "cursor-pointer";
-    const t28 = !canEdit && (expanded ? "line-clamp-none" : "line-clamp-3");
-    let t29;
-    if ($[66] !== t27 || $[67] !== t28) {
-        t29 = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("mt-3 text-sm leading-relaxed text-gray-600 transition-all duration-300 focus:outline-none", t27, t28);
+        $[64] = canEdit;
+        $[65] = expanded;
         $[66] = t27;
+    } else {
+        t27 = $[66];
+    }
+    const t28 = canEdit ? "cursor-text" : "cursor-pointer";
+    const t29 = !canEdit && (expanded ? "line-clamp-none" : "line-clamp-3");
+    let t30;
+    if ($[67] !== t28 || $[68] !== t29) {
+        t30 = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("mt-3 text-sm leading-relaxed text-gray-600 transition-all duration-300 focus:outline-none", t28, t29);
         $[67] = t28;
         $[68] = t29;
+        $[69] = t30;
     } else {
-        t29 = $[68];
+        t30 = $[69];
     }
-    let t30;
-    if ($[69] !== canEdit || $[70] !== localBlogger.description || $[71] !== t25 || $[72] !== t26 || $[73] !== t29) {
-        t30 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+    let t31;
+    if ($[70] !== canEdit || $[71] !== localBlogger.description || $[72] !== t26 || $[73] !== t27 || $[74] !== t30) {
+        t31 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
             contentEditable: canEdit,
             suppressContentEditableWarning: true,
-            onBlur: t25,
-            onClick: t26,
-            className: t29,
+            onBlur: t26,
+            onClick: t27,
+            className: t30,
             children: localBlogger.description
         }, void 0, false, {
             fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 317,
+            lineNumber: 331,
             columnNumber: 11
         }, this);
-        $[69] = canEdit;
-        $[70] = localBlogger.description;
-        $[71] = t25;
+        $[70] = canEdit;
+        $[71] = localBlogger.description;
         $[72] = t26;
-        $[73] = t29;
+        $[73] = t27;
         $[74] = t30;
+        $[75] = t31;
     } else {
-        t30 = $[74];
+        t31 = $[75];
     }
-    let t31;
-    if ($[75] !== t22 || $[76] !== t23 || $[77] !== t24 || $[78] !== t30) {
-        t31 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+    let t32;
+    if ($[76] !== t23 || $[77] !== t24 || $[78] !== t25 || $[79] !== t31) {
+        t32 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             children: [
-                t22,
                 t23,
                 t24,
-                t30
+                t25,
+                t31
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 329,
+            lineNumber: 343,
             columnNumber: 11
         }, this);
-        $[75] = t22;
         $[76] = t23;
         $[77] = t24;
-        $[78] = t30;
+        $[78] = t25;
         $[79] = t31;
+        $[80] = t32;
     } else {
-        t31 = $[79];
+        t32 = $[80];
     }
-    let t32;
-    if ($[80] !== canEdit || $[81] !== handleAvatarSubmit || $[82] !== localBlogger.avatar || $[83] !== showAvatarDialog) {
-        t32 = canEdit && showAvatarDialog && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$bloggers$2f$components$2f$avatar$2d$upload$2d$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+    let t33;
+    if ($[81] !== canEdit || $[82] !== handleAvatarSubmit || $[83] !== localBlogger.avatar || $[84] !== showAvatarDialog) {
+        t33 = canEdit && showAvatarDialog && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$bloggers$2f$components$2f$avatar$2d$upload$2d$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
             currentAvatar: localBlogger.avatar,
             onClose: {
                 "BloggerCard[<AvatarUploadDialog>.onClose]": ()=>setShowAvatarDialog(false)
@@ -1422,44 +1436,44 @@ function BloggerCard(t0) {
             onSubmit: handleAvatarSubmit
         }, void 0, false, {
             fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 340,
+            lineNumber: 354,
             columnNumber: 42
         }, this);
-        $[80] = canEdit;
-        $[81] = handleAvatarSubmit;
-        $[82] = localBlogger.avatar;
-        $[83] = showAvatarDialog;
-        $[84] = t32;
+        $[81] = canEdit;
+        $[82] = handleAvatarSubmit;
+        $[83] = localBlogger.avatar;
+        $[84] = showAvatarDialog;
+        $[85] = t33;
     } else {
-        t32 = $[84];
+        t33 = $[85];
     }
-    let t33;
-    if ($[85] !== t31 || $[86] !== t32 || $[87] !== t6 || $[88] !== t7) {
-        t33 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
+    let t34;
+    if ($[86] !== t32 || $[87] !== t33 || $[88] !== t6 || $[89] !== t7) {
+        t34 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
             initial: t5,
             ...t6,
             className: "card relative block overflow-hidden",
             children: [
                 t7,
-                t31,
-                t32
+                t32,
+                t33
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/bloggers/components/blogger-card.tsx",
-            lineNumber: 353,
+            lineNumber: 367,
             columnNumber: 11
         }, this);
-        $[85] = t31;
         $[86] = t32;
-        $[87] = t6;
-        $[88] = t7;
-        $[89] = t33;
+        $[87] = t33;
+        $[88] = t6;
+        $[89] = t7;
+        $[90] = t34;
     } else {
-        t33 = $[89];
+        t34 = $[90];
     }
-    return t33;
+    return t34;
 }
-_s(BloggerCard, "SojVwkkw/7dSgxYzsQgDxg2zsGI=", false, function() {
+_s(BloggerCard, "J6dobAdnqRL3B3EhsjdHrsYc3l8=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$use$2d$size$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSize"]
     ];
@@ -2910,7 +2924,7 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
 }),
 "[project]/src/app/bloggers/list.json (json)", ((__turbopack_context__) => {
 
-__turbopack_context__.v(JSON.parse("[{\"name\":\"阮一峰的网络日志\",\"avatar\":\"/images/blogger/fe25259da8e3609b.png\",\"url\":\"https://www.ruanyifeng.com/blog/archives.html\",\"description\":\"经典必看，每周更新。无聊是看新闻、还是学习、还是拓展眼界，都是能其中获取到乐趣的。还有很多网友的每周留言。这就是 blog 的含金量。\",\"stars\":5},{\"name\":\"Enji Kusnadi\",\"url\":\"https://enji.dev/\",\"avatar\":\"https://enji.dev/_next/image?url=%2Fassets%2Fimages%2Fme.png&w=1080&q=100\",\"description\":\"第一个在设计样式上惊艳我的人，那时每逢推荐别人blog，我都会提这么一嘴。但这个不算她的blog 网站，只算它的线上简历，没有持续的内容，比较可惜。\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"Josh W. Comeau\",\"url\":\"https://www.joshwcomeau.com/\",\"avatar\":\"https://www.joshwcomeau.com/favicon.png\",\"description\":\"John blog 更像是一个课程网站，每一篇文章都书写的很好，每次阅读都能吸收到新的东西。网站设计也恰到好处，工整、有趣。\",\"stars\":5},{\"name\":\"nanda\",\"url\":\"https://www.nan.fyi/\",\"avatar\":\"https://www.nan.fyi/favicon.ico\",\"description\":\"设计大师，nanda 。页面只用灰色加线条，都让我觉得叹为观止，内容不多，每篇都精雕细琢。跟 Josh 一样，属于技术网站，但它的教程引导更加出神入化，可称为程序艺术家。\",\"stars\":5},{\"name\":\"Emil Kowalski\",\"url\":\"https://emilkowal.ski/\",\"avatar\":\"https://emilkowal.ski/favicon.ico\",\"description\":\"Blog 就干脆\\\"不设计\\\"，无装饰。技术就比较轻松一些，它更强调动画/交互。Vercel 员工，他的组件很好用，也很 vercel。\",\"stars\":4,\"status\":\"disconnected\"},{\"name\":\"Risingle\",\"url\":\"https://www.imrising.cn/\",\"avatar\":\"https://www.imrising.cn/images/logo/logo.webp\",\"description\":\"网站样式很棒，虽然用的别人的模板，但是他用的很棒。是个初出茅庐的程序员。\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"無名小栈\",\"url\":\"https://blog.imsyy.top/\",\"avatar\":\"https://blog.imsyy.top/images/logo/logo.webp\",\"description\":\"Risingle blog 的模板主人，或许是头像和网站风格不搭，显得没有 Risingle 的舒服。Github 热门项目还不少，一看就是爱折腾的人，就是不爱写 blog，没啥内容。01 年，挺年轻的，独立开发者？不知道经历了什么。\",\"stars\":2,\"status\":\"disconnected\"},{\"name\":\"韩小韩博客\",\"url\":\"https://www.vvhan.com/\",\"avatar\":\"https://q1.qlogo.cn/g?b=qq&nk=1655466387&s=640\",\"description\":\"网站很棒，内容多，头像也帅，不知道人帅不帅。就是这个错位滑动效果一直让我头疼，这个阻尼效果还写blog专业上了。。。一个插件导入的事情，啥时候他能把这个效果关掉就好了。挺想多看下他内容的，但是这个效果太头晕了。\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"Anthony Fu\",\"url\":\"https://antfu.me/\",\"avatar\":\"https://avatars.githubusercontent.com/u/11247099?v=4\",\"description\":\"很厉害的一个人，好像还很年轻。经常在 b站活跃，开直播（看过）。我记得它几乎毕业就做了很多厉害的事情，vue 系列核心成员，似乎对他来说很轻松的事情。blog 多是英文，生活圈也是大神汇聚，真好。不怎么爱写blog，但相比来说已经算好的了。可以从他这窥探一些 vue \\\"上流社会\\\"\",\"stars\":4,\"status\":\"disconnected\"},{\"name\":\"enpitsulin 铅笔\",\"url\":\"https://enpitsulin.xyz/\",\"avatar\":\"https://enpitsulin.dev/images/avatar.webp\",\"description\":\"很简洁的blog网站，像 nanda。只不过很久没内容了。他现在的头像一时让我想不起他是谁了，突然发现它过去可爱头像，我想起来这家伙了。\",\"stars\":2},{\"name\":\"Innei 静かな森\",\"url\":\"https://innei.in/\",\"avatar\":\"https://cdn.jsdelivr.net/gh/Innei/static@master/avatar.png\",\"description\":\"网站还行，是典型的那种某个时代的产物，我不太get。但是内容活跃，并且他好像很火？但我没找出他为什么火。项目还是挺多的。\",\"stars\":3},{\"name\":\"秋夜灯雨\",\"url\":\"https://blog.lierhua.top/\",\"avatar\":\"https://blog.lierhua.top/images/web/yyqda3.svg\",\"description\":\"看名字，就知道是过去的残党了。但是我挺喜欢他的设计的，页面清晰，一股书生气。虽然是老人，但能追溯的过去并不多。\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"BlogFinder\",\"url\":\"https://bf.zzxworld.com/\",\"avatar\":\"https://bf.zzxworld.com/images/favicon.png\",\"description\":\"一个 blog 收集网站，可以查阅有哪些 blog，也可以直接看最近谁更新了什么\",\"stars\":3},{\"name\":\"Tonsky\",\"url\":\"https://tonsky.me/\",\"avatar\":\"https://avatars.githubusercontent.com/u/285292?v=4\",\"description\":\"一个过去的国外大神，忘了是什么时候发现它的，blog 依旧时不时更新。就是现在 blog 太刺眼了，不知道是不是故意的。\",\"stars\":3},{\"name\":\"Cali\",\"url\":\"https://cali.so/\",\"avatar\":\"https://cali.so/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FPortrait.8d12f14a.png&w=96&q=75\",\"description\":\"设计师，网站设计不错，但是 blog 内容很少。但厉害的是他已经自己开公司了，给别人设计网站，影石 Insta360 是他们设计的。很好的 blog 参考。他的 zolplay 网站跟 nanda 风格很像，不知道谁抄的谁。\",\"stars\":4,\"status\":\"disconnected\"},{\"name\":\"Chrome Blog\",\"url\":\"https://web.dev/blog?hl=zh-cn\",\"avatar\":\"/images/blogger/2fe46db88bd43683.svg\",\"description\":\"技术团队 blog，咨询、动态、故事。我觉得页面感受还不错。\",\"stars\":4},{\"name\":\"Huozhi\",\"url\":\"https://huozhi.im/\",\"avatar\":\"https://avatars.githubusercontent.com/u/4800338?v=4\",\"description\":\"极简主义者，网站真的极简，但是感觉也不差。内容不多，当你觉得不知道怎么设计blog，或者设计的不好时，看看他。\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"Brian Lovin\",\"url\":\"https://brianlovin.com/\",\"avatar\":\"https://avatars.githubusercontent.com/u/1923260?v=4\",\"description\":\"早期外国大神，在 Github,Facebook 工作过，现在在notion，资历老、项目多。blog 写成了 Dashboard 风格，蛮奇特的，但是 blog 并不多。\",\"stars\":4},{\"name\":\"Cassie Evans's Blog\",\"url\":\"https://www.cassie.codes/\",\"avatar\":\"https://www.cassie.codes/images/avatar2.jpg\",\"description\":\"彩色网站，真的很酷。并且还是位女士，真的很少见。GASP、SVG、动画很精美，但是没几篇内容，也算是高级 blog 的一种诅咒。在 Twitter 上也是名人。\",\"stars\":4,\"status\":\"disconnected\"},{\"name\":\"Niracler 的博物志\",\"url\":\"https://niracler.com/\",\"avatar\":\"https://niracler.com/favicon.svg\",\"description\":\"小透明，偶尔更新一篇blog。但是网站风格还是有特点的，可作为设计 blog 时的参考。\",\"stars\":2},{\"name\":\"講評世界\",\"url\":\"https://blog.moeyua.com/\",\"avatar\":\"https://avatars.githubusercontent.com/u/45156493?v=4\",\"description\":\"小透明，失踪人口。但 blog 网站样式有种字体的美，不知道怎么说。好像是影视飓风成员。\",\"stars\":2,\"status\":\"disconnected\"},{\"name\":\"阿猫的博客\",\"url\":\"https://ameow.xyz/\",\"avatar\":\"https://ameow.xyz/upload/favicon.png\",\"description\":\"可爱的网站，一直在更新他的猫鱼周刊。\",\"stars\":3},{\"name\":\"pseudoyu\",\"url\":\"https://www.pseudoyu.com/\",\"avatar\":\"https://www.pseudoyu.com/avatar.webp\",\"description\":\"区块链开发者，在 Monad 区块链倒腾了一段时间。网站长得跟 Anthony 一模一样。嘴上一直念叨着他的学姐老婆。应该也挺厉害的。\",\"stars\":3},{\"name\":\"季节记忆\",\"avatar\":\"https://www.seamory.com/api/storage/2024112814523200000001349b3aa3c2\",\"url\":\"https://www.seamory.com/\",\"description\":\"好像是为后端/嵌入式？2025 年初建立的 blog，无 UI 设计。但少有后端人显露 blog，应当勉励的。\",\"stars\":1,\"status\":\"disconnected\"},{\"name\":\"微尔微\",\"avatar\":\"https://www.vio.vin/apple-touch-icon.png\",\"url\":\"https://www.vio.vin/\",\"description\":\"23 年新晋散修，如他所说，一天倒腾一些奇怪的东西。应该是以后端为主，喜欢完一些硬件。静森系 blog，25年 blog 稳定输出。\",\"stars\":2},{\"name\":\"搬砖日记\",\"avatar\":\"https://banzhuanriji.com/img/icon.ico\",\"url\":\"https://banzhuanriji.com/\",\"description\":\"白底黑字。但是打理得挺好的。应该是 Andriod 开发者，24 年开始分享各种探索。摸不清根底。\",\"stars\":2},{\"name\":\"博客.cn\",\"avatar\":\"https://xmind.design/favicon.ico\",\"url\":\"https://loud-fear-11e.notion.site/eb29a49346a742989582723f950fcf0f?v=4b4f7b7d24274ba7853426c101a149d7\",\"description\":\"好像是 XMind 的内部 blog notion，不确认，但里面的内容确实专业深刻，先收藏一波\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"KK\",\"avatar\":\"https://avatars.githubusercontent.com/u/44634134?v=4\",\"url\":\"https://kaiyi.cool/\",\"description\":\"kk 是跟很厉害的人。突然看朋友圈想起他了，发现他是有 blog 的，虽然已经不维护了。但他的 blog 还残留一些好东西，或许对你有帮助。\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"猫普的精神世界\",\"avatar\":\"https://maplezz.com/_astro/picture.DavLO-HP_1hhoaS.webp\",\"url\":\"https://maplezz.com/\",\"description\":\"通过 issue 发现的另外一个开源的，也是这几天开源的，好巧。液态玻璃感设计，是有这种感觉，挺好的，就是有的花。我还是挺喜欢的。内容从 25年开始。\",\"stars\":3},{\"name\":\"手里有只毛毛虫\",\"avatar\":\"https://www.krjojo.com/wp-content/uploads/2024/05/avatar.avif\",\"url\":\"https://www.krjojo.com/\",\"description\":\"网站很舒服，一位六边形战士的独立开发者。文章目录能一眼看完就好了，想翻点想看的比较不容易。\",\"stars\":4},{\"name\":\"Honesty\",\"avatar\":\"https://cdn.jsdelivr.net/gh/listener-He/images@default/202309111525908.jpeg\",\"url\":\"https://blog.hehouhui.cn/\",\"description\":\"折腾 blog 的后端，是个后端学习的榜样，折腾了这么多年。网站弄得还挺好的，就是加载内容有点慢。\",\"stars\":3},{\"name\":\"ElysiumStack\",\"avatar\":\"https://www.elysium-stack.cn/upload/b4136969-e1a1-44b9-833f-36e54392f018.png\",\"url\":\"https://www.elysium-stack.cn/\",\"description\":\"UI 设计师 blogger，少见，blog 设计的很棒。一股游戏感铺面而来，25 年开始的内容。\",\"stars\":3},{\"name\":\"十玖八柒\",\"avatar\":\"https://ahzoo.cn/img/avatar.webp\",\"url\":\"https://blog.ahzoo.cn/\",\"description\":\"Z次元，后端开发，记录了很多后端研究。但折腾前端和 blog 还不少。把 blog 打理得有自己独特得舒适，实属难得\",\"stars\":3},{\"name\":\"纸鹿摸鱼处\",\"avatar\":\"https://weavatar.com/avatar/47c0f2e82b76d9b10eb3023df9e02e4e3fdbeaf5b74b842063f207971e7fbe7b?s=160\",\"url\":\"https://blog.zhilu.site/\",\"description\":\"棒棒的开源 blog 主，今天蹭了蹭他群友，🤣，给他多加一分🤣🤣🤣。\",\"stars\":4},{\"name\":\"灯火不休时\",\"avatar\":\"https://file.dhbxs.top/ylvwvjjs.jpg\",\"url\":\"https://blog.dhbxs.top/\",\"description\":\"群友，JAVAR，干净blog，让我看到几个人的影子。\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"23朵毒蘑菇\",\"avatar\":\"https://blog.dumogu.top/web-assets/v-last/public/user.jpg\",\"url\":\"https://blog.dumogu.top/\",\"description\":\"前端开发，页面小巧，结构简单，寻常记录\",\"stars\":3}]"));}),
+__turbopack_context__.v(JSON.parse("[{\"name\":\"阮一峰的网络日志\",\"avatar\":\"/images/blogger/fe25259da8e3609b.png\",\"url\":\"https://www.ruanyifeng.com/blog/archives.html\",\"description\":\"经典必看，每周更新。无聊是看新闻、还是学习、还是拓展眼界，都是能其中获取到乐趣的。还有很多网友的每周留言。这就是 blog 的含金量。\",\"stars\":5},{\"name\":\"Enji Kusnadi\",\"url\":\"https://enji.dev/\",\"avatar\":\"https://enji.dev/_next/image?url=%2Fassets%2Fimages%2Fme.png&w=1080&q=100\",\"description\":\"第一个在设计样式上惊艳我的人，那时每逢推荐别人blog，我都会提这么一嘴。但这个不算她的blog 网站，只算它的线上简历，没有持续的内容，比较可惜。\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"Josh W. Comeau\",\"url\":\"https://www.joshwcomeau.com/\",\"avatar\":\"https://www.joshwcomeau.com/favicon.png\",\"description\":\"John blog 更像是一个课程网站，每一篇文章都书写的很好，每次阅读都能吸收到新的东西。网站设计也恰到好处，工整、有趣。\",\"stars\":5},{\"name\":\"nanda\",\"url\":\"https://www.nan.fyi/\",\"avatar\":\"https://www.nan.fyi/favicon.ico\",\"description\":\"设计大师，nanda 。页面只用灰色加线条，都让我觉得叹为观止，内容不多，每篇都精雕细琢。跟 Josh 一样，属于技术网站，但它的教程引导更加出神入化，可称为程序艺术家。\",\"stars\":5},{\"name\":\"Emil Kowalski\",\"url\":\"https://emilkowal.ski/\",\"avatar\":\"https://emilkowal.ski/favicon.ico\",\"description\":\"Blog 就干脆\\\"不设计\\\"，无装饰。技术就比较轻松一些，它更强调动画/交互。Vercel 员工，他的组件很好用，也很 vercel。\",\"stars\":4,\"status\":\"disconnected\"},{\"name\":\"Risingle\",\"url\":\"https://www.imrising.cn/\",\"avatar\":\"https://www.imrising.cn/images/logo/logo.webp\",\"description\":\"网站样式很棒，虽然用的别人的模板，但是他用的很棒。是个初出茅庐的程序员。\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"無名小栈\",\"url\":\"https://blog.imsyy.top/\",\"avatar\":\"https://blog.imsyy.top/images/logo/logo.webp\",\"description\":\"Risingle blog 的模板主人，或许是头像和网站风格不搭，显得没有 Risingle 的舒服。Github 热门项目还不少，一看就是爱折腾的人，就是不爱写 blog，没啥内容。01 年，挺年轻的，独立开发者？不知道经历了什么。\",\"stars\":2,\"status\":\"disconnected\"},{\"name\":\"韩小韩博客\",\"url\":\"https://www.vvhan.com/\",\"avatar\":\"https://q1.qlogo.cn/g?b=qq&nk=1655466387&s=640\",\"description\":\"网站很棒，内容多，头像也帅，不知道人帅不帅。就是这个错位滑动效果一直让我头疼，这个阻尼效果还写blog专业上了。。。一个插件导入的事情，啥时候他能把这个效果关掉就好了。挺想多看下他内容的，但是这个效果太头晕了。\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"Anthony Fu\",\"url\":\"https://antfu.me/\",\"avatar\":\"https://avatars.githubusercontent.com/u/11247099?v=4\",\"description\":\"很厉害的一个人，好像还很年轻。经常在 b站活跃，开直播（看过）。我记得它几乎毕业就做了很多厉害的事情，vue 系列核心成员，似乎对他来说很轻松的事情。blog 多是英文，生活圈也是大神汇聚，真好。不怎么爱写blog，但相比来说已经算好的了。可以从他这窥探一些 vue \\\"上流社会\\\"\",\"stars\":4,\"status\":\"disconnected\"},{\"name\":\"enpitsulin 铅笔\",\"url\":\"https://enpitsulin.xyz/\",\"avatar\":\"https://enpitsulin.dev/images/avatar.webp\",\"description\":\"很简洁的blog网站，像 nanda。只不过很久没内容了。他现在的头像一时让我想不起他是谁了，突然发现它过去可爱头像，我想起来这家伙了。\",\"stars\":2},{\"name\":\"Innei 静かな森\",\"url\":\"https://innei.in/\",\"avatar\":\"https://cdn.jsdelivr.net/gh/Innei/static@master/avatar.png\",\"description\":\"网站还行，是典型的那种某个时代的产物，我不太get。但是内容活跃，并且他好像很火？但我没找出他为什么火。项目还是挺多的。\",\"stars\":3},{\"name\":\"秋夜灯雨\",\"url\":\"https://blog.lierhua.top/\",\"avatar\":\"https://blog.lierhua.top/images/web/yyqda3.svg\",\"description\":\"看名字，就知道是过去的残党了。但是我挺喜欢他的设计的，页面清晰，一股书生气。虽然是老人，但能追溯的过去并不多。\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"BlogFinder\",\"url\":\"https://bf.zzxworld.com/\",\"avatar\":\"https://bf.zzxworld.com/images/favicon.png\",\"description\":\"一个 blog 收集网站，可以查阅有哪些 blog，也可以直接看最近谁更新了什么\",\"stars\":3},{\"name\":\"Tonsky\",\"url\":\"https://tonsky.me/\",\"avatar\":\"https://avatars.githubusercontent.com/u/285292?v=4\",\"description\":\"一个过去的国外大神，忘了是什么时候发现它的，blog 依旧时不时更新。就是现在 blog 太刺眼了，不知道是不是故意的。\",\"stars\":3},{\"name\":\"Cali\",\"url\":\"https://cali.so/\",\"avatar\":\"https://cali.so/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FPortrait.8d12f14a.png&w=96&q=75\",\"description\":\"设计师，网站设计不错，但是 blog 内容很少。但厉害的是他已经自己开公司了，给别人设计网站，影石 Insta360 是他们设计的。很好的 blog 参考。他的 zolplay 网站跟 nanda 风格很像，不知道谁抄的谁。\",\"stars\":4,\"status\":\"disconnected\"},{\"name\":\"Chrome Blog\",\"url\":\"https://web.dev/blog?hl=zh-cn\",\"avatar\":\"/images/blogger/2fe46db88bd43683.svg\",\"description\":\"技术团队 blog，咨询、动态、故事。我觉得页面感受还不错。\",\"stars\":4},{\"name\":\"Huozhi\",\"url\":\"https://huozhi.im/\",\"avatar\":\"https://avatars.githubusercontent.com/u/4800338?v=4\",\"description\":\"极简主义者，网站真的极简，但是感觉也不差。内容不多，当你觉得不知道怎么设计blog，或者设计的不好时，看看他。\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"Brian Lovin\",\"url\":\"https://brianlovin.com/\",\"avatar\":\"https://avatars.githubusercontent.com/u/1923260?v=4\",\"description\":\"早期外国大神，在 Github,Facebook 工作过，现在在notion，资历老、项目多。blog 写成了 Dashboard 风格，蛮奇特的，但是 blog 并不多。\",\"stars\":4},{\"name\":\"Cassie Evans's Blog\",\"url\":\"https://www.cassie.codes/\",\"avatar\":\"https://www.cassie.codes/images/avatar2.jpg\",\"description\":\"彩色网站，真的很酷。并且还是位女士，真的很少见。GASP、SVG、动画很精美，但是没几篇内容，也算是高级 blog 的一种诅咒。在 Twitter 上也是名人。\",\"stars\":4,\"status\":\"disconnected\"},{\"name\":\"Niracler 的博物志\",\"url\":\"https://niracler.com/\",\"avatar\":\"https://niracler.com/favicon.svg\",\"description\":\"小透明，偶尔更新一篇blog。但是网站风格还是有特点的，可作为设计 blog 时的参考。\",\"stars\":2},{\"name\":\"講評世界\",\"url\":\"https://blog.moeyua.com/\",\"avatar\":\"https://avatars.githubusercontent.com/u/45156493?v=4\",\"description\":\"小透明，失踪人口。但 blog 网站样式有种字体的美，不知道怎么说。好像是影视飓风成员。\",\"stars\":2,\"status\":\"disconnected\"},{\"name\":\"阿猫的博客\",\"url\":\"https://ameow.xyz/\",\"avatar\":\"https://ameow.xyz/upload/favicon.png\",\"description\":\"可爱的网站，一直在更新他的猫鱼周刊。\",\"stars\":3},{\"name\":\"pseudoyu\",\"url\":\"https://www.pseudoyu.com/\",\"avatar\":\"https://www.pseudoyu.com/avatar.webp\",\"description\":\"区块链开发者，在 Monad 区块链倒腾了一段时间。网站长得跟 Anthony 一模一样。嘴上一直念叨着他的学姐老婆。应该也挺厉害的。\",\"stars\":3},{\"name\":\"季节记忆\",\"avatar\":\"https://www.seamory.com/api/storage/2024112814523200000001349b3aa3c2\",\"url\":\"https://www.seamory.com/\",\"description\":\"好像是为后端/嵌入式？2025 年初建立的 blog，无 UI 设计。但少有后端人显露 blog，应当勉励的。\",\"stars\":1,\"status\":\"disconnected\"},{\"name\":\"微尔微\",\"avatar\":\"https://www.vio.vin/apple-touch-icon.png\",\"url\":\"https://www.vio.vin/\",\"description\":\"23 年新晋散修，如他所说，一天倒腾一些奇怪的东西。应该是以后端为主，喜欢完一些硬件。静森系 blog，25年 blog 稳定输出。\",\"stars\":2},{\"name\":\"搬砖日记\",\"avatar\":\"https://banzhuanriji.com/img/icon.ico\",\"url\":\"https://banzhuanriji.com/\",\"description\":\"白底黑字。但是打理得挺好的。应该是 Andriod 开发者，24 年开始分享各种探索。摸不清根底。\",\"stars\":2},{\"name\":\"博客.cn\",\"avatar\":\"https://xmind.design/favicon.ico\",\"url\":\"https://loud-fear-11e.notion.site/eb29a49346a742989582723f950fcf0f?v=4b4f7b7d24274ba7853426c101a149d7\",\"description\":\"好像是 XMind 的内部 blog notion，不确认，但里面的内容确实专业深刻，先收藏一波\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"KK\",\"avatar\":\"https://avatars.githubusercontent.com/u/44634134?v=4\",\"url\":\"https://kaiyi.cool/\",\"description\":\"kk 是跟很厉害的人。突然看朋友圈想起他了，发现他是有 blog 的，虽然已经不维护了。但他的 blog 还残留一些好东西，或许对你有帮助。\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"猫普的精神世界\",\"avatar\":\"https://maplezz.com/_astro/picture.DavLO-HP_1hhoaS.webp\",\"url\":\"https://maplezz.com/\",\"description\":\"通过 issue 发现的另外一个开源的，也是这几天开源的，好巧。液态玻璃感设计，是有这种感觉，挺好的，就是有的花。我还是挺喜欢的。内容从 25年开始。\",\"stars\":3},{\"name\":\"手里有只毛毛虫\",\"avatar\":\"https://www.krjojo.com/wp-content/uploads/2024/05/avatar.avif\",\"url\":\"https://www.krjojo.com/\",\"description\":\"网站很舒服，一位六边形战士的独立开发者。文章目录能一眼看完就好了，想翻点想看的比较不容易。\",\"stars\":4},{\"name\":\"Honesty\",\"avatar\":\"https://cdn.jsdelivr.net/gh/listener-He/images@default/202309111525908.jpeg\",\"url\":\"https://blog.hehouhui.cn/\",\"description\":\"折腾 blog 的后端，是个后端学习的榜样，折腾了这么多年。网站弄得还挺好的，就是加载内容有点慢。\",\"stars\":3},{\"name\":\"ElysiumStack\",\"avatar\":\"/images/avatar.png\",\"url\":\"https://www.elysium-stack.cn/\",\"description\":\"UI 设计师 blogger，少见，blog 设计的很棒。一股游戏感铺面而来，25 年开始的内容。\",\"stars\":3},{\"name\":\"十玖八柒\",\"avatar\":\"https://ahzoo.cn/img/avatar.webp\",\"url\":\"https://blog.ahzoo.cn/\",\"description\":\"Z次元，后端开发，记录了很多后端研究。但折腾前端和 blog 还不少。把 blog 打理得有自己独特得舒适，实属难得\",\"stars\":3},{\"name\":\"纸鹿摸鱼处\",\"avatar\":\"https://weavatar.com/avatar/47c0f2e82b76d9b10eb3023df9e02e4e3fdbeaf5b74b842063f207971e7fbe7b?s=160\",\"url\":\"https://blog.zhilu.site/\",\"description\":\"棒棒的开源 blog 主，今天蹭了蹭他群友，🤣，给他多加一分🤣🤣🤣。\",\"stars\":4},{\"name\":\"灯火不休时\",\"avatar\":\"https://file.dhbxs.top/ylvwvjjs.jpg\",\"url\":\"https://blog.dhbxs.top/\",\"description\":\"群友，JAVAR，干净blog，让我看到几个人的影子。\",\"stars\":3,\"status\":\"disconnected\"},{\"name\":\"23朵毒蘑菇\",\"avatar\":\"https://blog.dumogu.top/web-assets/v-last/public/user.jpg\",\"url\":\"https://blog.dumogu.top/\",\"description\":\"前端开发，页面小巧，结构简单，寻常记录\",\"stars\":3}]"));}),
 "[project]/src/app/bloggers/page.tsx [app-client] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 

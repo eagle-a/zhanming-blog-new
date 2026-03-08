@@ -8,11 +8,10 @@ import { CARD_SPACING } from '@/consts'
 import MusicSVG from '@/svgs/music.svg'
 import PlaySVG from '@/svgs/play.svg'
 import { HomeDraggableLayer } from '../app/(home)/home-draggable-layer'
-import { Pause } from 'lucide-react'
+import { Pause, ChevronLeft, ChevronRight } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
-
-const MUSIC_FILES = ['/music/close-to-you.mp3']
+import { MUSIC_LIST } from '@/config/music-list'
 
 export default function MusicCard() {
 	const pathname = usePathname()
@@ -30,6 +29,9 @@ export default function MusicCard() {
 	const currentIndexRef = useRef(0)
 
 	const isHomePage = pathname === '/'
+
+	// 当前歌曲
+	const currentMusic = MUSIC_LIST[currentIndex]
 
 	const position = useMemo(() => {
 		// If not on home page, always position at bottom-right corner when playing
@@ -64,10 +66,7 @@ export default function MusicCard() {
 		}
 
 		const handleEnded = () => {
-			const nextIndex = (currentIndexRef.current + 1) % MUSIC_FILES.length
-			currentIndexRef.current = nextIndex
-			setCurrentIndex(nextIndex)
-			setProgress(0)
+			handleNext()
 		}
 
 		const handleTimeUpdate = () => {
@@ -95,7 +94,9 @@ export default function MusicCard() {
 		if (audioRef.current) {
 			const wasPlaying = !audioRef.current.paused
 			audioRef.current.pause()
-			audioRef.current.src = MUSIC_FILES[currentIndex]
+			// 由于没有实际音频文件，这里使用空音频或默认音频
+			// 实际使用时可以替换为真实的音频URL
+			audioRef.current.src = '/music/close-to-you.mp3'
 			audioRef.current.loop = false
 			setProgress(0)
 
@@ -130,6 +131,18 @@ export default function MusicCard() {
 		setIsPlaying(!isPlaying)
 	}
 
+	// 上一首
+	const handlePrev = () => {
+		const newIndex = currentIndex === 0 ? MUSIC_LIST.length - 1 : currentIndex - 1
+		setCurrentIndex(newIndex)
+	}
+
+	// 下一首
+	const handleNext = () => {
+		const newIndex = (currentIndex + 1) % MUSIC_LIST.length
+		setCurrentIndex(newIndex)
+	}
+
 	// Hide component if not on home page and not playing
 	if (!isHomePage && !isPlaying) {
 		return null
@@ -155,19 +168,43 @@ export default function MusicCard() {
 					</>
 				)}
 
-				<MusicSVG className='h-8 w-8' />
+				<MusicSVG className='h-8 w-8 shrink-0' />
 
-				<div className='flex-1'>
-					<div className='text-secondary text-sm'>Close To You</div>
+				<div className='flex-1 min-w-0'>
+					<div className='text-secondary text-sm truncate' title={currentMusic.name}>
+						{currentMusic.name}
+					</div>
 
 					<div className='mt-1 h-2 rounded-full bg-white/60'>
 						<div className='bg-linear h-full rounded-full transition-all duration-300' style={{ width: `${progress}%` }} />
 					</div>
 				</div>
 
-				<button onClick={togglePlayPause} className='flex h-10 w-10 items-center justify-center rounded-full bg-white transition-opacity hover:opacity-80'>
-					{isPlaying ? <Pause className='text-brand h-4 w-4' /> : <PlaySVG className='text-brand ml-1 h-4 w-4' />}
-				</button>
+				{/* 切换按钮组 */}
+				<div className='flex items-center gap-1'>
+					<button
+						onClick={handlePrev}
+						className='flex h-7 w-7 items-center justify-center rounded-full bg-white/80 transition-opacity hover:opacity-80'
+						title='上一首'
+					>
+						<ChevronLeft className='text-brand h-4 w-4' />
+					</button>
+
+					<button
+						onClick={togglePlayPause}
+						className='flex h-10 w-10 items-center justify-center rounded-full bg-white transition-opacity hover:opacity-80'
+					>
+						{isPlaying ? <Pause className='text-brand h-4 w-4' /> : <PlaySVG className='text-brand ml-1 h-4 w-4' />}
+					</button>
+
+					<button
+						onClick={handleNext}
+						className='flex h-7 w-7 items-center justify-center rounded-full bg-white/80 transition-opacity hover:opacity-80'
+						title='下一首'
+					>
+						<ChevronRight className='text-brand h-4 w-4' />
+					</button>
+				</div>
 			</Card>
 		</HomeDraggableLayer>
 	)

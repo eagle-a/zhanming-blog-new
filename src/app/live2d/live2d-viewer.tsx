@@ -20,22 +20,35 @@ interface Live2DModelInstance {
 const CDN_SCRIPTS = [
 	'https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.2.0/browser/pixi.min.js',
 	'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js',
-	'https://cdn.jsdelivr.net/npm/pixi-live2d-display/dist/cubism4.min.js'
+	'https://cdn.jsdelivr.net/npm/pixi-live2d-display/cubism/cubism4.min.js'
 ]
 
 const MODEL_URL = '/live2d/live2d.model3.json'
 
-function loadScript(src: string): Promise<void> {
+function loadScript(src: string, timeout = 10000): Promise<void> {
 	return new Promise((resolve, reject) => {
 		if (document.querySelector(`script[src="${src}"]`)) {
 			resolve()
 			return
 		}
+
 		const script = document.createElement('script')
 		script.src = src
 		script.crossOrigin = 'anonymous'
-		script.onload = () => resolve()
-		script.onerror = () => reject(new Error(`Failed to load script: ${src}`))
+
+		const timeoutId = setTimeout(() => {
+			reject(new Error(`加载脚本超时: ${src}`))
+		}, timeout)
+
+		script.onload = () => {
+			clearTimeout(timeoutId)
+			resolve()
+		}
+		script.onerror = () => {
+			clearTimeout(timeoutId)
+			reject(new Error(`加载脚本失败: ${src}`))
+		}
+
 		document.head.appendChild(script)
 	})
 }

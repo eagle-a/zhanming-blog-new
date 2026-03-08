@@ -8,6 +8,9 @@ import EditableStarRating from '@/components/editable-star-rating'
 import { useState } from 'react'
 import LogoUploadDialog, { type LogoItem } from './logo-upload-dialog'
 
+// 默认占位图
+const FALLBACK_LOGO = '/images/avatar.png'
+
 export interface Share {
 	name: string
 	logo: string
@@ -31,6 +34,7 @@ export function ShareCard({ share, isEditMode = false, onUpdate, onDelete }: Sha
 	const [localShare, setLocalShare] = useState(share)
 	const [showLogoDialog, setShowLogoDialog] = useState(false)
 	const [logoItem, setLogoItem] = useState<LogoItem | null>(null)
+	const [logoError, setLogoError] = useState(false)
 
 	const handleFieldChange = (field: keyof Share, value: any) => {
 		const updated = { ...localShare, [field]: value }
@@ -44,6 +48,7 @@ export function ShareCard({ share, isEditMode = false, onUpdate, onDelete }: Sha
 		const updated = { ...localShare, logo: logoUrl }
 		setLocalShare(updated)
 		onUpdate?.(updated, share, logo)
+		setLogoError(false) // 重置错误状态
 	}
 
 	const handleTagsChange = (tagsStr: string) => {
@@ -95,10 +100,11 @@ export function ShareCard({ share, isEditMode = false, onUpdate, onDelete }: Sha
 				<div className='mb-4 flex items-center gap-4'>
 					<div className='group relative'>
 						<img
-							src={localShare.logo}
+							src={logoError ? FALLBACK_LOGO : localShare.logo}
 							alt={localShare.name}
 							className={cn('h-16 w-16 rounded-xl object-cover', canEdit && 'cursor-pointer')}
 							onClick={() => canEdit && setShowLogoDialog(true)}
+							onError={() => setLogoError(true)}
 						/>
 						{canEdit && (
 							<div className='ev pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-black/40 opacity-0 transition-opacity group-hover:opacity-100'>

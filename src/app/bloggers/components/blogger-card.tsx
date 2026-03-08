@@ -9,6 +9,9 @@ import { Blogger, type BloggerStatus } from '../grid-view'
 import { useState } from 'react'
 import AvatarUploadDialog, { type AvatarItem } from './avatar-upload-dialog'
 
+// 默认占位图
+const FALLBACK_AVATAR = '/images/avatar.png'
+
 interface BloggerCardProps {
 	blogger: Blogger
 	isEditMode?: boolean
@@ -23,6 +26,7 @@ export function BloggerCard({ blogger, isEditMode = false, onUpdate, onDelete }:
 	const [localBlogger, setLocalBlogger] = useState(blogger)
 	const [showAvatarDialog, setShowAvatarDialog] = useState(false)
 	const [avatarItem, setAvatarItem] = useState<AvatarItem | null>(null)
+	const [avatarError, setAvatarError] = useState(false)
 
 	const handleFieldChange = (field: keyof Blogger, value: any) => {
 		const updated = { ...localBlogger, [field]: value }
@@ -36,6 +40,7 @@ export function BloggerCard({ blogger, isEditMode = false, onUpdate, onDelete }:
 		const updated = { ...localBlogger, avatar: avatarUrl }
 		setLocalBlogger(updated)
 		onUpdate?.(updated, blogger, avatar)
+		setAvatarError(false) // 重置错误状态
 	}
 
 	const handleCancel = () => {
@@ -79,10 +84,11 @@ export function BloggerCard({ blogger, isEditMode = false, onUpdate, onDelete }:
 				<div className='mb-4 flex items-center gap-4'>
 					<div className='group relative'>
 						<img
-							src={localBlogger.avatar}
+							src={avatarError ? FALLBACK_AVATAR : localBlogger.avatar}
 							alt={localBlogger.name}
 							className={cn('h-16 w-16 rounded-full object-cover', canEdit && 'cursor-pointer')}
 							onClick={() => canEdit && setShowAvatarDialog(true)}
+							onError={() => setAvatarError(true)}
 						/>
 						{canEdit && (
 							<div className='ev pointer-events-none absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100'>

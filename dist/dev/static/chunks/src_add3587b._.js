@@ -911,14 +911,16 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
+// 默认占位图
+const FALLBACK_LOGO = '/images/avatar.png';
 function ShareCard(t0) {
     _s();
-    const $ = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$compiler$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["c"])(94);
-    if ($[0] !== "449e7ceb269240b6164007ac17a47ca924aa23386f3165c6f49f1dc34ca1e56f") {
-        for(let $i = 0; $i < 94; $i += 1){
+    const $ = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$compiler$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["c"])(95);
+    if ($[0] !== "a2480bd59f8ff21c6468fc785c56087623b76ff1f8ce326a51cb634d02665625") {
+        for(let $i = 0; $i < 95; $i += 1){
             $[$i] = Symbol.for("react.memo_cache_sentinel");
         }
-        $[0] = "449e7ceb269240b6164007ac17a47ca924aa23386f3165c6f49f1dc34ca1e56f";
+        $[0] = "a2480bd59f8ff21c6468fc785c56087623b76ff1f8ce326a51cb634d02665625";
     }
     const { share, isEditMode: t1, onUpdate, onDelete } = t0;
     const isEditMode = t1 === undefined ? false : t1;
@@ -928,6 +930,7 @@ function ShareCard(t0) {
     const [localShare, setLocalShare] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(share);
     const [showLogoDialog, setShowLogoDialog] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [logoItem, setLogoItem] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [logoError, setLogoError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     let t2;
     if ($[1] !== localShare || $[2] !== logoItem || $[3] !== onUpdate || $[4] !== share) {
         t2 = ({
@@ -961,6 +964,7 @@ function ShareCard(t0) {
                 };
                 setLocalShare(updated_0);
                 onUpdate?.(updated_0, share, logo);
+                setLogoError(false);
             }
         })["ShareCard[handleLogoSubmit]"];
         $[6] = localShare;
@@ -1041,7 +1045,7 @@ function ShareCard(t0) {
                         children: "取消"
                     }, void 0, false, {
                         fileName: "[project]/src/app/share/components/share-card.tsx",
-                        lineNumber: 151,
+                        lineNumber: 156,
                         columnNumber: 95
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1052,7 +1056,7 @@ function ShareCard(t0) {
                         children: "完成"
                     }, void 0, false, {
                         fileName: "[project]/src/app/share/components/share-card.tsx",
-                        lineNumber: 151,
+                        lineNumber: 156,
                         columnNumber: 232
                     }, this)
                 ]
@@ -1066,7 +1070,7 @@ function ShareCard(t0) {
                         children: "编辑"
                     }, void 0, false, {
                         fileName: "[project]/src/app/share/components/share-card.tsx",
-                        lineNumber: 153,
+                        lineNumber: 158,
                         columnNumber: 157
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1075,14 +1079,14 @@ function ShareCard(t0) {
                         children: "删除"
                     }, void 0, false, {
                         fileName: "[project]/src/app/share/components/share-card.tsx",
-                        lineNumber: 155,
+                        lineNumber: 160,
                         columnNumber: 149
                     }, this)
                 ]
             }, void 0, true)
         }, void 0, false, {
             fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 151,
+            lineNumber: 156,
             columnNumber: 24
         }, this);
         $[17] = handleCancel;
@@ -1093,7 +1097,7 @@ function ShareCard(t0) {
     } else {
         t8 = $[21];
     }
-    const t9 = localShare.logo;
+    const t9 = logoError ? FALLBACK_LOGO : localShare.logo;
     const t10 = localShare.name;
     const t11 = canEdit && "cursor-pointer";
     let t12;
@@ -1115,109 +1119,119 @@ function ShareCard(t0) {
         t13 = $[25];
     }
     let t14;
-    if ($[26] !== localShare.logo || $[27] !== localShare.name || $[28] !== t12 || $[29] !== t13) {
-        t14 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
+    if ($[26] === Symbol.for("react.memo_cache_sentinel")) {
+        t14 = ({
+            "ShareCard[<img>.onError]": ()=>setLogoError(true)
+        })["ShareCard[<img>.onError]"];
+        $[26] = t14;
+    } else {
+        t14 = $[26];
+    }
+    let t15;
+    if ($[27] !== localShare.name || $[28] !== t12 || $[29] !== t13 || $[30] !== t9) {
+        t15 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
             src: t9,
             alt: t10,
             className: t12,
-            onClick: t13
+            onClick: t13,
+            onError: t14
         }, void 0, false, {
             fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 187,
+            lineNumber: 201,
             columnNumber: 11
         }, this);
-        $[26] = localShare.logo;
         $[27] = localShare.name;
         $[28] = t12;
         $[29] = t13;
-        $[30] = t14;
+        $[30] = t9;
+        $[31] = t15;
     } else {
-        t14 = $[30];
+        t15 = $[31];
     }
-    let t15;
-    if ($[31] !== canEdit) {
-        t15 = canEdit && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+    let t16;
+    if ($[32] !== canEdit) {
+        t16 = canEdit && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "ev pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-black/40 opacity-0 transition-opacity group-hover:opacity-100",
             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                 className: "text-xs text-white",
                 children: "更换"
             }, void 0, false, {
                 fileName: "[project]/src/app/share/components/share-card.tsx",
-                lineNumber: 198,
+                lineNumber: 212,
                 columnNumber: 188
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 198,
+            lineNumber: 212,
             columnNumber: 22
         }, this);
-        $[31] = canEdit;
-        $[32] = t15;
+        $[32] = canEdit;
+        $[33] = t16;
     } else {
-        t15 = $[32];
+        t16 = $[33];
     }
-    let t16;
-    if ($[33] !== t14 || $[34] !== t15) {
-        t16 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+    let t17;
+    if ($[34] !== t15 || $[35] !== t16) {
+        t17 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "group relative",
             children: [
-                t14,
-                t15
+                t15,
+                t16
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 206,
+            lineNumber: 220,
             columnNumber: 11
         }, this);
-        $[33] = t14;
         $[34] = t15;
         $[35] = t16;
+        $[36] = t17;
     } else {
-        t16 = $[35];
+        t17 = $[36];
     }
-    let t17;
-    if ($[36] !== handleFieldChange) {
-        t17 = ({
+    let t18;
+    if ($[37] !== handleFieldChange) {
+        t18 = ({
             "ShareCard[<h3>.onBlur]": (e)=>handleFieldChange("name", e.currentTarget.textContent || "")
         })["ShareCard[<h3>.onBlur]"];
-        $[36] = handleFieldChange;
-        $[37] = t17;
-    } else {
-        t17 = $[37];
-    }
-    const t18 = canEdit && "cursor-text";
-    let t19;
-    if ($[38] !== t18) {
-        t19 = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("group-hover:text-brand text-lg font-bold transition-colors focus:outline-none", t18);
+        $[37] = handleFieldChange;
         $[38] = t18;
-        $[39] = t19;
     } else {
-        t19 = $[39];
+        t18 = $[38];
     }
+    const t19 = canEdit && "cursor-text";
     let t20;
-    if ($[40] !== canEdit || $[41] !== localShare.name || $[42] !== t17 || $[43] !== t19) {
-        t20 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+    if ($[39] !== t19) {
+        t20 = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("group-hover:text-brand text-lg font-bold transition-colors focus:outline-none", t19);
+        $[39] = t19;
+        $[40] = t20;
+    } else {
+        t20 = $[40];
+    }
+    let t21;
+    if ($[41] !== canEdit || $[42] !== localShare.name || $[43] !== t18 || $[44] !== t20) {
+        t21 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
             contentEditable: canEdit,
             suppressContentEditableWarning: true,
-            onBlur: t17,
-            className: t19,
+            onBlur: t18,
+            className: t20,
             children: localShare.name
         }, void 0, false, {
             fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 234,
+            lineNumber: 248,
             columnNumber: 11
         }, this);
-        $[40] = canEdit;
-        $[41] = localShare.name;
-        $[42] = t17;
-        $[43] = t19;
+        $[41] = canEdit;
+        $[42] = localShare.name;
+        $[43] = t18;
         $[44] = t20;
+        $[45] = t21;
     } else {
-        t20 = $[44];
+        t21 = $[45];
     }
-    let t21;
-    if ($[45] !== canEdit || $[46] !== handleFieldChange || $[47] !== localShare.url) {
-        t21 = canEdit ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+    let t22;
+    if ($[46] !== canEdit || $[47] !== handleFieldChange || $[48] !== localShare.url) {
+        t22 = canEdit ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             contentEditable: true,
             suppressContentEditableWarning: true,
             onBlur: {
@@ -1227,7 +1241,7 @@ function ShareCard(t0) {
             children: localShare.url
         }, void 0, false, {
             fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 245,
+            lineNumber: 259,
             columnNumber: 21
         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
             href: localShare.url,
@@ -1237,57 +1251,57 @@ function ShareCard(t0) {
             children: localShare.url
         }, void 0, false, {
             fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 247,
+            lineNumber: 261,
             columnNumber: 160
         }, this);
-        $[45] = canEdit;
-        $[46] = handleFieldChange;
-        $[47] = localShare.url;
-        $[48] = t21;
+        $[46] = canEdit;
+        $[47] = handleFieldChange;
+        $[48] = localShare.url;
+        $[49] = t22;
     } else {
-        t21 = $[48];
-    }
-    let t22;
-    if ($[49] !== t20 || $[50] !== t21) {
-        t22 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-            className: "flex-1",
-            children: [
-                t20,
-                t21
-            ]
-        }, void 0, true, {
-            fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 257,
-            columnNumber: 11
-        }, this);
-        $[49] = t20;
-        $[50] = t21;
-        $[51] = t22;
-    } else {
-        t22 = $[51];
+        t22 = $[49];
     }
     let t23;
-    if ($[52] !== t16 || $[53] !== t22) {
+    if ($[50] !== t21 || $[51] !== t22) {
         t23 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-            className: "mb-4 flex items-center gap-4",
+            className: "flex-1",
             children: [
-                t16,
+                t21,
                 t22
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 266,
+            lineNumber: 271,
             columnNumber: 11
         }, this);
-        $[52] = t16;
-        $[53] = t22;
-        $[54] = t23;
+        $[50] = t21;
+        $[51] = t22;
+        $[52] = t23;
     } else {
-        t23 = $[54];
+        t23 = $[52];
     }
     let t24;
-    if ($[55] !== canEdit || $[56] !== handleFieldChange || $[57] !== localShare.stars) {
-        t24 = canEdit ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$editable$2d$star$2d$rating$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+    if ($[53] !== t17 || $[54] !== t23) {
+        t24 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "mb-4 flex items-center gap-4",
+            children: [
+                t17,
+                t23
+            ]
+        }, void 0, true, {
+            fileName: "[project]/src/app/share/components/share-card.tsx",
+            lineNumber: 280,
+            columnNumber: 11
+        }, this);
+        $[53] = t17;
+        $[54] = t23;
+        $[55] = t24;
+    } else {
+        t24 = $[55];
+    }
+    let t25;
+    if ($[56] !== canEdit || $[57] !== handleFieldChange || $[58] !== localShare.stars) {
+        t25 = canEdit ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$editable$2d$star$2d$rating$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
             stars: localShare.stars,
             editable: true,
             onChange: {
@@ -1295,25 +1309,25 @@ function ShareCard(t0) {
             }["ShareCard[<EditableStarRating>.onChange]"]
         }, void 0, false, {
             fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 275,
+            lineNumber: 289,
             columnNumber: 21
         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$star$2d$rating$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
             stars: localShare.stars
         }, void 0, false, {
             fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 277,
+            lineNumber: 291,
             columnNumber: 57
         }, this);
-        $[55] = canEdit;
-        $[56] = handleFieldChange;
-        $[57] = localShare.stars;
-        $[58] = t24;
+        $[56] = canEdit;
+        $[57] = handleFieldChange;
+        $[58] = localShare.stars;
+        $[59] = t25;
     } else {
-        t24 = $[58];
+        t25 = $[59];
     }
-    let t25;
-    if ($[59] !== canEdit || $[60] !== handleTagsChange || $[61] !== localShare.tags) {
-        t25 = canEdit ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+    let t26;
+    if ($[60] !== canEdit || $[61] !== handleTagsChange || $[62] !== localShare.tags) {
+        t26 = canEdit ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
             type: "text",
             value: localShare.tags.join(", "),
             onChange: {
@@ -1323,44 +1337,44 @@ function ShareCard(t0) {
             className: "w-full rounded-md border border-gray-300 bg-gray-50 px-2 py-1 text-xs focus:outline-none"
         }, void 0, false, {
             fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 287,
+            lineNumber: 301,
             columnNumber: 21
         }, this) : localShare.tags.map(_ShareCardLocalShareTagsMap);
-        $[59] = canEdit;
-        $[60] = handleTagsChange;
-        $[61] = localShare.tags;
-        $[62] = t25;
+        $[60] = canEdit;
+        $[61] = handleTagsChange;
+        $[62] = localShare.tags;
+        $[63] = t26;
     } else {
-        t25 = $[62];
-    }
-    let t26;
-    if ($[63] !== t25) {
-        t26 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-            className: "mt-3 flex flex-wrap gap-1.5",
-            children: t25
-        }, void 0, false, {
-            fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 299,
-            columnNumber: 11
-        }, this);
-        $[63] = t25;
-        $[64] = t26;
-    } else {
-        t26 = $[64];
+        t26 = $[63];
     }
     let t27;
-    if ($[65] !== handleFieldChange) {
-        t27 = ({
-            "ShareCard[<p>.onBlur]": (e_2)=>handleFieldChange("description", e_2.currentTarget.textContent || "")
-        })["ShareCard[<p>.onBlur]"];
-        $[65] = handleFieldChange;
-        $[66] = t27;
+    if ($[64] !== t26) {
+        t27 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "mt-3 flex flex-wrap gap-1.5",
+            children: t26
+        }, void 0, false, {
+            fileName: "[project]/src/app/share/components/share-card.tsx",
+            lineNumber: 313,
+            columnNumber: 11
+        }, this);
+        $[64] = t26;
+        $[65] = t27;
     } else {
-        t27 = $[66];
+        t27 = $[65];
     }
     let t28;
-    if ($[67] !== canEdit || $[68] !== expanded) {
+    if ($[66] !== handleFieldChange) {
         t28 = ({
+            "ShareCard[<p>.onBlur]": (e_2)=>handleFieldChange("description", e_2.currentTarget.textContent || "")
+        })["ShareCard[<p>.onBlur]"];
+        $[66] = handleFieldChange;
+        $[67] = t28;
+    } else {
+        t28 = $[67];
+    }
+    let t29;
+    if ($[68] !== canEdit || $[69] !== expanded) {
+        t29 = ({
             "ShareCard[<p>.onClick]": (e_3)=>{
                 if (!canEdit) {
                     e_3.preventDefault();
@@ -1368,71 +1382,71 @@ function ShareCard(t0) {
                 }
             }
         })["ShareCard[<p>.onClick]"];
-        $[67] = canEdit;
-        $[68] = expanded;
-        $[69] = t28;
-    } else {
-        t28 = $[69];
-    }
-    const t29 = canEdit ? "cursor-text" : "cursor-pointer";
-    const t30 = !canEdit && (expanded ? "line-clamp-none" : "line-clamp-3");
-    let t31;
-    if ($[70] !== t29 || $[71] !== t30) {
-        t31 = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("mt-3 text-sm leading-relaxed text-gray-600 transition-all duration-300 focus:outline-none", t29, t30);
+        $[68] = canEdit;
+        $[69] = expanded;
         $[70] = t29;
+    } else {
+        t29 = $[70];
+    }
+    const t30 = canEdit ? "cursor-text" : "cursor-pointer";
+    const t31 = !canEdit && (expanded ? "line-clamp-none" : "line-clamp-3");
+    let t32;
+    if ($[71] !== t30 || $[72] !== t31) {
+        t32 = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("mt-3 text-sm leading-relaxed text-gray-600 transition-all duration-300 focus:outline-none", t30, t31);
         $[71] = t30;
         $[72] = t31;
+        $[73] = t32;
     } else {
-        t31 = $[72];
+        t32 = $[73];
     }
-    let t32;
-    if ($[73] !== canEdit || $[74] !== localShare.description || $[75] !== t27 || $[76] !== t28 || $[77] !== t31) {
-        t32 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+    let t33;
+    if ($[74] !== canEdit || $[75] !== localShare.description || $[76] !== t28 || $[77] !== t29 || $[78] !== t32) {
+        t33 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
             contentEditable: canEdit,
             suppressContentEditableWarning: true,
-            onBlur: t27,
-            onClick: t28,
-            className: t31,
+            onBlur: t28,
+            onClick: t29,
+            className: t32,
             children: localShare.description
         }, void 0, false, {
             fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 344,
+            lineNumber: 358,
             columnNumber: 11
         }, this);
-        $[73] = canEdit;
-        $[74] = localShare.description;
-        $[75] = t27;
+        $[74] = canEdit;
+        $[75] = localShare.description;
         $[76] = t28;
-        $[77] = t31;
+        $[77] = t29;
         $[78] = t32;
+        $[79] = t33;
     } else {
-        t32 = $[78];
+        t33 = $[79];
     }
-    let t33;
-    if ($[79] !== t23 || $[80] !== t24 || $[81] !== t26 || $[82] !== t32) {
-        t33 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+    let t34;
+    if ($[80] !== t24 || $[81] !== t25 || $[82] !== t27 || $[83] !== t33) {
+        t34 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             children: [
-                t23,
                 t24,
-                t26,
-                t32
+                t25,
+                t27,
+                t33
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 356,
+            lineNumber: 370,
             columnNumber: 11
         }, this);
-        $[79] = t23;
         $[80] = t24;
-        $[81] = t26;
-        $[82] = t32;
+        $[81] = t25;
+        $[82] = t27;
         $[83] = t33;
+        $[84] = t34;
     } else {
-        t33 = $[83];
+        t34 = $[84];
     }
-    let t34;
-    if ($[84] !== canEdit || $[85] !== handleLogoSubmit || $[86] !== localShare.logo || $[87] !== showLogoDialog) {
-        t34 = canEdit && showLogoDialog && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$share$2f$components$2f$logo$2d$upload$2d$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+    let t35;
+    if ($[85] !== canEdit || $[86] !== handleLogoSubmit || $[87] !== localShare.logo || $[88] !== showLogoDialog) {
+        t35 = canEdit && showLogoDialog && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$share$2f$components$2f$logo$2d$upload$2d$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
             currentLogo: localShare.logo,
             onClose: {
                 "ShareCard[<LogoUploadDialog>.onClose]": ()=>setShowLogoDialog(false)
@@ -1440,44 +1454,44 @@ function ShareCard(t0) {
             onSubmit: handleLogoSubmit
         }, void 0, false, {
             fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 367,
+            lineNumber: 381,
             columnNumber: 40
         }, this);
-        $[84] = canEdit;
-        $[85] = handleLogoSubmit;
-        $[86] = localShare.logo;
-        $[87] = showLogoDialog;
-        $[88] = t34;
+        $[85] = canEdit;
+        $[86] = handleLogoSubmit;
+        $[87] = localShare.logo;
+        $[88] = showLogoDialog;
+        $[89] = t35;
     } else {
-        t34 = $[88];
+        t35 = $[89];
     }
-    let t35;
-    if ($[89] !== t33 || $[90] !== t34 || $[91] !== t7 || $[92] !== t8) {
-        t35 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
+    let t36;
+    if ($[90] !== t34 || $[91] !== t35 || $[92] !== t7 || $[93] !== t8) {
+        t36 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
             initial: t6,
             ...t7,
             className: "card relative block overflow-hidden",
             children: [
                 t8,
-                t33,
-                t34
+                t34,
+                t35
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/share/components/share-card.tsx",
-            lineNumber: 380,
+            lineNumber: 394,
             columnNumber: 11
         }, this);
-        $[89] = t33;
         $[90] = t34;
-        $[91] = t7;
-        $[92] = t8;
-        $[93] = t35;
+        $[91] = t35;
+        $[92] = t7;
+        $[93] = t8;
+        $[94] = t36;
     } else {
-        t35 = $[93];
+        t36 = $[94];
     }
-    return t35;
+    return t36;
 }
-_s(ShareCard, "nxB5Y6ohNh/hFUaXBSCte7zdGOo=", false, function() {
+_s(ShareCard, "2QZVeIBuKkG9MhYUHSoRu2Kv080=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$use$2d$size$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSize"]
     ];
@@ -1489,7 +1503,7 @@ function _ShareCardLocalShareTagsMap(tag) {
         children: tag
     }, tag, false, {
         fileName: "[project]/src/app/share/components/share-card.tsx",
-        lineNumber: 392,
+        lineNumber: 406,
         columnNumber: 10
     }, this);
 }
@@ -3067,7 +3081,7 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
 }),
 "[project]/src/app/share/list.json (json)", ((__turbopack_context__) => {
 
-__turbopack_context__.v([{"name":"iLoveIMG","url":"https://www.iloveimg.com/zh-cn","logo":"/images/share/7e91e93e3cdd586b.svg","description":"免费图片处理网站，我经常用来压缩图片，压缩效果会比 Tinypng 更好。链式处理功能非常好用。","tags":["图片"],"stars":4},{"name":"TinyPNG","url":"https://tinypng.com/","logo":"https://tinypng.com/static/images/george-anim/large_george_x2.webp","description":"国际上比较出名的压缩图片工具，过去的书本中知晓的这个网站，但是有图片大小限制，也有数量限制。挺好的压缩图片替代品。","tags":["图片"],"stars":3},{"name":"removebg","url":"https://www.remove.bg/zh","logo":"/images/share/859bfb2ef1c6a503.svg","description":"AI 抠图工具，特点是界面简洁，效果比 windows 自带的去除背景会更好一些，缺点是有免费有导出大小限制","tags":["图片","AI"],"stars":3},{"name":"Neumorphism","url":"https://neumorphism.io/","logo":"https://neumorphism.io/apple-touch-icon.png","description":"Neumorphism 是一种极具鲜明特色的设计风格，总能给新人一种惊叹感。但是应用并不广泛，实际开发也会有很多不好的点。更多是做一个留念。","tags":["CSS","Github"],"stars":2},{"name":"Nucleo","url":"https://nucleoapp.com/app/?library=core","logo":"/images/share/7e720f35557fa9de.svg","description":"图标库，网站整体很干净。独特的是，它有一类像素风格的图标，很有意思。它的 icon 也很多，还有 grass 风格的。","tags":["Icons"],"stars":3},{"name":"Loadership","url":"https://www.loadership.com/","logo":"https://www.loadership.com/loadership_logo_round.svg","description":"13种 Loader 样式，在线调整使用。在 AI 时代可能意义小很多了。","tags":["CSS","Github"],"stars":3},{"name":"CSS Buttons","url":"https://cssbuttons.io/","logo":"/images/share/2b8118a3645967ee.svg","description":"有不少按钮样式。跟 Neumorphism 有一些关系。","tags":["CSS"],"stars":2},{"name":"Uiverse","url":"https://uiverse.io/","logo":"/images/share/5e7b29cb1a84be80.png","description":"不可错过的参考库，有很多交互效果，包括热门的 Button、Loader 设计，内容丰富，还在不断更新。","tags":["CSS"],"stars":4},{"name":"Magic UI","url":"https://magicui.design/","logo":"https://magicui.design/favicon.ico","description":"shadcn/ui 伴生库，有很多实用设计。取用也很方便，可以自己复制独立的代码。","tags":["组件","Github"],"stars":4},{"name":"Ai lman","url":"https://aliimam.in/docs/backgrounds/shader-rgb","logo":"https://aliimam.in/_next/image?url=%2Fai-logo-black.png&w=128&q=75","description":"类 Magic UI，但是感觉差点意思。可作为看完 Magic 意犹未尽时闲看。","tags":["组件"],"stars":3},{"name":"Awwwards","url":"https://www.awwwards.com/","logo":"https://assets.awwwards.com/assets/images/favicon.svg","description":"网站评选网站，你总能从这里发现惊艳的网站","tags":["网站集"],"stars":3},{"name":"CSS Design Awards","url":"https://www.cssdesignawards.com/","logo":"/images/share/aaae2bf4f74c8eb1.svg","description":"网站评选网站，跟 Awwwards 类似，可以看到每期的优秀网站。观感上会好些。","tags":["网站集"],"stars":3},{"name":"404s.design","logo":"/images/share/5c9a8b7deb717c5f.svg","url":"https://www.404s.design/","description":"收集 404 设计的网站，无聊的时候可以看下。","tags":["网站集"],"stars":3},{"name":"Igloo Inc.","logo":"https://www.igloo.inc/assets/favicon32-af94112f.png","url":"https://www.igloo.inc/","description":"abeto 作品，非常酷炫","tags":["3D"],"stars":4},{"name":"abeto 官网","logo":"https://abeto.co/assets/favicon32-11fb90a3.png","url":"https://abeto.co/","description":"无限绽开的花，飘荡的树叶，复古风格化","tags":["3D"],"stars":4},{"name":"Messenger","logo":"https://messenger.abeto.co/assets/favicon32-BC0QIL61.png","url":"https://messenger.abeto.co/","description":"abeto 作品，卡通送信员在地球小镇上奔跑，联机在线，可换装","tags":["3D"],"stars":4},{"name":"Summer Afternoon","logo":"https://summer-afternoon.vlucendo.com/assets/favicon32-e817b074.png","url":"https://summer-afternoon.vlucendo.com/","description":"夏日午后，小男孩在乡村公路上上游玩","tags":["3D"],"stars":4},{"name":"The Monolith Project","logo":"https://themonolithproject.net/assets/images-next/nose_logo.webp","url":"https://themonolithproject.net/","description":"奇幻宇宙的动画演绎，像看电影一样。“跨越多星之际，一座沉默的巨石碑悄然苏醒。“巨石碑计划”：每一次触碰，皆可重写现实。”","tags":["3D"],"stars":5},{"name":"Making Software","logo":"https://www.makingsoftware.com/favicon.ico","url":"https://www.makingsoftware.com/","description":"面向软件设计和开发人员的参考手册。样式很棒的学习网站。","tags":["学习"],"stars":4},{"name":"Ease 函数参考","logo":"https://easings.net/96.8aa68ac4.png","url":"https://easings.net/","description":"当你在调整动画节奏时，这个 ease 表能帮助直观感受 ease 表现出的效果","tags":["Github"],"stars":3},{"name":"Isocons","logo":"/images/share/97859f1c57799dd2.png","url":"https://www.isocons.app/","description":"3D icons 网站，酷酷的，免费。","tags":["Icons"],"stars":3},{"name":"Webp 转换压缩","logo":"/images/avatar.png","url":"https://eagle-a.github.io/image-toolbox","description":"无限压缩，快且方便，可以直接对比效果","tags":["图片"],"stars":3},{"name":"WoraWork","logo":"https://worawork.vercel.app/Icons/worawork.webp","url":"https://worawork.vercel.app/","description":"方格世界的 Web3D，场景渲染非常棒，非常值得体验","tags":["3D"],"stars":3}]);}),
+__turbopack_context__.v([{"name":"iLoveIMG","url":"https://www.iloveimg.com/zh-cn","logo":"/images/share/7e91e93e3cdd586b.svg","description":"免费图片处理网站，我经常用来压缩图片，压缩效果会比 Tinypng 更好。链式处理功能非常好用。","tags":["图片"],"stars":4},{"name":"TinyPNG","url":"https://tinypng.com/","logo":"https://tinypng.com/static/images/george-anim/large_george_x2.webp","description":"国际上比较出名的压缩图片工具，过去的书本中知晓的这个网站，但是有图片大小限制，也有数量限制。挺好的压缩图片替代品。","tags":["图片"],"stars":3},{"name":"removebg","url":"https://www.remove.bg/zh","logo":"/images/share/859bfb2ef1c6a503.svg","description":"AI 抠图工具，特点是界面简洁，效果比 windows 自带的去除背景会更好一些，缺点是有免费有导出大小限制","tags":["图片","AI"],"stars":3},{"name":"Neumorphism","url":"https://neumorphism.io/","logo":"https://neumorphism.io/apple-touch-icon.png","description":"Neumorphism 是一种极具鲜明特色的设计风格，总能给新人一种惊叹感。但是应用并不广泛，实际开发也会有很多不好的点。更多是做一个留念。","tags":["CSS","Github"],"stars":2},{"name":"Nucleo","url":"https://nucleoapp.com/app/?library=core","logo":"/images/share/7e720f35557fa9de.svg","description":"图标库，网站整体很干净。独特的是，它有一类像素风格的图标，很有意思。它的 icon 也很多，还有 grass 风格的。","tags":["Icons"],"stars":3},{"name":"Loadership","url":"https://www.loadership.com/","logo":"https://www.loadership.com/loadership_logo_round.svg","description":"13种 Loader 样式，在线调整使用。在 AI 时代可能意义小很多了。","tags":["CSS","Github"],"stars":3},{"name":"CSS Buttons","url":"https://cssbuttons.io/","logo":"/images/share/2b8118a3645967ee.svg","description":"有不少按钮样式。跟 Neumorphism 有一些关系。","tags":["CSS"],"stars":2},{"name":"Uiverse","url":"https://uiverse.io/","logo":"/images/share/5e7b29cb1a84be80.png","description":"不可错过的参考库，有很多交互效果，包括热门的 Button、Loader 设计，内容丰富，还在不断更新。","tags":["CSS"],"stars":4},{"name":"Magic UI","url":"https://magicui.design/","logo":"https://magicui.design/favicon.ico","description":"shadcn/ui 伴生库，有很多实用设计。取用也很方便，可以自己复制独立的代码。","tags":["组件","Github"],"stars":4},{"name":"Ai lman","url":"https://aliimam.in/docs/backgrounds/shader-rgb","logo":"https://aliimam.in/_next/image?url=%2Fai-logo-black.png&w=128&q=75","description":"类 Magic UI，但是感觉差点意思。可作为看完 Magic 意犹未尽时闲看。","tags":["组件"],"stars":3},{"name":"Awwwards","url":"https://www.awwwards.com/","logo":"/images/avatar.png","description":"网站评选网站，你总能从这里发现惊艳的网站","tags":["网站集"],"stars":3},{"name":"CSS Design Awards","url":"https://www.cssdesignawards.com/","logo":"/images/share/aaae2bf4f74c8eb1.svg","description":"网站评选网站，跟 Awwwards 类似，可以看到每期的优秀网站。观感上会好些。","tags":["网站集"],"stars":3},{"name":"404s.design","logo":"/images/share/5c9a8b7deb717c5f.svg","url":"https://www.404s.design/","description":"收集 404 设计的网站，无聊的时候可以看下。","tags":["网站集"],"stars":3},{"name":"Igloo Inc.","logo":"https://www.igloo.inc/assets/favicon32-af94112f.png","url":"https://www.igloo.inc/","description":"abeto 作品，非常酷炫","tags":["3D"],"stars":4},{"name":"abeto 官网","logo":"https://abeto.co/assets/favicon32-11fb90a3.png","url":"https://abeto.co/","description":"无限绽开的花，飘荡的树叶，复古风格化","tags":["3D"],"stars":4},{"name":"Messenger","logo":"https://messenger.abeto.co/assets/favicon32-BC0QIL61.png","url":"https://messenger.abeto.co/","description":"abeto 作品，卡通送信员在地球小镇上奔跑，联机在线，可换装","tags":["3D"],"stars":4},{"name":"Summer Afternoon","logo":"https://summer-afternoon.vlucendo.com/assets/favicon32-e817b074.png","url":"https://summer-afternoon.vlucendo.com/","description":"夏日午后，小男孩在乡村公路上上游玩","tags":["3D"],"stars":4},{"name":"The Monolith Project","logo":"https://themonolithproject.net/assets/images-next/nose_logo.webp","url":"https://themonolithproject.net/","description":"奇幻宇宙的动画演绎，像看电影一样。“跨越多星之际，一座沉默的巨石碑悄然苏醒。“巨石碑计划”：每一次触碰，皆可重写现实。”","tags":["3D"],"stars":5},{"name":"Making Software","logo":"https://www.makingsoftware.com/favicon.ico","url":"https://www.makingsoftware.com/","description":"面向软件设计和开发人员的参考手册。样式很棒的学习网站。","tags":["学习"],"stars":4},{"name":"Ease 函数参考","logo":"https://easings.net/96.8aa68ac4.png","url":"https://easings.net/","description":"当你在调整动画节奏时，这个 ease 表能帮助直观感受 ease 表现出的效果","tags":["Github"],"stars":3},{"name":"Isocons","logo":"/images/share/97859f1c57799dd2.png","url":"https://www.isocons.app/","description":"3D icons 网站，酷酷的，免费。","tags":["Icons"],"stars":3},{"name":"Webp 转换压缩","logo":"/images/avatar.png","url":"https://eagle-a.github.io/image-toolbox","description":"无限压缩，快且方便，可以直接对比效果","tags":["图片"],"stars":3},{"name":"WoraWork","logo":"/images/avatar.png","url":"https://worawork.vercel.app/","description":"方格世界的 Web3D，场景渲染非常棒，非常值得体验","tags":["3D"],"stars":3}]);}),
 "[project]/src/app/share/page.tsx [app-client] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 

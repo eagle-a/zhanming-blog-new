@@ -1671,7 +1671,7 @@ function SocialButtons() {
 }),
 "[project]/src/app/share/list.json (json)", ((__turbopack_context__) => {
 
-__turbopack_context__.v([{"name":"iLoveIMG","url":"https://www.iloveimg.com/zh-cn","logo":"/images/share/7e91e93e3cdd586b.svg","description":"免费图片处理网站，我经常用来压缩图片，压缩效果会比 Tinypng 更好。链式处理功能非常好用。","tags":["图片"],"stars":4},{"name":"TinyPNG","url":"https://tinypng.com/","logo":"https://tinypng.com/static/images/george-anim/large_george_x2.webp","description":"国际上比较出名的压缩图片工具，过去的书本中知晓的这个网站，但是有图片大小限制，也有数量限制。挺好的压缩图片替代品。","tags":["图片"],"stars":3},{"name":"removebg","url":"https://www.remove.bg/zh","logo":"/images/share/859bfb2ef1c6a503.svg","description":"AI 抠图工具，特点是界面简洁，效果比 windows 自带的去除背景会更好一些，缺点是有免费有导出大小限制","tags":["图片","AI"],"stars":3},{"name":"Neumorphism","url":"https://neumorphism.io/","logo":"https://neumorphism.io/apple-touch-icon.png","description":"Neumorphism 是一种极具鲜明特色的设计风格，总能给新人一种惊叹感。但是应用并不广泛，实际开发也会有很多不好的点。更多是做一个留念。","tags":["CSS","Github"],"stars":2},{"name":"Nucleo","url":"https://nucleoapp.com/app/?library=core","logo":"/images/share/7e720f35557fa9de.svg","description":"图标库，网站整体很干净。独特的是，它有一类像素风格的图标，很有意思。它的 icon 也很多，还有 grass 风格的。","tags":["Icons"],"stars":3},{"name":"Loadership","url":"https://www.loadership.com/","logo":"https://www.loadership.com/loadership_logo_round.svg","description":"13种 Loader 样式，在线调整使用。在 AI 时代可能意义小很多了。","tags":["CSS","Github"],"stars":3},{"name":"CSS Buttons","url":"https://cssbuttons.io/","logo":"/images/share/2b8118a3645967ee.svg","description":"有不少按钮样式。跟 Neumorphism 有一些关系。","tags":["CSS"],"stars":2},{"name":"Uiverse","url":"https://uiverse.io/","logo":"/images/share/5e7b29cb1a84be80.png","description":"不可错过的参考库，有很多交互效果，包括热门的 Button、Loader 设计，内容丰富，还在不断更新。","tags":["CSS"],"stars":4},{"name":"Magic UI","url":"https://magicui.design/","logo":"https://magicui.design/favicon.ico","description":"shadcn/ui 伴生库，有很多实用设计。取用也很方便，可以自己复制独立的代码。","tags":["组件","Github"],"stars":4},{"name":"Ai lman","url":"https://aliimam.in/docs/backgrounds/shader-rgb","logo":"https://aliimam.in/_next/image?url=%2Fai-logo-black.png&w=128&q=75","description":"类 Magic UI，但是感觉差点意思。可作为看完 Magic 意犹未尽时闲看。","tags":["组件"],"stars":3},{"name":"Awwwards","url":"https://www.awwwards.com/","logo":"https://assets.awwwards.com/assets/images/favicon.svg","description":"网站评选网站，你总能从这里发现惊艳的网站","tags":["网站集"],"stars":3},{"name":"CSS Design Awards","url":"https://www.cssdesignawards.com/","logo":"/images/share/aaae2bf4f74c8eb1.svg","description":"网站评选网站，跟 Awwwards 类似，可以看到每期的优秀网站。观感上会好些。","tags":["网站集"],"stars":3},{"name":"404s.design","logo":"/images/share/5c9a8b7deb717c5f.svg","url":"https://www.404s.design/","description":"收集 404 设计的网站，无聊的时候可以看下。","tags":["网站集"],"stars":3},{"name":"Igloo Inc.","logo":"https://www.igloo.inc/assets/favicon32-af94112f.png","url":"https://www.igloo.inc/","description":"abeto 作品，非常酷炫","tags":["3D"],"stars":4},{"name":"abeto 官网","logo":"https://abeto.co/assets/favicon32-11fb90a3.png","url":"https://abeto.co/","description":"无限绽开的花，飘荡的树叶，复古风格化","tags":["3D"],"stars":4},{"name":"Messenger","logo":"https://messenger.abeto.co/assets/favicon32-BC0QIL61.png","url":"https://messenger.abeto.co/","description":"abeto 作品，卡通送信员在地球小镇上奔跑，联机在线，可换装","tags":["3D"],"stars":4},{"name":"Summer Afternoon","logo":"https://summer-afternoon.vlucendo.com/assets/favicon32-e817b074.png","url":"https://summer-afternoon.vlucendo.com/","description":"夏日午后，小男孩在乡村公路上上游玩","tags":["3D"],"stars":4},{"name":"The Monolith Project","logo":"https://themonolithproject.net/assets/images-next/nose_logo.webp","url":"https://themonolithproject.net/","description":"奇幻宇宙的动画演绎，像看电影一样。“跨越多星之际，一座沉默的巨石碑悄然苏醒。“巨石碑计划”：每一次触碰，皆可重写现实。”","tags":["3D"],"stars":5},{"name":"Making Software","logo":"https://www.makingsoftware.com/favicon.ico","url":"https://www.makingsoftware.com/","description":"面向软件设计和开发人员的参考手册。样式很棒的学习网站。","tags":["学习"],"stars":4},{"name":"Ease 函数参考","logo":"https://easings.net/96.8aa68ac4.png","url":"https://easings.net/","description":"当你在调整动画节奏时，这个 ease 表能帮助直观感受 ease 表现出的效果","tags":["Github"],"stars":3},{"name":"Isocons","logo":"/images/share/97859f1c57799dd2.png","url":"https://www.isocons.app/","description":"3D icons 网站，酷酷的，免费。","tags":["Icons"],"stars":3},{"name":"Webp 转换压缩","logo":"/images/avatar.png","url":"https://eagle-a.github.io/image-toolbox","description":"无限压缩，快且方便，可以直接对比效果","tags":["图片"],"stars":3},{"name":"WoraWork","logo":"https://worawork.vercel.app/Icons/worawork.webp","url":"https://worawork.vercel.app/","description":"方格世界的 Web3D，场景渲染非常棒，非常值得体验","tags":["3D"],"stars":3}]);}),
+__turbopack_context__.v([{"name":"iLoveIMG","url":"https://www.iloveimg.com/zh-cn","logo":"/images/share/7e91e93e3cdd586b.svg","description":"免费图片处理网站，我经常用来压缩图片，压缩效果会比 Tinypng 更好。链式处理功能非常好用。","tags":["图片"],"stars":4},{"name":"TinyPNG","url":"https://tinypng.com/","logo":"https://tinypng.com/static/images/george-anim/large_george_x2.webp","description":"国际上比较出名的压缩图片工具，过去的书本中知晓的这个网站，但是有图片大小限制，也有数量限制。挺好的压缩图片替代品。","tags":["图片"],"stars":3},{"name":"removebg","url":"https://www.remove.bg/zh","logo":"/images/share/859bfb2ef1c6a503.svg","description":"AI 抠图工具，特点是界面简洁，效果比 windows 自带的去除背景会更好一些，缺点是有免费有导出大小限制","tags":["图片","AI"],"stars":3},{"name":"Neumorphism","url":"https://neumorphism.io/","logo":"https://neumorphism.io/apple-touch-icon.png","description":"Neumorphism 是一种极具鲜明特色的设计风格，总能给新人一种惊叹感。但是应用并不广泛，实际开发也会有很多不好的点。更多是做一个留念。","tags":["CSS","Github"],"stars":2},{"name":"Nucleo","url":"https://nucleoapp.com/app/?library=core","logo":"/images/share/7e720f35557fa9de.svg","description":"图标库，网站整体很干净。独特的是，它有一类像素风格的图标，很有意思。它的 icon 也很多，还有 grass 风格的。","tags":["Icons"],"stars":3},{"name":"Loadership","url":"https://www.loadership.com/","logo":"https://www.loadership.com/loadership_logo_round.svg","description":"13种 Loader 样式，在线调整使用。在 AI 时代可能意义小很多了。","tags":["CSS","Github"],"stars":3},{"name":"CSS Buttons","url":"https://cssbuttons.io/","logo":"/images/share/2b8118a3645967ee.svg","description":"有不少按钮样式。跟 Neumorphism 有一些关系。","tags":["CSS"],"stars":2},{"name":"Uiverse","url":"https://uiverse.io/","logo":"/images/share/5e7b29cb1a84be80.png","description":"不可错过的参考库，有很多交互效果，包括热门的 Button、Loader 设计，内容丰富，还在不断更新。","tags":["CSS"],"stars":4},{"name":"Magic UI","url":"https://magicui.design/","logo":"https://magicui.design/favicon.ico","description":"shadcn/ui 伴生库，有很多实用设计。取用也很方便，可以自己复制独立的代码。","tags":["组件","Github"],"stars":4},{"name":"Ai lman","url":"https://aliimam.in/docs/backgrounds/shader-rgb","logo":"https://aliimam.in/_next/image?url=%2Fai-logo-black.png&w=128&q=75","description":"类 Magic UI，但是感觉差点意思。可作为看完 Magic 意犹未尽时闲看。","tags":["组件"],"stars":3},{"name":"Awwwards","url":"https://www.awwwards.com/","logo":"/images/avatar.png","description":"网站评选网站，你总能从这里发现惊艳的网站","tags":["网站集"],"stars":3},{"name":"CSS Design Awards","url":"https://www.cssdesignawards.com/","logo":"/images/share/aaae2bf4f74c8eb1.svg","description":"网站评选网站，跟 Awwwards 类似，可以看到每期的优秀网站。观感上会好些。","tags":["网站集"],"stars":3},{"name":"404s.design","logo":"/images/share/5c9a8b7deb717c5f.svg","url":"https://www.404s.design/","description":"收集 404 设计的网站，无聊的时候可以看下。","tags":["网站集"],"stars":3},{"name":"Igloo Inc.","logo":"https://www.igloo.inc/assets/favicon32-af94112f.png","url":"https://www.igloo.inc/","description":"abeto 作品，非常酷炫","tags":["3D"],"stars":4},{"name":"abeto 官网","logo":"https://abeto.co/assets/favicon32-11fb90a3.png","url":"https://abeto.co/","description":"无限绽开的花，飘荡的树叶，复古风格化","tags":["3D"],"stars":4},{"name":"Messenger","logo":"https://messenger.abeto.co/assets/favicon32-BC0QIL61.png","url":"https://messenger.abeto.co/","description":"abeto 作品，卡通送信员在地球小镇上奔跑，联机在线，可换装","tags":["3D"],"stars":4},{"name":"Summer Afternoon","logo":"https://summer-afternoon.vlucendo.com/assets/favicon32-e817b074.png","url":"https://summer-afternoon.vlucendo.com/","description":"夏日午后，小男孩在乡村公路上上游玩","tags":["3D"],"stars":4},{"name":"The Monolith Project","logo":"https://themonolithproject.net/assets/images-next/nose_logo.webp","url":"https://themonolithproject.net/","description":"奇幻宇宙的动画演绎，像看电影一样。“跨越多星之际，一座沉默的巨石碑悄然苏醒。“巨石碑计划”：每一次触碰，皆可重写现实。”","tags":["3D"],"stars":5},{"name":"Making Software","logo":"https://www.makingsoftware.com/favicon.ico","url":"https://www.makingsoftware.com/","description":"面向软件设计和开发人员的参考手册。样式很棒的学习网站。","tags":["学习"],"stars":4},{"name":"Ease 函数参考","logo":"https://easings.net/96.8aa68ac4.png","url":"https://easings.net/","description":"当你在调整动画节奏时，这个 ease 表能帮助直观感受 ease 表现出的效果","tags":["Github"],"stars":3},{"name":"Isocons","logo":"/images/share/97859f1c57799dd2.png","url":"https://www.isocons.app/","description":"3D icons 网站，酷酷的，免费。","tags":["Icons"],"stars":3},{"name":"Webp 转换压缩","logo":"/images/avatar.png","url":"https://eagle-a.github.io/image-toolbox","description":"无限压缩，快且方便，可以直接对比效果","tags":["图片"],"stars":3},{"name":"WoraWork","logo":"/images/avatar.png","url":"https://worawork.vercel.app/","description":"方格世界的 Web3D，场景渲染非常棒，非常值得体验","tags":["3D"],"stars":3}]);}),
 "[project]/src/app/(home)/share-card.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
@@ -2785,6 +2785,27 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$consts$2e$ts__$5b$app
 ;
 ;
 const ENDPOINT = 'https://blog-liker.yysuni1001.workers.dev/api/like';
+const FETCH_TIMEOUT = 5000 // 5秒超时
+;
+// 带超时的 fetch 函数
+async function fetchWithTimeout(url, options = {}, timeout = FETCH_TIMEOUT) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(()=>controller.abort(), timeout);
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        return response;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error instanceof Error && error.name === 'AbortError') {
+            throw new Error('请求超时');
+        }
+        throw error;
+    }
+}
 function LikeButton({ slug = 'eagle-a', delay, className }) {
     slug = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$consts$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["BLOG_SLUG_KEY"] + slug;
     const [liked, setLiked] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
@@ -2805,13 +2826,19 @@ function LikeButton({ slug = 'eagle-a', delay, className }) {
         justLiked
     ]);
     const fetcher = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCallback"])(async (url)=>{
-        const res = await fetch(url, {
-            method: 'GET',
-            cache: 'no-store'
-        });
-        if (!res.ok) return null;
-        const data = await res.json().catch(()=>({}));
-        return typeof data?.count === 'number' ? data.count : null;
+        try {
+            const res = await fetchWithTimeout(url, {
+                method: 'GET',
+                cache: 'no-store'
+            });
+            if (!res.ok) return null;
+            const data = await res.json().catch(()=>({}));
+            return typeof data?.count === 'number' ? data.count : null;
+        } catch (error) {
+            // 静默处理错误，不显示错误提示
+            console.log('获取点赞数失败:', error);
+            return null;
+        }
     }, []);
     const { data: fetchedCount, mutate } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["default"])(slug ? `${ENDPOINT}?slug=${encodeURIComponent(slug)}` : null, fetcher, {
         revalidateOnFocus: false,
@@ -2834,7 +2861,7 @@ function LikeButton({ slug = 'eagle-a', delay, className }) {
         setTimeout(()=>setParticles([]), 1000);
         try {
             const url = `${ENDPOINT}?slug=${encodeURIComponent(slug)}`;
-            const res = await fetch(url, {
+            const res = await fetchWithTimeout(url, {
                 method: 'POST'
             });
             const data = await res.json().catch(()=>({}));
@@ -2843,8 +2870,13 @@ function LikeButton({ slug = 'eagle-a', delay, className }) {
             await mutate(value, {
                 revalidate: false
             });
-        } catch  {
-        // ignore
+        } catch (error) {
+            // 静默处理错误，点赞动画仍然继续
+            console.log('点赞请求失败:', error);
+            // 即使请求失败，也更新本地状态
+            await mutate((fetchedCount ?? 0) + 1, {
+                revalidate: false
+            });
         }
     }, [
         slug,
@@ -2906,17 +2938,17 @@ function LikeButton({ slug = 'eagle-a', delay, className }) {
                             size: 12
                         }, void 0, false, {
                             fileName: "[project]/src/components/like-button.tsx",
-                            lineNumber: 104,
+                            lineNumber: 135,
                             columnNumber: 8
                         }, this)
                     }, particle.id, false, {
                         fileName: "[project]/src/components/like-button.tsx",
-                        lineNumber: 92,
+                        lineNumber: 123,
                         columnNumber: 7
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/src/components/like-button.tsx",
-                lineNumber: 90,
+                lineNumber: 121,
                 columnNumber: 5
             }, this),
             typeof count === 'number' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].span, {
@@ -2930,7 +2962,7 @@ function LikeButton({ slug = 'eagle-a', delay, className }) {
                 children: count
             }, void 0, false, {
                 fileName: "[project]/src/components/like-button.tsx",
-                lineNumber: 110,
+                lineNumber: 141,
                 columnNumber: 6
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
@@ -2956,18 +2988,18 @@ function LikeButton({ slug = 'eagle-a', delay, className }) {
                     size: 28
                 }, void 0, false, {
                     fileName: "[project]/src/components/like-button.tsx",
-                    lineNumber: 121,
+                    lineNumber: 152,
                     columnNumber: 6
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/like-button.tsx",
-                lineNumber: 120,
+                lineNumber: 151,
                 columnNumber: 5
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/like-button.tsx",
-        lineNumber: 82,
+        lineNumber: 113,
         columnNumber: 4
     }, this);
 }

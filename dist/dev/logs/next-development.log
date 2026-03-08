@@ -1,12 +1,80 @@
-[00:00:00.902] Server  LOG      ✓ Ready in 653ms
-[00:00:04.690] Server  LOG      ○ Compiling / ...
-[00:00:06.623] Server  WARN     ⚠ Cross origin request detected from 192.168.1.105 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
-Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
-[00:00:06.646] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:07.103] Browser WARN    Image with src "/images/avatar.png" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
-Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
-[00:00:11.729] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'writeText')
-[00:02:44.323] Browser LOG     2026-03-08T12:24
-[00:02:44.323] Browser WARN    Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
-[00:02:44.324] Browser LOG     2026-03-08T12:24
-[00:02:44.324] Browser LOG     2026-03-08T12:24
+[00:00:00.924] Server  LOG      ✓ Ready in 661ms
+[00:00:04.689] Server  LOG      ○ Compiling / ...
+[00:00:06.668] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:06.707] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:10.732] Browser WARN    Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[00:00:11.844] Browser LOG     获取点赞数失败: {}
+[00:00:13.655] Browser LOG     获取点赞数失败: {}
+[00:00:19.189] Browser LOG     获取点赞数失败: {}
+[00:02:16.807] Server  LOG      ✓ Compiled in 938ms
+[00:02:21.380] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:03:03.656] Server  LOG      ✓ Compiled in 201ms
+[00:03:10.999] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:03:12.890] Browser WARN    Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[00:03:16.123] Browser LOG     获取点赞数失败: {}
+[00:03:27.884] Browser LOG     获取点赞数失败: {}
+[00:06:58.057] Server  LOG      ✓ Compiled in 316ms
+[00:06:58.225] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:07:04.645] Browser LOG     获取点赞数失败: {}
+[00:07:19.915] Server  LOG      ✓ Compiled in 5ms
+[00:08:43.844] Server  LOG      ✓ Compiled in 109ms
+[00:08:57.734] Server  LOG      ✓ Compiled in 122ms
+[00:09:40.164] Server  LOG      ✓ Compiled in 188ms
+[00:09:45.263] Browser LOG     获取点赞数失败: {}
+[00:10:53.227] Server  LOG      ✓ Compiled in 158ms
+[00:10:58.325] Browser LOG     获取点赞数失败: {}
+[00:11:22.062] Server  LOG      ✓ Compiled in 75ms
+[00:11:23.889] Browser LOG     获取点赞数失败: {}
+[00:11:24.389] Server  LOG      ✓ Compiled in 148ms
+[00:11:27.602] Server  LOG      ✓ Compiled in 67ms
+[00:11:33.255] Server  LOG      ✓ Compiled in 60ms
+[00:11:39.227] Server  LOG      ✓ Compiled in 131ms
+[00:11:40.347] Server  LOG      ✓ Compiled in 81ms
+[00:11:44.135] Server  LOG      ✓ Compiled in 128ms
+[00:11:45.410] Server  LOG      ✓ Compiled in 128ms
+[00:11:50.790] Server  LOG      ✓ Compiled in 102ms
+[00:11:51.645] Browser LOG     获取点赞数失败: {}
+[00:11:53.701] Server  LOG      ✓ Compiled in 62ms
+[00:11:57.734] Browser LOG     点赞请求失败: {}
+[00:11:57.734] Browser LOG     点赞请求失败: {}
+[00:11:57.734] Browser LOG     点赞请求失败: {}
+[00:11:58.963] Browser LOG     点赞请求失败: {}
+[00:11:59.438] Browser LOG     点赞请求失败: {}
+[00:11:59.600] Browser LOG     点赞请求失败: {}
+[00:11:59.766] Browser LOG     点赞请求失败: {}
+[00:11:59.942] Browser LOG     点赞请求失败: {}
+[00:12:00.100] Browser LOG     点赞请求失败: {}
+[00:12:00.263] Browser LOG     点赞请求失败: {}
+[00:12:00.431] Browser LOG     点赞请求失败: {}
+[00:12:31.131] Server  LOG      ✓ Compiled in 107ms
+[00:12:32.735] Server  LOG      ✓ Compiled in 179ms
+[00:12:34.953] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:12:40.088] Browser LOG     获取点赞数失败: {}
+[00:12:44.993] Browser LOG     点赞请求失败: {}
+[00:12:44.993] Browser LOG     点赞请求失败: {}
+[00:12:57.926] Server  LOG      ✓ Compiled in 96ms
+[00:13:00.077] Browser LOG     获取点赞数失败: {}
+[00:13:00.082] Server  LOG      ✓ Compiled in 139ms
+[00:13:01.737] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:13:01.971] Browser LOG     获取点赞数失败: {}
+[00:13:03.402] Browser LOG     点赞请求失败: {}
+[00:13:04.343] Browser LOG     点赞请求失败: {}
+[00:13:04.973] Browser LOG     点赞请求失败: {}
+[00:13:05.127] Browser LOG     点赞请求失败: {}
+[00:13:05.639] Browser LOG     点赞请求失败: {}
+[00:13:05.810] Browser LOG     点赞请求失败: {}
+[00:13:05.982] Browser LOG     点赞请求失败: {}
+[00:13:06.153] Browser LOG     点赞请求失败: {}
+[00:14:15.857] Server  LOG      ✓ Compiled in 28ms
+[00:15:03.020] Server  LOG      ✓ Compiled in 40ms
+[00:15:07.107] Server  LOG      ✓ Compiled in 14ms
+[00:15:09.337] Server  LOG      ✓ Compiled in 5ms
+[00:15:54.993] Server  LOG      ✓ Compiled in 10ms
+[00:16:23.489] Server  LOG      ✓ Compiled in 14ms
+[00:16:30.622] Server  LOG      ✓ Compiled in 5ms
+[00:16:32.256] Server  LOG      ✓ Compiled in 5ms
+[00:16:36.010] Server  LOG      ✓ Compiled in 6ms
+[00:16:37.520] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:16:43.652] Browser LOG     获取点赞数失败: {}
+[00:16:45.398] Server  LOG      ✓ Compiled in 39ms
+[00:17:44.442] Server  LOG      ✓ Compiled in 5ms

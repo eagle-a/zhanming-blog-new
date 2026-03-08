@@ -14,6 +14,28 @@ type LikeButtonProps = {
 }
 
 const ENDPOINT = 'https://blog-liker.yysuni1001.workers.dev/api/like'
+const FETCH_TIMEOUT = 5000 // 5秒超时
+
+// 带超时的 fetch 函数
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = FETCH_TIMEOUT): Promise<Response> {
+	const controller = new AbortController()
+	const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+	try {
+		const response = await fetch(url, {
+			...options,
+			signal: controller.signal
+		})
+		clearTimeout(timeoutId)
+		return response
+	} catch (error) {
+		clearTimeout(timeoutId)
+		if (error instanceof Error && error.name === 'AbortError') {
+			throw new Error('请求超时')
+		}
+		throw error
+	}
+}
 
 export default function LikeButton({ slug = 'eagle-a', delay, className }: LikeButtonProps) {
 	slug = BLOG_SLUG_KEY + slug
@@ -36,10 +58,16 @@ export default function LikeButton({ slug = 'eagle-a', delay, className }: LikeB
 	}, [justLiked])
 
 	const fetcher = useCallback(async (url: string): Promise<number | null> => {
-		const res = await fetch(url, { method: 'GET', cache: 'no-store' })
-		if (!res.ok) return null
-		const data = await res.json().catch(() => ({}))
-		return typeof data?.count === 'number' ? data.count : null
+		try {
+			const res = await fetchWithTimeout(url, { method: 'GET', cache: 'no-store' })
+			if (!res.ok) return null
+			const data = await res.json().catch(() => ({}))
+			return typeof data?.count === 'number' ? data.count : null
+		} catch (error) {
+			// 静默处理错误，不显示错误提示
+			console.log('获取点赞数失败:', error)
+			return null
+		}
 	}, [])
 
 	const { data: fetchedCount, mutate } = useSWR(slug ? `${ENDPOINT}?slug=${encodeURIComponent(slug)}` : null, fetcher, {
@@ -65,13 +93,16 @@ export default function LikeButton({ slug = 'eagle-a', delay, className }: LikeB
 
 		try {
 			const url = `${ENDPOINT}?slug=${encodeURIComponent(slug)}`
-			const res = await fetch(url, { method: 'POST' })
+			const res = await fetchWithTimeout(url, { method: 'POST' })
 			const data = await res.json().catch(() => ({}))
 			if (data.reason == 'rate_limited') toast('谢谢啦😘，今天已经不能再点赞啦💕')
 			const value = typeof data?.count === 'number' ? data.count : (fetchedCount ?? 0) + 1
 			await mutate(value, { revalidate: false })
-		} catch {
-			// ignore
+		} catch (error) {
+			// 静默处理错误，点赞动画仍然继续
+			console.log('点赞请求失败:', error)
+			// 即使请求失败，也更新本地状态
+			await mutate((fetchedCount ?? 0) + 1, { revalidate: false })
 		}
 	}, [slug, fetchedCount, mutate])
 

@@ -106,7 +106,7 @@
 	{
 		"name": "Awwwards",
 		"url": "https://www.awwwards.com/",
-		"logo": "https://assets.awwwards.com/assets/images/favicon.svg",
+		"logo": "/images/avatar.png",
 		"description": "网站评选网站，你总能从这里发现惊艳的网站",
 		"tags": [
 			"网站集"
@@ -225,7 +225,7 @@
 	},
 	{
 		"name": "WoraWork",
-		"logo": "https://worawork.vercel.app/Icons/worawork.webp",
+		"logo": "/images/avatar.png",
 		"url": "https://worawork.vercel.app/",
 		"description": "方格世界的 Web3D，场景渲染非常棒，非常值得体验",
 		"tags": [

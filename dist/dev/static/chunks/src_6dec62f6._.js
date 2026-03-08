@@ -1737,6 +1737,8 @@ function NavCard() {
                             alt: "avatar",
                             width: 40,
                             height: 40,
+                            loading: "eager",
+                            priority: true,
                             style: {
                                 boxShadow: ' 0 12px 20px -5px #E2D9CE'
                             },

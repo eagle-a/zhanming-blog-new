@@ -752,6 +752,14 @@
     inset-inline: calc(var(--spacing) * 0);
   }
 
+  .start {
+    inset-inline-start: var(--spacing);
+  }
+
+  .end {
+    inset-inline-end: var(--spacing);
+  }
+
   .-top-1 {
     top: calc(var(--spacing) * -1);
   }
@@ -882,10 +890,6 @@
 
   .z-90 {
     z-index: 90;
-  }
-
-  .z-\[100\] {
-    z-index: 100;
   }
 
   .\!container {
@@ -1191,11 +1195,6 @@
     aspect-ratio: 1;
   }
 
-  .size-1 {
-    width: calc(var(--spacing) * 1);
-    height: calc(var(--spacing) * 1);
-  }
-
   .size-3 {
     width: calc(var(--spacing) * 3);
     height: calc(var(--spacing) * 3);
@@ -1327,10 +1326,6 @@
 
   .h-\[206px\] {
     height: 206px;
-  }
-
-  .h-\[400px\] {
-    height: 400px;
   }
 
   .h-\[650px\] {
@@ -1499,10 +1494,6 @@
 
   .w-\[200px\] {
     width: 200px;
-  }
-
-  .w-\[240px\] {
-    width: 240px;
   }
 
   .w-\[320px\] {
@@ -2102,6 +2093,16 @@
     border-inline-end-width: 1px;
   }
 
+  .border-bs {
+    border-block-start-style: var(--tw-border-style);
+    border-block-start-width: 1px;
+  }
+
+  .border-be {
+    border-block-end-style: var(--tw-border-style);
+    border-block-end-width: 1px;
+  }
+
   .border-t {
     border-top-style: var(--tw-border-style);
     border-top-width: 1px;
@@ -2233,16 +2234,6 @@
     background-color: var(--color-black);
   }
 
-  .bg-black\/0 {
-    background-color: #0000;
-  }
-
-  @supports (color: color-mix(in lab, red, red)) {
-    .bg-black\/0 {
-      background-color: color-mix(in oklab, var(--color-black) 0%, transparent);
-    }
-  }
-
   .bg-black\/20 {
     background-color: #0003;
   }
@@ -2270,16 +2261,6 @@
   @supports (color: color-mix(in lab, red, red)) {
     .bg-black\/70 {
       background-color: color-mix(in oklab, var(--color-black) 70%, transparent);
-    }
-  }
-
-  .bg-black\/80 {
-    background-color: #000c;
-  }
-
-  @supports (color: color-mix(in lab, red, red)) {
-    .bg-black\/80 {
-      background-color: color-mix(in oklab, var(--color-black) 80%, transparent);
     }
   }
 
@@ -2357,10 +2338,6 @@
 
   .bg-gray-300 {
     background-color: var(--color-gray-300);
-  }
-
-  .bg-gray-600 {
-    background-color: var(--color-gray-600);
   }
 
   .bg-primary {
@@ -2582,10 +2559,6 @@
 
   .p-12 {
     padding: calc(var(--spacing) * 12);
-  }
-
-  .p-20 {
-    padding: calc(var(--spacing) * 20);
   }
 
   .px-1 {
@@ -3796,12 +3769,6 @@
   }
 
   @media not (min-width: 40rem) {
-    .max-sm\:p-4 {
-      padding: calc(var(--spacing) * 4);
-    }
-  }
-
-  @media not (min-width: 40rem) {
     .max-sm\:px-0 {
       padding-inline: calc(var(--spacing) * 0);
     }
@@ -4066,7 +4033,7 @@
 }
 
 .katex .katex-version:after {
-  content: "0.16.27";
+  content: "0.16.37";
 }
 
 .katex .katex-mathml {
@@ -4265,6 +4232,11 @@
 
 .katex .mspace {
   display: inline-block;
+}
+
+.katex .smash {
+  line-height: 0;
+  display: inline;
 }
 
 .katex .clap, .katex .llap, .katex .rlap {
@@ -4885,6 +4857,17 @@
 .katex svg {
   fill: currentColor;
   stroke: currentColor;
+  height: inherit;
+  width: 100%;
+  display: block;
+  position: absolute;
+}
+
+.katex svg path {
+  stroke: none;
+}
+
+.katex svg {
   fill-rule: nonzero;
   fill-opacity: 1;
   stroke-width: 1px;
@@ -4894,14 +4877,6 @@
   stroke-dasharray: none;
   stroke-dashoffset: 0;
   stroke-opacity: 1;
-  height: inherit;
-  width: 100%;
-  display: block;
-  position: absolute;
-}
-
-.katex svg path {
-  stroke: none;
 }
 
 .katex img {

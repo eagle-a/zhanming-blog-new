@@ -4,10 +4,8 @@
     "[project]/src/app/about/page": [],
     "[project]/src/app/blog/page": [],
     "[project]/src/app/bloggers/page": [],
-    "[project]/src/app/clock/page": [],
     "[project]/src/app/projects/page": [],
-    "[project]/src/app/share/page": [],
-    "[project]/src/app/write/page": []
+    "[project]/src/app/share/page": []
   },
   "appUsingSizeAdjust": false,
   "pages": {},

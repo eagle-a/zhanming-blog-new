@@ -1403,6 +1403,26 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 const ENDPOINT = 'https://blog-liker.yysuni1001.workers.dev/api/like';
+const FETCH_TIMEOUT = 5000; // 5秒超时
+// 带超时的 fetch 函数
+async function fetchWithTimeout(url, options = {}, timeout = FETCH_TIMEOUT) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(()=>controller.abort(), timeout);
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        return response;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error instanceof Error && error.name === 'AbortError') {
+            throw new Error('请求超时');
+        }
+        throw error;
+    }
+}
 function LikeButton({ slug = 'eagle-a', delay, className }) {
     _s();
     slug = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$consts$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["BLOG_SLUG_KEY"] + slug;
@@ -1435,15 +1455,21 @@ function LikeButton({ slug = 'eagle-a', delay, className }) {
     ]);
     const fetcher = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
         "LikeButton.useCallback[fetcher]": async (url)=>{
-            const res = await fetch(url, {
-                method: 'GET',
-                cache: 'no-store'
-            });
-            if (!res.ok) return null;
-            const data = await res.json().catch({
-                "LikeButton.useCallback[fetcher]": ()=>({})
-            }["LikeButton.useCallback[fetcher]"]);
-            return typeof data?.count === 'number' ? data.count : null;
+            try {
+                const res = await fetchWithTimeout(url, {
+                    method: 'GET',
+                    cache: 'no-store'
+                });
+                if (!res.ok) return null;
+                const data = await res.json().catch({
+                    "LikeButton.useCallback[fetcher]": ()=>({})
+                }["LikeButton.useCallback[fetcher]"]);
+                return typeof data?.count === 'number' ? data.count : null;
+            } catch (error) {
+                // 静默处理错误，不显示错误提示
+                console.log('获取点赞数失败:', error);
+                return null;
+            }
         }
     }["LikeButton.useCallback[fetcher]"], []);
     const { data: fetchedCount, mutate } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["default"])(slug ? `${ENDPOINT}?slug=${encodeURIComponent(slug)}` : null, fetcher, {
@@ -1472,7 +1498,7 @@ function LikeButton({ slug = 'eagle-a', delay, className }) {
             }["LikeButton.useCallback[handleLike]"], 1000);
             try {
                 const url_0 = `${ENDPOINT}?slug=${encodeURIComponent(slug)}`;
-                const res_0 = await fetch(url_0, {
+                const res_0 = await fetchWithTimeout(url_0, {
                     method: 'POST'
                 });
                 const data_0 = await res_0.json().catch({
@@ -1483,8 +1509,13 @@ function LikeButton({ slug = 'eagle-a', delay, className }) {
                 await mutate(value, {
                     revalidate: false
                 });
-            } catch  {
-            // ignore
+            } catch (error_0) {
+                // 静默处理错误，点赞动画仍然继续
+                console.log('点赞请求失败:', error_0);
+                // 即使请求失败，也更新本地状态
+                await mutate((fetchedCount ?? 0) + 1, {
+                    revalidate: false
+                });
             }
         }
     }["LikeButton.useCallback[handleLike]"], [
@@ -1547,17 +1578,17 @@ function LikeButton({ slug = 'eagle-a', delay, className }) {
                             size: 12
                         }, void 0, false, {
                             fileName: "[project]/src/components/like-button.tsx",
-                            lineNumber: 117,
+                            lineNumber: 149,
                             columnNumber: 8
                         }, this)
                     }, particle.id, false, {
                         fileName: "[project]/src/components/like-button.tsx",
-                        lineNumber: 101,
+                        lineNumber: 133,
                         columnNumber: 33
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/src/components/like-button.tsx",
-                lineNumber: 100,
+                lineNumber: 132,
                 columnNumber: 5
             }, this),
             typeof count === 'number' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].span, {
@@ -1571,7 +1602,7 @@ function LikeButton({ slug = 'eagle-a', delay, className }) {
                 children: count
             }, void 0, false, {
                 fileName: "[project]/src/components/like-button.tsx",
-                lineNumber: 121,
+                lineNumber: 153,
                 columnNumber: 35
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
@@ -1597,18 +1628,18 @@ function LikeButton({ slug = 'eagle-a', delay, className }) {
                     size: 28
                 }, void 0, false, {
                     fileName: "[project]/src/components/like-button.tsx",
-                    lineNumber: 135,
+                    lineNumber: 167,
                     columnNumber: 6
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/like-button.tsx",
-                lineNumber: 128,
+                lineNumber: 160,
                 columnNumber: 5
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/like-button.tsx",
-        lineNumber: 89,
+        lineNumber: 121,
         columnNumber: 20
     }, this);
 }
