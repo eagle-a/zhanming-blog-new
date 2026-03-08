@@ -91,7 +91,7 @@
 
   * 📧 [2121612901@qq.com](mailto:2121612901@qq.com)
   * 🐙 [@eagle-a](https://github.com/eagle-a)
-  * 技能: 自动化、嵌入式、Linux、Web
+  * 技能: 自动化、嵌入式、Linux、Web、rust
 
 
 
