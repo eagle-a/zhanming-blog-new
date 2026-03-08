@@ -6,6 +6,209 @@
 >
 > GitHub：https://github.com/eagle-a
 
+## Cloudflare Pages 部署指南
+
+本项目支持部署到 **Cloudflare Pages**，使用 Edge Runtime 运行。
+
+### 1. 环境准备
+
+- **Node.js**: 20.x 或更高版本（项目已配置 `.node-version`）
+- **包管理器**: pnpm（推荐）
+- **GitHub 仓库**: 用于存储博客内容
+
+### 2. 分支说明
+
+项目有两个主要分支：
+
+| 分支 | 用途 | 部署目标 |
+|------|------|----------|
+| `main` | 主分支，用于 Vercel 部署 | Vercel |
+| `cloudflare` | Cloudflare 专用分支 | Cloudflare Pages |
+
+**切换到 cloudflare 分支：**
+
+```bash
+git checkout cloudflare
+```
+
+### 3. 安装依赖
+
+```bash
+pnpm install
+```
+
+### 4. 开发预览
+
+```bash
+# 启动开发服务器（端口 2025）
+pnpm dev
+```
+
+### 5. 构建与部署
+
+#### 5.1 本地构建
+
+```bash
+# 构建 Cloudflare 版本
+pnpm run build:cf
+```
+
+构建输出位于 `.open-next/` 目录。
+
+#### 5.2 本地预览
+
+```bash
+# 构建后在本地预览
+pnpm run preview
+```
+
+**注意：** 预览前必须先执行 `pnpm run build:cf`
+
+#### 5.3 部署到 Cloudflare
+
+```bash
+# 构建并部署
+pnpm run build:cf
+pnpm run deploy
+```
+
+或一步完成：
+
+```bash
+pnpm run build:cf && pnpm run deploy
+```
+
+### 6. 配置说明
+
+#### 6.1 wrangler.toml
+
+项目根目录的 `wrangler.toml` 配置：
+
+```toml
+main = ".open-next/worker.js"
+name = "zhanming-blog-new"
+compatibility_date = "2024-07-29"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".open-next"
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[observability]
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+persist = true
+```
+
+#### 6.2 Edge Runtime
+
+所有页面和 API 路由已配置使用 Edge Runtime：
+
+```typescript
+export const runtime = 'edge'
+```
+
+### 7. GitHub Actions 自动部署（推荐）
+
+创建 `.github/workflows/deploy-cloudflare.yml`：
+
+```yaml
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [cloudflare]
+  pull_request:
+    branches: [cloudflare]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Build
+        run: pnpm run build:cf
+        env:
+          NEXT_PUBLIC_GITHUB_OWNER: ${{ secrets.NEXT_PUBLIC_GITHUB_OWNER }}
+          NEXT_PUBLIC_GITHUB_REPO: ${{ secrets.NEXT_PUBLIC_GITHUB_REPO }}
+          NEXT_PUBLIC_GITHUB_BRANCH: ${{ secrets.NEXT_PUBLIC_GITHUB_BRANCH }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy .open-next --project-name=zhanming-blog-new
+```
+
+**配置 Secrets：**
+
+在 GitHub 仓库 → Settings → Secrets and variables → Actions 中添加：
+
+- `CLOUDFLARE_API_TOKEN`: Cloudflare API Token
+- `CLOUDFLARE_ACCOUNT_ID`: Cloudflare Account ID
+- `NEXT_PUBLIC_GITHUB_OWNER`: GitHub 用户名
+- `NEXT_PUBLIC_GITHUB_REPO`: 仓库名
+- `NEXT_PUBLIC_GITHUB_BRANCH`: 分支名
+- `NEXT_PUBLIC_SITE_URL`: 网站地址
+
+### 8. 环境变量
+
+创建 `.env.local` 文件：
+
+```bash
+# GitHub 仓库配置（必填）
+NEXT_PUBLIC_GITHUB_OWNER=你的GitHub用户名
+NEXT_PUBLIC_GITHUB_REPO=仓库名
+NEXT_PUBLIC_GITHUB_BRANCH=main
+
+# GitHub App 配置（如需在线编辑功能）
+NEXT_PUBLIC_GITHUB_APP_ID=你的GitHubAppID
+NEXT_PUBLIC_GITHUB_ENCRYPT_KEY=自定义加密密钥
+
+# 网站地址（用于 RSS 和 Sitemap）
+NEXT_PUBLIC_SITE_URL=https://你的域名
+```
+
+### 9. 常见问题
+
+#### 构建失败
+- 检查 Node.js 版本是否为 20.x
+- 确保使用 pnpm 安装依赖
+- 检查 `.env.local` 环境变量是否正确
+
+#### Edge Runtime 错误
+- 确保所有页面都有 `export const runtime = 'edge'`
+- 避免使用 Node.js 特有的 API（如 `fs`、`path` 等）
+
+#### 部署后 404
+- 检查 `wrangler.toml` 中的 `pages_build_output_dir` 是否为 `.open-next`
+- 确认构建输出目录 `.open-next/` 存在
+
+#### 静态资源加载失败
+- 检查 `[assets]` 配置是否正确
+- 确认 `wrangler.toml` 中的 `directory` 指向正确
+
+---
+
 ## 宝塔部署完整指南
 
 > ⚠️ **重要提示**：本项目使用 **GitHub 作为数据源**，博客内容通过 GitHub API 获取。部署前请确保已配置好 GitHub 相关设置。
