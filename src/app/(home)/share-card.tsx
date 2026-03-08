@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import Card from '@/components/card'
 import { useCenterStore } from '@/hooks/use-center'
 import { useConfigStore } from './stores/config-store'
@@ -21,19 +21,13 @@ type ShareItem = {
 export default function ShareCard() {
 	const center = useCenterStore()
 	const { cardStyles, siteContent } = useConfigStore()
-	const [randomItem, setRandomItem] = useState<ShareItem | null>(null)
+	const randomItem = useMemo<ShareItem>(() => {
+		const randomIndex = Math.floor(Math.random() * shareList.length)
+		return shareList[randomIndex] as ShareItem
+	}, [])
 	const styles = cardStyles.shareCard
 	const hiCardStyles = cardStyles.hiCard
 	const socialButtonsStyles = cardStyles.socialButtons
-
-	useEffect(() => {
-		const randomIndex = Math.floor(Math.random() * shareList.length)
-		setRandomItem(shareList[randomIndex])
-	}, [])
-
-	if (!randomItem) {
-		return null
-	}
 
 	const x = styles.offsetX !== null ? center.x + styles.offsetX : center.x + hiCardStyles.width / 2 - socialButtonsStyles.width
 	const y = styles.offsetY !== null ? center.y + styles.offsetY : center.y + hiCardStyles.height / 2 + CARD_SPACING + socialButtonsStyles.height + CARD_SPACING

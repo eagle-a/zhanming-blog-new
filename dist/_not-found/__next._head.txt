@@ -1,0 +1,7 @@
+1:"$Sreact.fragment"
+2:I[97367,["/_next/static/chunks/708af4302ca6c1dc.js","/_next/static/chunks/666ef0752391bea4.js","/_next/static/chunks/2af438d9a766a862.js","/_next/static/chunks/49c2247b0258b0af.js","/_next/static/chunks/926350dec3317ae7.js"],"ViewportBoundary"]
+4:I[97367,["/_next/static/chunks/708af4302ca6c1dc.js","/_next/static/chunks/666ef0752391bea4.js","/_next/static/chunks/2af438d9a766a862.js","/_next/static/chunks/49c2247b0258b0af.js","/_next/static/chunks/926350dec3317ae7.js"],"MetadataBoundary"]
+5:"$Sreact.suspense"
+0:{"buildId":"KXcKW2fyi66FtHL7OYGM7","rsc":["$","$1","h",{"children":[["$","meta",null,{"name":"robots","content":"noindex"}],["$","$L2",null,{"children":"$@3"}],["$","div",null,{"hidden":true,"children":["$","$L4",null,{"children":["$","$5",null,{"name":"Next.Metadata","children":"$@6"}]}]}],null]}],"loading":null,"isPartial":false}
+3:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
+6:[["$","title","0",{"children":"eagle-a"}],["$","meta","1",{"name":"description","content":"eagle-a 的个人博客，一名热爱技术的在校大学生，记录前端开发、探索、笔记。"}],["$","meta","2",{"property":"og:title","content":"eagle-a"}],["$","meta","3",{"property":"og:description","content":"eagle-a 的个人博客，一名热爱技术的在校大学生，记录前端开发、探索、笔记。"}],["$","meta","4",{"name":"twitter:card","content":"summary"}],["$","meta","5",{"name":"twitter:title","content":"eagle-a"}],["$","meta","6",{"name":"twitter:description","content":"eagle-a 的个人博客，一名热爱技术的在校大学生，记录前端开发、探索、笔记。"}]]

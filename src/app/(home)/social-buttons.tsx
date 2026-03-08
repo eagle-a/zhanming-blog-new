@@ -221,9 +221,26 @@ export default function SocialButtons() {
 				<motion.button
 					key={button.id}
 					onClick={() => {
-						navigator.clipboard.writeText(button.value).then(() => {
-							toast.success(messageMap[button.type as 'email' | 'wechat' | 'qq'])
-						})
+						if (navigator.clipboard && navigator.clipboard.writeText) {
+							navigator.clipboard.writeText(button.value).then(() => {
+								toast.success(messageMap[button.type as 'email' | 'wechat' | 'qq'])
+							})
+						} else {
+							// 降级方案：使用传统的复制方法
+							const textArea = document.createElement('textarea')
+							textArea.value = button.value
+							textArea.style.position = 'fixed'
+							textArea.style.left = '-9999px'
+							document.body.appendChild(textArea)
+							textArea.select()
+							try {
+								document.execCommand('copy')
+								toast.success(messageMap[button.type as 'email' | 'wechat' | 'qq'])
+							} catch (err) {
+								toast.error('复制失败，请手动复制')
+							}
+							document.body.removeChild(textArea)
+						}
 					}}
 					{...commonProps}
 					className='card btn relative rounded-xl p-1.5'>
