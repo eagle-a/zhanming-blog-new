@@ -36,18 +36,6 @@
     "category": "日记"
   },
   {
-    "slug": "clipboard",
-    "title": "粘贴板 - 湛明",
-    "tags": [
-      "笔记"
-    ],
-    "date": "2025-10-18",
-    "summary": "粘贴板",
-    "cover": "",
-    "hidden": false,
-    "category": "杂项"
-  },
-  {
     "slug": "blog-deployment-guide",
     "title": "个人博客网站部署教程（Vue3+Express-TS+MongoDB+Nginx+Docker）",
     "tags": [
