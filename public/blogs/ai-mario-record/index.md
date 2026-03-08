@@ -72,11 +72,6 @@ nes-py 底层依赖 fceux-lib，需要编译 C++ 代码，而Windows系统默认
          pip install -r requirements.txt
          
 
-1  
-2  
-3  
-
-
 ### 4\. 安装适配的PyTorch版本
 
 #### 4.1 确认环境
@@ -86,11 +81,6 @@ nes-py 底层依赖 fceux-lib，需要编译 C++ 代码，而Windows系统默认
     nvidia-smi
     # 无NVIDIA显卡则直接安装CPU版PyTorch
     
-
-1  
-2  
-3  
-
 
 #### 4.2 下载安装
 
@@ -105,15 +95,6 @@ nes-py 底层依赖 fceux-lib，需要编译 C++ 代码，而Windows系统默认
         # 查看CUDA版本 
         print(torch.version.cuda) 
         
-
-1  
-2  
-3  
-4  
-5  
-6  
-7  
-
 
 ### 5\. 安装TensorBoard（可视化训练过程）
     
@@ -145,10 +126,6 @@ nes-py 底层依赖 fceux-lib，需要编译 C++ 代码，而Windows系统默认
     # 启动TensorBoard（日志文件存于tensorboard_log文件夹）
     tensorboard --logdir=tensorboard_log
     
-
-1  
-2  
-
 
 启动后访问链接：`http://localhost:6006/` 即可查看训练指标可视化结果。
 
