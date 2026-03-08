@@ -9,19 +9,19 @@ export const MUSIC_LIST: MusicItem[] = [
 		name: 'close-to-you'
 	},
 	{
-		id: 'hai-shi-hui-ji-mo',
+		id: '还是会寂寞',
 		name: '还是会寂寞'
 	},
 	{
-		id: 'bu-zhi-de',
+		id: '不值得',
 		name: '不值得'
 	},
 	{
-		id: 'mu-dan-jiang',
+		id: '牡丹江',
 		name: '牡丹江'
 	},
 	{
-		id: 'jie-yao',
+		id: '解药',
 		name: '解药'
 	}
 ]
