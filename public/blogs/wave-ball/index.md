@@ -226,7 +226,7 @@ void main() {
 
 <iframe
 	src='https://practices-sandy.vercel.app/wave-only-demo'
-	style={{ border: 0 }}
+	style="border: 0"
 	allowfullscreen
 	width="100%"
 	height="600px"

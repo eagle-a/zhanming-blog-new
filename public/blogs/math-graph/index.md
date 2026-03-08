@@ -22,7 +22,7 @@
 
 <iframe
 	src='https://math-graph.yysuni.com/'
-	style={{ border: 0 }}
+	style="border: 0"
 	allowfullscreen
 	width="100%"
 	height="600px"
