@@ -251,18 +251,6 @@
     "category": "专业笔记"
   },
   {
-    "slug": "miscellaneous",
-    "title": "杂项 - 湛明",
-    "tags": [
-      "笔记"
-    ],
-    "date": "2025-10-18",
-    "summary": "杂项分类文章",
-    "cover": "",
-    "hidden": false,
-    "category": "杂项"
-  },
-  {
     "slug": "control-theory",
     "title": "控制理论 - 湛明",
     "tags": [
