@@ -1,5 +1,6 @@
 import { NextConfig } from 'next'
 import { codeInspectorPlugin } from 'code-inspector-plugin'
+import { setupDevPlatform } from '@cloudflare/next-on-pages/next-dev'
 
 const nextConfig: NextConfig = {
 	output: 'export',
@@ -39,6 +40,10 @@ const nextConfig: NextConfig = {
 
 		return config
 	}
+}
+
+if (process.env.NODE_ENV === 'development') {
+	await setupDevPlatform()
 }
 
 export default nextConfig
