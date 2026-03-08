@@ -3,7 +3,7 @@
 		"name": "zhanming-blog-new",
 		"year": 2025,
 		"description": "基于 Next.js 构建的个人博客系统，支持 Markdown/MDX 文章、项目展示、图片管理等功能，采用静态导出部署。",
-		"image": "https://github.com/eagle-a/zhanming-blog-new/raw/main/public/favicon.ico",
+		"image": "https://skillicons.dev/icons?i=nextjs",
 		"url": "https://github.com/eagle-a/zhanming-blog-new",
 		"tags": ["Next.js", "React", "TypeScript", "Tailwind CSS", "博客"],
 		"github": "https://github.com/eagle-a/zhanming-blog-new"
@@ -12,7 +12,7 @@
 		"name": "vue3-vite-express",
 		"year": 2024,
 		"description": "Vue 3 + Vite + Express 全栈项目模板，包含前端和后端的基础架构，适合快速启动全栈应用开发。",
-		"image": "https://github.com/eagle-a/vue3-vite-express/raw/main/public/favicon.ico",
+		"image": "https://skillicons.dev/icons?i=vue",
 		"url": "https://github.com/eagle-a/vue3-vite-express",
 		"tags": ["Vue 3", "Vite", "Express", "Node.js", "全栈"],
 		"github": "https://github.com/eagle-a/vue3-vite-express"
