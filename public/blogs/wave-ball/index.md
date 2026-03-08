@@ -1,3 +1,11 @@
+# 波浪球 - 湛明
+
+**日期**: 2026-03-08
+
+**标签**: 笔记
+
+---
+
 学习 Shader，我想先学习那种变化多端的 **球**，最常见的 **噪波置换**，当然在这之前，学一个更有规律的破浪翻滚。
 
 先添加一个在线 shader 更改的网站：[https://suni-demos.vercel.app/custom-icosahedron](https://suni-demos.vercel.app/custom-icosahedron) (加载需要下载一个 xhr 文件，需要稍等下）

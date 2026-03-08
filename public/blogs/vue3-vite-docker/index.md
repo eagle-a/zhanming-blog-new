@@ -1,12 +1,10 @@
-# Search code, repositories, users, issues, pull requests...
+# vue3-vite-express
 
 **日期**: 2026-03-08
 
 **标签**: 笔记
 
 ---
-
-# vue3-vite-express
 
 一个现代化的全栈博客系统 + DAP 工具。
 

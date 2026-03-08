@@ -1,3 +1,11 @@
+# 水波纹扭曲效果 - 湛明
+
+**日期**: 2026-03-08
+
+**标签**: 笔记
+
+---
+
 - 原网站：[https://yoyogipark.trunk-hotel.com/en/about](https://yoyogipark.trunk-hotel.com/en/about)
 - 相关网站：
   - [https://codesandbox.io/p/sandbox/threejs-ripple-text-distortion-effect-wlt94?file=%2Fsrc%2FTouchTexture.js%3A111%2C15-111%2C18](https://codesandbox.io/p/sandbox/threejs-ripple-text-distortion-effect-wlt94?file=%2Fsrc%2FTouchTexture.js%3A111%2C15-111%2C18)

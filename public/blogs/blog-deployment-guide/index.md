@@ -6,8 +6,6 @@
 
 ---
 
-# 个人博客网站部署教程（Vue3+Express-TS+MongoDB+Nginx+Docker）
-
 ## 关于作者
 
 项目 | 信息  
