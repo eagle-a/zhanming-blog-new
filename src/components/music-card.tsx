@@ -94,9 +94,8 @@ export default function MusicCard() {
 		if (audioRef.current) {
 			const wasPlaying = !audioRef.current.paused
 			audioRef.current.pause()
-			// 由于没有实际音频文件，这里使用空音频或默认音频
-			// 实际使用时可以替换为真实的音频URL
-			audioRef.current.src = '/music/close-to-you.mp3'
+			// 根据当前歌曲ID设置音频源
+			audioRef.current.src = `/music/${currentMusic.id}.mp3`
 			audioRef.current.loop = false
 			setProgress(0)
 
@@ -104,7 +103,7 @@ export default function MusicCard() {
 				audioRef.current.play().catch(console.error)
 			}
 		}
-	}, [currentIndex])
+	}, [currentIndex, currentMusic])
 
 	// Handle play/pause state change
 	useEffect(() => {
