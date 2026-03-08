@@ -1,5 +1,7 @@
 'use client'
 
+export const runtime = 'edge'
+
 import Live2DViewer from './live2d-viewer'
 
 export default function Live2DPage() {

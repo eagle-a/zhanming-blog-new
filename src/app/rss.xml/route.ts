@@ -5,6 +5,8 @@ import siteContent from '@/config/site-content.json'
 import blogIndex from '@/../public/blogs/index.json'
 import type { BlogIndexItem } from '@/app/blog/types'
 
+export const runtime = 'edge'
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://eagle-a.github.io'
 const FEED_PATH = '/rss.xml'
 const SITE_ORIGIN = SITE_URL.replace(/\/$/, '')

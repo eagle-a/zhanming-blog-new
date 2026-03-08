@@ -1,5 +1,7 @@
 'use client'
 
+export const runtime = 'edge'
+
 import { useWriteStore } from './stores/write-store'
 import { usePreviewStore } from './stores/preview-store'
 import { WriteEditor } from './components/editor'

@@ -1,5 +1,7 @@
 'use client'
 
+export const runtime = 'edge'
+
 import HiCard from '@/app/(home)/hi-card'
 import ArtCard from '@/app/(home)/art-card'
 import ClockCard from '@/app/(home)/clock-card'

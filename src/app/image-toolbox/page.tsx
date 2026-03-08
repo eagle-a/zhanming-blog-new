@@ -1,5 +1,7 @@
 'use client'
 
+export const runtime = 'edge'
+
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import { motion } from 'motion/react'
 import { ANIMATION_DELAY, INIT_DELAY } from '@/consts'
