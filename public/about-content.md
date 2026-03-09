@@ -1,6 +1,11 @@
 ## 关于我
 
-我是 **eagle-a**，一名热爱技术的在校大学生。
+我是 **孙召顺**（@eagle-a），一名热爱技术的在校大学生。
+
+### 基本信息
+- **姓名**: 孙召顺
+- **出生年月**: 2004.06
+- **职业**: Student
 
 ### 教育经历
 - 2022 ~ 至今 **Harbin Engineering University** 本科在读
@@ -11,11 +16,10 @@
 - 音乐
 
 ### 技能
-- HTML
-- CSS
-- JavaScript
-- Vue
-- Rust
+- 自动化
+- 嵌入式软件
+- Linux
+- 网站开发
 
 ### 个人主页
 - 网站：https://eagle-a.github.io
