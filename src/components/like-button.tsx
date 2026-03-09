@@ -1,55 +1,38 @@
 import { useCallback, useEffect, useState } from 'react'
-import useSWR from 'swr'
 import { motion, AnimatePresence } from 'motion/react'
 import { Heart } from 'lucide-react'
 import clsx from 'clsx'
 import { cn } from '@/lib/utils'
-import { toast } from 'sonner'
-import { BLOG_SLUG_KEY } from '@/consts'
 
 type LikeButtonProps = {
-	slug?: string
+	slug?: string // 保留参数以兼容调用，但实际不再使用
 	className?: string
 	delay?: number
+	initialCount?: number // 可选：初始显示的数字，默认 0
 }
 
-const ENDPOINT = 'https://blog-liker.学习1001.workers.dev/api/like'
-const FETCH_TIMEOUT = 5000 // 5秒超时
-
-// 带超时的 fetch 函数
-async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = FETCH_TIMEOUT): Promise<Response> {
-	const controller = new AbortController()
-	const timeoutId = setTimeout(() => controller.abort(), timeout)
-
-	try {
-		const response = await fetch(url, {
-			...options,
-			signal: controller.signal
-		})
-		clearTimeout(timeoutId)
-		return response
-	} catch (error) {
-		clearTimeout(timeoutId)
-		if (error instanceof Error && error.name === 'AbortError') {
-			throw new Error('请求超时')
-		}
-		throw error
-	}
-}
-
-export default function LikeButton({ slug = 'eagle-a', delay, className }: LikeButtonProps) {
-	slug = BLOG_SLUG_KEY + slug
+export default function LikeButton({ 
+	slug, 
+	delay, 
+	className, 
+	initialCount = 0 
+}: LikeButtonProps) {
+	
+	const [count, setCount] = useState(initialCount)
 	const [liked, setLiked] = useState(false)
 	const [show, setShow] = useState(false)
 	const [justLiked, setJustLiked] = useState(false)
 	const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number }>>([])
 
+	// 延迟显示组件
 	useEffect(() => {
-		setTimeout(() => {
+		const timer = setTimeout(() => {
 			setShow(true)
 		}, delay || 1000)
-	}, [])
+		return () => clearTimeout(timer)
+	}, [delay])
 
+	// 点赞动画计时器
 	useEffect(() => {
 		if (justLiked) {
 			const timer = setTimeout(() => setJustLiked(false), 600)
@@ -57,30 +40,13 @@ export default function LikeButton({ slug = 'eagle-a', delay, className }: LikeB
 		}
 	}, [justLiked])
 
-	const fetcher = useCallback(async (url: string): Promise<number | null> => {
-		try {
-			const res = await fetchWithTimeout(url, { method: 'GET', cache: 'no-store' })
-			if (!res.ok) return null
-			const data = await res.json().catch(() => ({}))
-			return typeof data?.count === 'number' ? data.count : null
-		} catch (error) {
-			// 静默处理错误，不显示错误提示
-			console.log('获取点赞数失败:', error)
-			return null
-		}
-	}, [])
-
-	const { data: fetchedCount, mutate } = useSWR(slug ? `${ENDPOINT}?slug=${encodeURIComponent(slug)}` : null, fetcher, {
-		revalidateOnFocus: false,
-		dedupingInterval: 1000 * 10
-	})
-
-	const handleLike = useCallback(async () => {
-		if (!slug) return
+	const handleLike = useCallback(() => {
+		// 1. 更新状态
 		setLiked(true)
 		setJustLiked(true)
+		setCount(prev => prev + 1)
 
-		// Create particle effects
+		// 2. 创建粒子效果
 		const newParticles = Array.from({ length: 6 }, (_, i) => ({
 			id: Date.now() + i,
 			x: Math.random() * 60 - 30,
@@ -88,69 +54,59 @@ export default function LikeButton({ slug = 'eagle-a', delay, className }: LikeB
 		}))
 		setParticles(newParticles)
 
-		// Clear particles after animation
+		// 3. 清除粒子
 		setTimeout(() => setParticles([]), 1000)
+		
+		// 这里不再有网络请求，所以不需要 try-catch fetch
+		// console.log(`[LocalLike] 点赞成功，当前计数: ${count + 1}`);
+	}, [count])
 
-		try {
-			const url = `${ENDPOINT}?slug=${encodeURIComponent(slug)}`
-			const res = await fetchWithTimeout(url, { method: 'POST' })
-			const data = await res.json().catch(() => ({}))
-			if (data.reason == 'rate_limited') toast('谢谢啦😘，今天已经不能再点赞啦💕')
-			const value = typeof data?.count === 'number' ? data.count : (fetchedCount ?? 0) + 1
-			await mutate(value, { revalidate: false })
-		} catch (error) {
-			// 静默处理错误，点赞动画仍然继续
-			console.log('点赞请求失败:', error)
-			// 即使请求失败，也更新本地状态
-			await mutate((fetchedCount ?? 0) + 1, { revalidate: false })
-		}
-	}, [slug, fetchedCount, mutate])
+	if (!show) return null;
 
-	const count = typeof fetchedCount === 'number' ? fetchedCount : null
+	return (
+		<motion.button
+			initial={{ opacity: 0, scale: 0.6 }}
+			animate={{ opacity: 1, scale: 1 }}
+			whileHover={{ scale: 1.05 }}
+			whileTap={{ scale: 0.95 }}
+			aria-label='Like this post'
+			onClick={handleLike}
+			className={clsx('card heartbeat-container relative overflow-visible rounded-full p-3', className)}>
+			
+			<AnimatePresence>
+				{particles.map(particle => (
+					<motion.div
+						key={particle.id}
+						className='pointer-events-none absolute inset-0 flex items-center justify-center'
+						initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
+						animate={{
+							opacity: [1, 1, 0],
+							scale: [0, 1.2, 0.8],
+							x: particle.x,
+							y: particle.y
+						}}
+						exit={{ opacity: 0 }}
+						transition={{ duration: 0.8, ease: 'easeOut' }}>
+						<Heart className='fill-rose-400 text-rose-400' size={12} />
+					</motion.div>
+				))}
+			</AnimatePresence>
 
-	if (show)
-		return (
-			<motion.button
-				initial={{ opacity: 0, scale: 0.6 }}
-				animate={{ opacity: 1, scale: 1 }}
-				whileHover={{ scale: 1.05 }}
-				whileTap={{ scale: 0.95 }}
-				aria-label='Like this post'
-				onClick={handleLike}
-				className={clsx('card heartbeat-container relative overflow-visible rounded-full p-3', className)}>
-				<AnimatePresence>
-					{particles.map(particle => (
-						<motion.div
-							key={particle.id}
-							className='pointer-events-none absolute inset-0 flex items-center justify-center'
-							initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
-							animate={{
-								opacity: [1, 1, 0],
-								scale: [0, 1.2, 0.8],
-								x: particle.x,
-								y: particle.y
-							}}
-							exit={{ opacity: 0 }}
-							transition={{ duration: 0.8, ease: 'easeOut' }}>
-							<Heart className='fill-rose-400 text-rose-400' size={12} />
-						</motion.div>
-					))}
-				</AnimatePresence>
+			{/* 数字徽章 */}
+			<motion.span
+				initial={{ scale: 0.4 }}
+				animate={{ scale: 1 }}
+				className={cn(
+					'absolute -top-2 left-9 min-w-6 rounded-full px-1.5 py-1 text-center text-xs text-white tabular-nums',
+					liked ? 'bg-rose-400' : 'bg-gray-300'
+				)}>
+				{count}
+			</motion.span>
 
-				{typeof count === 'number' && (
-					<motion.span
-						initial={{ scale: 0.4 }}
-						animate={{ scale: 1 }}
-						className={cn(
-							'absolute -top-2 left-9 min-w-6 rounded-full px-1.5 py-1 text-center text-xs text-white tabular-nums',
-							liked ? 'bg-rose-400' : 'bg-gray-300'
-						)}>
-						{count}
-					</motion.span>
-				)}
-				<motion.div animate={justLiked ? { scale: [1, 1.4, 1], rotate: [0, -10, 10, 0] } : {}} transition={{ duration: 0.6, ease: 'easeOut' }}>
-					<Heart className={clsx('heartbeat', liked ? 'fill-rose-400 text-rose-400' : 'fill-rose-200 text-rose-200')} size={28} />
-				</motion.div>
-			</motion.button>
-		)
+			{/* 爱心图标 */}
+			<motion.div animate={justLiked ? { scale: [1, 1.4, 1], rotate: [0, -10, 10, 0] } : {}} transition={{ duration: 0.6, ease: 'easeOut' }}>
+				<Heart className={clsx('heartbeat', liked ? 'fill-rose-400 text-rose-400' : 'fill-rose-200 text-rose-200')} size={28} />
+			</motion.div>
+		</motion.button>
+	)
 }
