@@ -69,7 +69,7 @@
     
     VITE_API_URL=http://47.76.125.24/api/
 
-## 📦 技术栈
+## 📦 学习栈
 
   * **后端** : Express + TypeScript + MongoDB + JWT
   * **前端** : Vue 3 + Vite + SSR + Pinia + Element Plus

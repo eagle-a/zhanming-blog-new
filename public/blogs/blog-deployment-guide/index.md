@@ -21,7 +21,7 @@ Github | @eagle-a
 ### 核心信息
 
   * 源代码仓库：`vue3-vite-docker`（基于 @lincenying 项目克隆改造）
-  * 技术架构： 
+  * 学习架构： 
     * 服务端：Express + TypeScript + MongoDB
     * 客户端：Vue3（前台 SSR 渲染模式，后台 SPA 渲染模式）
   * 核心功能：管理员管理、用户管理、文章分类、文章发布、评论互动、文章点赞
