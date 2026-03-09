@@ -1,7 +1,7 @@
 import Script from 'next/script'
 
 export default function Head() {
-	// 只在生产环境加载 Google Analytics
+	// 只在生产环境加载 Plausible Analytics
 	const isProduction = process.env.NODE_ENV === 'production'
 
 	return (
@@ -16,18 +16,15 @@ export default function Head() {
 
 			<link href='https://fonts.googleapis.cn/css2?family=Averia+Gruesa+Libre&display=swap' rel='stylesheet' />
 
-			{/* Google Analytics - 只在生产环境加载 */}
+			{/* Plausible Analytics - 只在生产环境加载 */}
 			{isProduction && (
 				<>
-					<Script src='https://www.googletagmanager.com/gtag/js?id=G-ZNSFR7C9PM' strategy='lazyOnload' />
-					<Script id='google-analytics' strategy='lazyOnload'>
-						{`
-							window.dataLayer = window.dataLayer || [];
-							function gtag(){dataLayer.push(arguments);}
-							gtag('js', new Date());
-							gtag('config', 'G-ZNSFR7C9PM');
-						`}
-					</Script>
+					{/* Privacy-friendly analytics by Plausible */}
+					<Script
+						src='https://plausible.io/js/pa-O6zWmNeHq85ObmIKiKCxO.js'
+						strategy='lazyOnload'
+						data-domain='yourdomain.com'
+					/>
 				</>
 			)}
 		</head>
