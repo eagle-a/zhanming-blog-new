@@ -11,40 +11,18 @@ import LikeButton from '@/components/like-button'
 import GithubSVG from '@/svgs/github.svg'
 import initialData from './list.json'
 
-// 加载 markdown 内容的函数
-async function loadMarkdownContent(content: string): Promise<string> {
-	// 检测是否是文件路径（以 ./ 或 / 开头，或以 .md 结尾）
-	if (content.startsWith('./') || content.startsWith('/') || content.endsWith('.md')) {
-		try {
-			const response = await fetch(content)
-			if (response.ok) {
-				return await response.text()
-			}
-		} catch (error) {
-			console.error('Failed to load markdown file:', error)
-		}
-	}
-	return content
-}
-
 export default function Page() {
 	const [data, setData] = useState<AboutData>(initialData as AboutData)
 	const [originalData, setOriginalData] = useState<AboutData>(initialData as AboutData)
 	const [isEditMode, setIsEditMode] = useState(false)
 	const [isSaving, setIsSaving] = useState(false)
 	const [isPreviewMode, setIsPreviewMode] = useState(false)
-	const [markdownContent, setMarkdownContent] = useState<string>(initialData.content)
 	const keyInputRef = useRef<HTMLInputElement>(null)
 
 	const { isAuth, setPrivateKey } = useAuthStore()
 	const { siteContent } = useConfigStore()
-	const { content, loading } = useMarkdownRender(markdownContent)
+	const { content, loading } = useMarkdownRender(data.content)
 	const hideEditButton = siteContent.hideEditButton ?? false
-
-	// 加载 markdown 文件内容
-	useEffect(() => {
-		loadMarkdownContent(data.content).then(setMarkdownContent)
-	}, [data.content])
 
 	const handleChoosePrivateKey = async (file: File) => {
 		try {
@@ -191,7 +169,7 @@ export default function Page() {
 
 					<div className='mt-8 flex items-center justify-center gap-6'>
 						<motion.a
-							href='https://github.com/eagle-a/zhanming-blog-new'
+							href='https://github.com/YYsuni/2025-blog-public'
 							target='_blank'
 							rel='noreferrer'
 							initial={{ opacity: 0, scale: 0.6 }}
