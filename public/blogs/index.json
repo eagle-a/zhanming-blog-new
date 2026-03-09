@@ -1,13 +1,13 @@
 [
   {
     "slug": "readme",
-    "title": "Hello!",
-    "tags": ["关于我"],
+    "title": "部署说明",
+    "tags": ["部署说明"],
     "date": "2026-03-08T10:00",
-    "summary": "个人简介",
+    "summary": "部署说明",
     "cover": "",
     "hidden": false,
-    "category": "日记"
+    "category": "总结"
   },
   {
     "slug": "diary-may-20",
