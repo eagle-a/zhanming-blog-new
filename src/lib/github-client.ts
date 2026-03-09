@@ -99,16 +99,35 @@ export async function putFile(token: string, owner: string, repo: string, path: 
 // Batch commit APIs
 
 export async function getRef(token: string, owner: string, repo: string, ref: string): Promise<{ sha: string }> {
-	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/ref/${encodeURIComponent(ref)}`, {
+	const url = `${GH_API}/repos/${owner}/${repo}/git/ref/${encodeURIComponent(ref)}`
+	console.log('[getRef] Request URL:', url)
+	console.log('[getRef] Token prefix:', token.substring(0, 10) + '...')
+
+	const res = await fetch(url, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 			Accept: 'application/vnd.github+json',
 			'X-GitHub-Api-Version': '2022-11-28'
 		}
 	})
-	if (res.status === 401) handle401Error()
+
+	console.log('[getRef] Response status:', res.status)
+
+	if (res.status === 401) {
+		handle401Error()
+		throw new Error('认证失败：令牌无效或已过期')
+	}
+	if (res.status === 404) {
+		const errorText = await res.text()
+		console.error('[getRef] 404 Error details:', errorText)
+		throw new Error(`找不到引用：${ref}，请检查仓库 ${owner}/${repo} 是否存在该分支`)
+	}
 	if (res.status === 422) handle422Error()
-	if (!res.ok) throw new Error(`get ref failed: ${res.status}`)
+	if (!res.ok) {
+		const errorText = await res.text()
+		console.error('[getRef] Error details:', errorText)
+		throw new Error(`get ref failed: ${res.status} - ${errorText}`)
+	}
 	const data = await res.json()
 	return { sha: data.object.sha }
 }
