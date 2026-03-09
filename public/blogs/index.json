@@ -53,7 +53,7 @@
     "slug": "ai-mario-record",
     "title": "AI玩马里奥记录",
     "tags": ["笔记"],
-    "date": "2026-01-25",
+    "date": "2026-01-24",
     "summary": "记录使用强化学习玩马里奥时运行代码的全过程，包括环境配置、依赖安装、常见问题解决等",
     "cover": "",
     "hidden": false,
