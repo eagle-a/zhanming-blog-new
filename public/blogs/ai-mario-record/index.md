@@ -6,8 +6,6 @@
 
 ---
 
-# AI玩马里奥记录
-
 感谢up主详细的视频！φ(゜▽゜*)♪。记录一下使用强化学习玩马里奥时运行代码的全过程。
 
 ## 安装依赖
@@ -24,17 +22,6 @@
     
     # 查看已安装包（可选）
     conda list
-    
-
-1  
-2  
-3  
-4  
-5  
-6  
-7  
-8  
-9  
 
 
 ### 2\. 降低依赖包版本（适配低版本gym和sb3）
@@ -50,16 +37,6 @@
     python.exe -m pip install pip==20.2.4
     
 
-1  
-2  
-3  
-4  
-5  
-6  
-7  
-8  
-
-
 ### 3\. 安装项目依赖包
     
     
@@ -70,13 +47,6 @@
     pip install -r requirements.txt
     
 
-1  
-2  
-3  
-4  
-5  
-
-
 #### 常见错误及解决（nes-py安装失败）
 
 **错误原因** ：  
@@ -85,40 +55,22 @@ nes-py 底层依赖 fceux-lib，需要编译 C++ 代码，而Windows系统默认
 
 **解决方案** ：
 
-  1. 安装Chocolatey（以管理员身份打开PowerShell）：
          
          Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-         
-
-1  
 
 
 验证安装：`choco -v`（显示版本号则成功）
 
-  2. 安装Visual Studio构建工具：
          
          choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
-         
-
-1  
-
 
 （安装耗时10-30分钟，完成后重启电脑）
 
-  3. 重启后重新安装依赖：
          
          conda activate RL_mario_for_learn
          cd /d F:\RL_SuperMario-main
          pip install -r requirements.txt
          
-
-1  
-2  
-3  
-
-
-
-
 
 ### 4\. 安装适配的PyTorch版本
 
@@ -129,11 +81,6 @@ nes-py 底层依赖 fceux-lib，需要编译 C++ 代码，而Windows系统默认
     nvidia-smi
     # 无NVIDIA显卡则直接安装CPU版PyTorch
     
-
-1  
-2  
-3  
-
 
 #### 4.2 下载安装
 
@@ -149,26 +96,11 @@ nes-py 底层依赖 fceux-lib，需要编译 C++ 代码，而Windows系统默认
         print(torch.version.cuda) 
         
 
-1  
-2  
-3  
-4  
-5  
-6  
-7  
-
-
-
-
-
 ### 5\. 安装TensorBoard（可视化训练过程）
     
     
     pip install tensorboard
     
-
-1  
-
 
 ## 运行代码
 
@@ -181,13 +113,11 @@ nes-py 底层依赖 fceux-lib，需要编译 C++ 代码，而Windows系统默认
   3. 配置解释器：选择已创建的`RL_mario_for_learn` conda环境（右下角切换或通过`add new interpreter`添加）
 
 
-
 ### 2\. 测试与运行
 
   1. **测试马里奥运行** ：右键运行`test/test_mario.py`
   2. **测试预训练模型** ：右键运行`test_model.py`（默认加载`monitor_log/best_model/best_model.zip`，修改路径可测试自定义模型）
   3. **训练自定义模型** ：右键运行`train.py`（训练耗时较长，耐心等待）
-
 
 
 ### 3\. 实时观测训练过程
@@ -197,10 +127,6 @@ nes-py 底层依赖 fceux-lib，需要编译 C++ 代码，而Windows系统默认
     tensorboard --logdir=tensorboard_log
     
 
-1  
-2  
-
-
 启动后访问链接：`http://localhost:6006/` 即可查看训练指标可视化结果。
 
 ### 总结
@@ -208,5 +134,3 @@ nes-py 底层依赖 fceux-lib，需要编译 C++ 代码，而Windows系统默认
   1. 安装失败核心问题是Windows缺少C++编译环境，需安装Visual Studio构建工具解决nes-py编译问题；
   2. PyTorch需根据显卡CUDA版本适配，无GPU则安装CPU版；
   3. TensorBoard可实时监控训练过程，通过`tensorboard --logdir`命令启动即可访问可视化界面。
-
-

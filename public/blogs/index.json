@@ -2,9 +2,7 @@
   {
     "slug": "readme",
     "title": "Hello!",
-    "tags": [
-      "关于我"
-    ],
+    "tags": ["关于我"],
     "date": "2026-03-08T10:00",
     "summary": "个人简介",
     "cover": "",
@@ -12,11 +10,29 @@
     "category": "日记"
   },
   {
+    "slug": "diary-may-20",
+    "title": "日记：5月20日",
+    "tags": ["笔记"],
+    "date": "2025-05-20",
+    "summary": "错过了此生仅有的机会，等你多年后想起时是否懊悔",
+    "cover": "",
+    "hidden": false,
+    "category": "日记"
+  },
+  {
+    "slug": "diary-may-21",
+    "title": "日记：5月21日",
+    "tags": ["笔记"],
+    "date": "2025-05-21",
+    "summary": "焦虑是因为你有完成这件事的能力，25年的",
+    "cover": "",
+    "hidden": false,
+    "category": "日记"
+  },
+  {
     "slug": "diary-august-27",
-    "title": "日记：8月27日 - 湛明",
-    "tags": [
-      "笔记"
-    ],
+    "title": "日记：8月27日",
+    "tags": ["笔记"],
     "date": "2025-08-27",
     "summary": "人生在世，其实不太需要接受别人的建议，只有经历了才知道。（deft）",
     "cover": "",
@@ -24,39 +40,11 @@
     "category": "日记"
   },
   {
-    "slug": "october-1st",
-    "title": "10月1日 - 湛明",
-    "tags": [
-      "笔记"
-    ],
-    "date": "2024-10-01",
-    "summary": "记录一下图片功能",
-    "cover": "/blogs/october-1st/image_1.jpg",
-    "hidden": false,
-    "category": "日记"
-  },
-  {
     "slug": "blog-deployment-guide",
-    "title": "个人博客网站部署教程（Vue3+Express-TS+MongoDB+Nginx+Docker）",
-    "tags": [
-      "笔记"
-    ],
+    "title": "Vue3 个人博客部署教程",
+    "tags": ["笔记"],
     "date": "2025-03-04",
-    "summary": "个人博客网站部署教程，作者：孙召顺，技能：自动化、嵌入式软件、Linux、网站开发",
-    "cover": "",
-    "hidden": false,
-    "category": "总结"
-  },
-  {
-    "slug": "baota-deployment-guide",
-    "title": "2025 Blog 宝塔部署指南",
-    "tags": [
-      "部署",
-      "宝塔",
-      "服务器"
-    ],
-    "date": "2025-03-08",
-    "summary": "脱离 Vercel，使用国内服务器部署，访问速度更快",
+    "summary": "Vue3 + Express-TS + MongoDB + Nginx + Docker 完整部署方案",
     "cover": "",
     "hidden": false,
     "category": "总结"
@@ -64,9 +52,7 @@
   {
     "slug": "ai-mario-record",
     "title": "AI玩马里奥记录",
-    "tags": [
-      "笔记"
-    ],
+    "tags": ["笔记"],
     "date": "2026-01-25",
     "summary": "记录使用强化学习玩马里奥时运行代码的全过程，包括环境配置、依赖安装、常见问题解决等",
     "cover": "",
@@ -75,10 +61,8 @@
   },
   {
     "slug": "february-23",
-    "title": "2 月 23日 - 湛明",
-    "tags": [
-      "笔记"
-    ],
+    "title": "日记：2月23日",
+    "tags": ["笔记"],
     "date": "2026-02-23",
     "summary": "你是电竞运动员，25岁已经是大龄了。你是工程师，35岁年富力强。对于政治家来说，50岁好年轻啊",
     "cover": "",
@@ -87,10 +71,8 @@
   },
   {
     "slug": "first-article-2024",
-    "title": "第一个文章-2024.5.17 - 湛明",
-    "tags": [
-      "笔记"
-    ],
+    "title": "第一个文章-2024.5.17",
+    "tags": ["笔记"],
     "date": "2024-05-17",
     "summary": "网站复活了，嘿嘿 –2025.3.4-18：45",
     "cover": "",
@@ -98,227 +80,13 @@
     "category": "日记"
   },
   {
-    "slug": "cursor-keyboard",
-    "title": "Cursor 快捷键",
-    "tags": [
-      "cursor"
-    ],
-    "date": "2026-03-06T09:47",
-    "summary": "常用、便捷操作",
-    "cover": "/blogs/cursor-keyboard/b8e0790993a85d17.jpg",
-    "hidden": false,
-    "category": "杂项"
-  },
-  {
-    "slug": "blender-scene-note",
-    "title": "Blender场景建模笔记",
-    "tags": [
-      "blender",
-      "学习"
-    ],
-    "date": "2026-03-04T16:25",
-    "summary": "blender 笔记",
-    "cover": "/blogs/blender-scene-note/32c234f6bf0b8b9b.webp",
-    "hidden": false,
-    "category": "专业笔记"
-  },
-  {
-    "slug": "diary",
-    "title": "日记 - 湛明",
-    "tags": [
-      "笔记"
-    ],
-    "date": "2026-02-23",
-    "summary": "日记分类文章",
-    "cover": "",
-    "hidden": false,
-    "category": "日记"
-  },
-  {
-    "slug": "3d-scene-note",
-    "title": "3D 场景搭建笔记",
-    "tags": [
-      "学习",
-      "笔记",
-      "3D"
-    ],
-    "date": "2026-02-06T17:21",
-    "summary": "计划如何计划",
-    "cover": "/blogs/3d-scene-note/96d5437de1d0424f.webp",
-    "hidden": false,
-    "category": "专业笔记"
-  },
-  {
-    "slug": "3d-blender-note",
-    "title": "3D 与 Blender 笔记",
-    "tags": [
-      "学习",
-      "3D"
-    ],
-    "date": "2026-02-05T17:20",
-    "summary": "遇到一个坑的笔记",
-    "cover": "/blogs/3d-blender-note/d61f14bf7b05d654.webp",
-    "hidden": false,
-    "category": "专业笔记"
-  },
-  {
-    "slug": "model-animation-note",
-    "title": "模型动画笔记",
-    "tags": [
-      "学习",
-      "建模"
-    ],
-    "date": "2026-02-03T11:40",
-    "summary": "骨骼与动画",
-    "cover": "/blogs/model-animation-note/0655bc33056c4af1.webp",
-    "hidden": false,
-    "category": "专业笔记"
-  },
-  {
-    "slug": "cartoon-note-render",
-    "title": "卡通人物建模笔记 · 三",
-    "tags": [
-      "学习",
-      "渲染"
-    ],
-    "date": "2026-01-29T22:06",
-    "summary": "渲染笔记",
-    "cover": "/blogs/cartoon-note-render/557a9db9106bcde2.webp",
-    "hidden": false,
-    "category": "专业笔记"
-  },
-  {
-    "slug": "study-notes",
-    "title": "学习笔记 - 湛明",
-    "tags": [
-      "笔记"
-    ],
-    "date": "2026-01-25",
-    "summary": "学习笔记分类文章",
-    "cover": "",
-    "hidden": false,
-    "category": "专业笔记"
-  },
-  {
-    "slug": "introduction",
-    "title": "介绍 - 湛明",
-    "tags": [
-      "笔记"
-    ],
-    "date": "2026-01-24",
-    "summary": "介绍分类文章",
-    "cover": "",
-    "hidden": false,
-    "category": "日记"
-  },
-  {
-    "slug": "cartoon-note-body",
-    "title": "卡通人物建模笔记 · 二",
-    "tags": [
-      "学习",
-      "建模"
-    ],
-    "date": "2026-01-29T16:02",
-    "summary": "身体建模笔记",
-    "cover": "/blogs/cartoon-note-body/a6cf63f4e4e7ac9c.webp",
-    "hidden": false,
-    "category": "专业笔记"
-  },
-  {
-    "slug": "cartoon-note-head",
-    "title": "卡通人物建模笔记",
-    "tags": [
-      "学习",
-      "建模"
-    ],
-    "date": "2026-01-28T17:01",
-    "summary": "头部线条记录",
-    "cover": "/blogs/cartoon-note-head/666668e4acc2d75c.webp",
-    "hidden": false,
-    "category": "专业笔记"
-  },
-  {
-    "slug": "gpu-twinkle",
-    "title": "GPU 闪动",
-    "tags": [
-      "GPU",
-      "学习"
-    ],
-    "date": "2026-01-17T10:51",
-    "summary": "GPU 计算是不稳定的",
-    "cover": "/blogs/gpu-twinkle/51610043dc9b0629.webp",
-    "hidden": false,
-    "category": "专业笔记"
-  },
-  {
     "slug": "control-theory",
-    "title": "控制理论 - 湛明",
-    "tags": [
-      "笔记"
-    ],
+    "title": "控制理论-李雅普诺夫能量函数理解",
+    "tags": ["笔记"],
     "date": "2025-04-12",
     "summary": "控制理论分类文章，包含李雅普诺夫能量函数理解",
     "cover": "",
     "hidden": false,
-    "category": "专业笔记"
-  },
-  {
-    "slug": "first-game",
-    "title": "学游戏",
-    "tags": [
-      "游戏",
-      "godot"
-    ],
-    "date": "2025-04-12",
-    "summary": "用 Godot 学做的第一个游戏",
-    "cover": "/blogs/first-game/9b871e63d2b65b74.png",
-    "category": "专业笔记"
-  },
-  {
-    "slug": "pnpm-upgrade",
-    "title": "PNPM 升级",
-    "tags": [
-      "笔记"
-    ],
-    "date": "2025-02-24",
-    "summary": "不同设备有不同升级方式，容易报错",
-    "cover": "/blogs/pnpm-upgrade/d3d0d5fee572546d.jpg",
-    "category": "总结"
-  },
-  {
-    "slug": "webpack-react",
-    "title": "Webpack 打包开发 React",
-    "tags": [
-      "总结",
-      "webpack",
-      "react"
-    ],
-    "date": "2023-07-03",
-    "summary": "记录一下如何用 Webpack 进行 React 项目的开发，总结 Webpack 对我的影响。",
-    "cover": "/blogs/webpack-react/f5f7beaea4b7ae16.jpg",
-    "category": "总结"
-  },
-  {
-    "slug": "css-colors",
-    "title": "知识速记 - CSS Colors",
-    "tags": [
-      "笔记"
-    ],
-    "date": "2023-06-29",
-    "summary": "简单记录一下在 MDN 看到的 CSS Blog 文章",
-    "cover": "/blogs/css-colors/e5a78a7492d1850d.png",
-    "category": "专业笔记"
-  },
-  {
-    "slug": "design-patterns-react",
-    "title": "React 中的设计模式",
-    "tags": [
-      "设计模式",
-      "创建blog网站"
-    ],
-    "date": "2023-05-07",
-    "summary": "设计模式在长期的开发过程当中，会慢慢显得更加重要。掌握好这些设计模式，对日后的项目工作有很大帮助。",
-    "cover": "/blogs/design-patterns-react/836ca6119fb23330.jpg",
     "category": "专业笔记"
   }
 ]

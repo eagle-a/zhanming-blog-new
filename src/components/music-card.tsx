@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import Card from '@/components/card'
 import { useCenterStore } from '@/hooks/use-center'
 import { useConfigStore } from '../app/(home)/stores/config-store'
@@ -51,13 +51,19 @@ export default function MusicCard() {
 
 	const { x, y } = position
 
-	// Initialize audio element
+	// Initialize audio element and setup event listeners
 	useEffect(() => {
 		if (!audioRef.current) {
 			audioRef.current = new Audio()
 		}
 
 		const audio = audioRef.current
+
+		// 设置初始音频源
+		if (!audio.src) {
+			audio.src = `/music/${MUSIC_LIST[0].id}.mp3`
+			audio.loop = false
+		}
 
 		const updateProgress = () => {
 			if (audio.duration) {
@@ -66,7 +72,12 @@ export default function MusicCard() {
 		}
 
 		const handleEnded = () => {
-			handleNext()
+			// 歌曲结束自动播放下一首
+			setCurrentIndex((prev) => {
+				const newIndex = (prev + 1) % MUSIC_LIST.length
+				currentIndexRef.current = newIndex
+				return newIndex
+			})
 		}
 
 		const handleTimeUpdate = () => {
@@ -91,20 +102,23 @@ export default function MusicCard() {
 	// Handle currentIndex change - load new audio
 	useEffect(() => {
 		currentIndexRef.current = currentIndex
-		if (audioRef.current) {
-			const wasPlaying = !audioRef.current.paused
-			audioRef.current.pause()
-			// 由于没有实际音频文件，这里使用空音频或默认音频
-			// 实际使用时可以替换为真实的音频URL
-			audioRef.current.src = '/music/close-to-you.mp3'
-			audioRef.current.loop = false
-			setProgress(0)
-
-			if (wasPlaying) {
-				audioRef.current.play().catch(console.error)
-			}
+		// 确保 audio 元素已初始化
+		if (!audioRef.current) {
+			audioRef.current = new Audio()
 		}
-	}, [currentIndex])
+
+		const audio = audioRef.current
+		const wasPlaying = !audio.paused
+		audio.pause()
+		// 根据当前歌曲ID设置音频源
+		audio.src = `/music/${currentMusic.id}.mp3`
+		audio.loop = false
+		setProgress(0)
+
+		if (wasPlaying) {
+			audio.play().catch(console.error)
+		}
+	}, [currentIndex, currentMusic])
 
 	// Handle play/pause state change
 	useEffect(() => {
@@ -132,16 +146,22 @@ export default function MusicCard() {
 	}
 
 	// 上一首
-	const handlePrev = () => {
-		const newIndex = currentIndex === 0 ? MUSIC_LIST.length - 1 : currentIndex - 1
-		setCurrentIndex(newIndex)
-	}
+	const handlePrev = useCallback(() => {
+		setCurrentIndex((prev) => {
+			const newIndex = prev === 0 ? MUSIC_LIST.length - 1 : prev - 1
+			currentIndexRef.current = newIndex
+			return newIndex
+		})
+	}, [])
 
 	// 下一首
-	const handleNext = () => {
-		const newIndex = (currentIndex + 1) % MUSIC_LIST.length
-		setCurrentIndex(newIndex)
-	}
+	const handleNext = useCallback(() => {
+		setCurrentIndex((prev) => {
+			const newIndex = (prev + 1) % MUSIC_LIST.length
+			currentIndexRef.current = newIndex
+			return newIndex
+		})
+	}, [])
 
 	// Hide component if not on home page and not playing
 	if (!isHomePage && !isPlaying) {

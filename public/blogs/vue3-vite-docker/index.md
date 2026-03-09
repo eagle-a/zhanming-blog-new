@@ -1,12 +1,10 @@
-# Search code, repositories, users, issues, pull requests...
+# vue3-vite-express
 
 **日期**: 2026-03-08
 
 **标签**: 笔记
 
 ---
-
-# vue3-vite-express
 
 一个现代化的全栈博客系统 + DAP 工具。
 
@@ -15,7 +13,6 @@
   * **网站** : <https://zhanming.cc.cd/>
   * **API** : <http://47.76.125.24/>
   * **后台** : <http://47.76.125.24/backend>
-
 
 
 ## 📁 项目结构
@@ -72,13 +69,12 @@
     
     VITE_API_URL=http://47.76.125.24/api/
 
-## 📦 技术栈
+## 📦 学习栈
 
   * **后端** : Express + TypeScript + MongoDB + JWT
   * **前端** : Vue 3 + Vite + SSR + Pinia + Element Plus
   * **安全** : XSS防护、速率限制、输入验证、bcrypt
   * **DAP** : Vue 3 + DAP.js + WebUSB
-
 
 
 ## 🛡️ 安全
@@ -92,7 +88,6 @@
   * 📧 [2121612901@qq.com](mailto:2121612901@qq.com)
   * 🐙 [@eagle-a](https://github.com/eagle-a)
   * 技能: 自动化、嵌入式、Linux、Web、rust
-
 
 
 基于 [@lincenying](https://github.com/lincenying) 的 [mmf-blog-vite-vue3](https://github.com/lincenying/mmf-blog-vite-vue3) 修改

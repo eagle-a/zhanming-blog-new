@@ -6,8 +6,6 @@
 
 ---
 
-# 个人博客网站部署教程（Vue3+Express-TS+MongoDB+Nginx+Docker）
-
 ## 关于作者
 
 项目 | 信息  
@@ -23,11 +21,10 @@ Github | @eagle-a
 ### 核心信息
 
   * 源代码仓库：`vue3-vite-docker`（基于 @lincenying 项目克隆改造）
-  * 技术架构： 
+  * 学习架构： 
     * 服务端：Express + TypeScript + MongoDB
     * 客户端：Vue3（前台 SSR 渲染模式，后台 SPA 渲染模式）
   * 核心功能：管理员管理、用户管理、文章分类、文章发布、评论互动、文章点赞
-
 
 
 ## 部署配置与操作步骤
@@ -112,85 +109,6 @@ Github | @eagle-a
         access_log  /www/wwwlogs/1.94.109.75.log;
         error_log  /www/wwwlogs/1.94.109.75.error.log;
     }
-    
-
-1  
-2  
-3  
-4  
-5  
-6  
-7  
-8  
-9  
-10  
-11  
-12  
-13  
-14  
-15  
-16  
-17  
-18  
-19  
-20  
-21  
-22  
-23  
-24  
-25  
-26  
-27  
-28  
-29  
-30  
-31  
-32  
-33  
-34  
-35  
-36  
-37  
-38  
-39  
-40  
-41  
-42  
-43  
-44  
-45  
-46  
-47  
-48  
-49  
-50  
-51  
-52  
-53  
-54  
-55  
-56  
-57  
-58  
-59  
-60  
-61  
-62  
-63  
-64  
-65  
-66  
-67  
-68  
-69  
-70  
-71  
-72  
-73  
-74  
-75  
-
-
 ### 2\. Node.js 后端服务部署（Express-TS + PNPM）
 
 #### 2.1 项目拉取与基础安装
@@ -202,15 +120,6 @@ Github | @eagle-a
     
     # 安装依赖（使用pnpm）
     pnpm install
-    
-
-1  
-2  
-3  
-4  
-5  
-6  
-
 
 #### 2.2 开发/生产环境命令
     
@@ -226,19 +135,6 @@ Github | @eagle-a
     
     # 代码格式化与lint检查
     pnpm lint
-    
-
-1  
-2  
-3  
-4  
-5  
-6  
-7  
-8  
-9  
-10  
-11  
 
 
 ### 3\. Docker Compose 部署（推荐生产环境）
@@ -259,15 +155,6 @@ Github | @eagle-a
       - /Users/lincenying/web/mongodb/data:/data/db
     
 
-1  
-2  
-3  
-4  
-5  
-6  
-7  
-
-
 #### 3.2 部署命令
     
     
@@ -281,21 +168,10 @@ Github | @eagle-a
     docker-compose -f docker-compose.api.yml up -d
     
 
-1  
-2  
-3  
-4  
-5  
-6  
-7  
-8  
-
-
 #### 3.3 访问地址
 
   * 网站首页：http://localhost:7779
   * 后台登录：http://localhost:7779/backend/login
-
 
 
 ## 许可证
@@ -307,5 +183,3 @@ Github | @eagle-a
   1. 网站核心架构为 Vue3（前台SSR/后台SPA）+ Express-TS + MongoDB，部署依赖 Nginx 做反向代理和静态资源管理。
   2. Node 后端支持 PNPM 本地开发，也可通过 Docker Compose 快速部署生产环境（需注意 MongoDB 数据卷映射）。
   3. Nginx 配置中 `/api` 路径代理到 Node 服务端口（4000），前端路由通过 `try_files` 适配 Vue 单页应用特性。
-
-
