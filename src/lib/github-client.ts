@@ -32,45 +32,22 @@ export function signAppJwt(appId: string, privateKeyPem: string): string {
 }
 
 export async function getInstallationId(jwt: string, owner: string, repo: string): Promise<number> {
-	const url = `${GH_API}/repos/${owner}/${repo}/installation`
-	console.log('[getInstallationId] Request URL:', url)
-
-	const res = await fetch(url, {
+	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/installation`, {
 		headers: {
 			Authorization: `Bearer ${jwt}`,
 			Accept: 'application/vnd.github+json',
 			'X-GitHub-Api-Version': '2022-11-28'
 		}
 	})
-
-	console.log('[getInstallationId] Response status:', res.status)
-
-	if (res.status === 401) {
-		handle401Error()
-		throw new Error('JWT 认证失败：私钥可能不正确')
-	}
-	if (res.status === 404) {
-		const errorText = await res.text()
-		console.error('[getInstallationId] 404 Error:', errorText)
-		throw new Error(`GitHub App 未安装在仓库 ${owner}/${repo} 上，请访问 GitHub App 设置页面安装应用`)
-	}
+	if (res.status === 401) handle401Error()
 	if (res.status === 422) handle422Error()
-	if (!res.ok) {
-		const errorText = await res.text()
-		console.error('[getInstallationId] Error:', errorText)
-		throw new Error(`installation lookup failed: ${res.status} - ${errorText}`)
-	}
+	if (!res.ok) throw new Error(`installation lookup failed: ${res.status}`)
 	const data = await res.json()
-	console.log('[getInstallationId] Installation ID:', data.id)
 	return data.id
 }
 
 export async function createInstallationToken(jwt: string, installationId: number): Promise<string> {
-	const url = `${GH_API}/app/installations/${installationId}/access_tokens`
-	console.log('[createInstallationToken] Request URL:', url)
-	console.log('[createInstallationToken] Installation ID:', installationId)
-
-	const res = await fetch(url, {
+	const res = await fetch(`${GH_API}/app/installations/${installationId}/access_tokens`, {
 		method: 'POST',
 		headers: {
 			Authorization: `Bearer ${jwt}`,
@@ -78,26 +55,10 @@ export async function createInstallationToken(jwt: string, installationId: numbe
 			'X-GitHub-Api-Version': '2022-11-28'
 		}
 	})
-
-	console.log('[createInstallationToken] Response status:', res.status)
-
-	if (res.status === 401) {
-		handle401Error()
-		throw new Error('创建安装令牌失败：JWT 认证失败')
-	}
-	if (res.status === 404) {
-		const errorText = await res.text()
-		console.error('[createInstallationToken] 404 Error:', errorText)
-		throw new Error(`安装实例 ${installationId} 不存在`)
-	}
+	if (res.status === 401) handle401Error()
 	if (res.status === 422) handle422Error()
-	if (!res.ok) {
-		const errorText = await res.text()
-		console.error('[createInstallationToken] Error:', errorText)
-		throw new Error(`create token failed: ${res.status} - ${errorText}`)
-	}
+	if (!res.ok) throw new Error(`create token failed: ${res.status}`)
 	const data = await res.json()
-	console.log('[createInstallationToken] Token created successfully')
 	return data.token as string
 }
 
@@ -138,39 +99,16 @@ export async function putFile(token: string, owner: string, repo: string, path: 
 // Batch commit APIs
 
 export async function getRef(token: string, owner: string, repo: string, ref: string): Promise<{ sha: string }> {
-	const url = `${GH_API}/repos/${owner}/${repo}/git/ref/${encodeURIComponent(ref)}`
-	console.log('[getRef] Request URL:', url)
-	console.log('[getRef] Token prefix:', token.substring(0, 10) + '...')
-
-	const res = await fetch(url, {
+	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/ref/${encodeURIComponent(ref)}`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 			Accept: 'application/vnd.github+json',
 			'X-GitHub-Api-Version': '2022-11-28'
 		}
 	})
-
-	console.log('[getRef] Response status:', res.status)
-
-	if (res.status === 401) {
-		handle401Error()
-		throw new Error('认证失败：令牌无效或已过期')
-	}
-	if (res.status === 404) {
-		const errorText = await res.text()
-		console.error('[getRef] 404 Error details:', errorText)
-		console.error('[getRef] 可能原因：')
-		console.error('1. GitHub App 未安装在仓库上')
-		console.error('2. GitHub App 没有 Contents 写入权限')
-		console.error('3. 分支不存在')
-		throw new Error(`找不到引用：${ref}。请检查：1) GitHub App 是否已安装在 ${owner}/${repo} 仓库；2) App 是否有 Contents 读写权限`)
-	}
+	if (res.status === 401) handle401Error()
 	if (res.status === 422) handle422Error()
-	if (!res.ok) {
-		const errorText = await res.text()
-		console.error('[getRef] Error details:', errorText)
-		throw new Error(`get ref failed: ${res.status} - ${errorText}`)
-	}
+	if (!res.ok) throw new Error(`get ref failed: ${res.status}`)
 	const data = await res.json()
 	return { sha: data.object.sha }
 }

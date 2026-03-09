@@ -2,7 +2,7 @@ import { createInstallationToken, getInstallationId, signAppJwt } from './github
 import { GITHUB_CONFIG } from '@/consts'
 import { useAuthStore } from '@/hooks/use-auth'
 import { toast } from 'sonner'
-import { decrypt,encrypt } from './aes256-util'
+import { decrypt, encrypt } from './aes256-util'
 
 const GITHUB_TOKEN_CACHE_KEY = 'github_token'
 const GITHUB_PEM_CACHE_KEY = 'p_info'
