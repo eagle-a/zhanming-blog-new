@@ -1,12 +1,11 @@
-> blog 前端网站（[zhanmingblog.com](https://zhanmingblog.cc.cd/blog/readme)）已链接到 public 仓库
+> blog 前端网站（[zhanmingblog.cc.cd](https://zhanmingblog.cc.cd/blog/readme)）已链接到 public 仓库
 
 该项目使用 Github App 管理项目内容，请保管好后续创建的 **Private key**，不要上传到公开网上。
 
 ## 0. Fork 项目
 
-请先 fork 我的项目到你自己的仓库中。后续我的更新，可以直接同步最新功能。
+请先 fork 我的[项目](https://github.com/eagle-a/zhanming-blog-new)到你自己的仓库中。后续我的更新，可以直接同步最新功能。
 
-![](/blogs/readme/f8fb1af7c34a8cf8.webp)
 
 ## 1. 安装
 
@@ -14,10 +13,11 @@
 
 ```ts
 export const GITHUB_CONFIG = {
-	OWNER: process.env.NEXT_PUBLIC_GITHUB_OWNER || 'yysuni',
-	REPO: process.env.NEXT_PUBLIC_GITHUB_REPO || '2025-blog-public',
+	OWNER: process.env.NEXT_PUBLIC_GITHUB_OWNER || 'eagle-a',
+	REPO: process.env.NEXT_PUBLIC_GITHUB_REPO || 'zhanming-blog-new',
 	BRANCH: process.env.NEXT_PUBLIC_GITHUB_BRANCH || 'main',
-	APP_ID: process.env.NEXT_PUBLIC_GITHUB_APP_ID || '-'
+	APP_ID: process.env.NEXT_PUBLIC_GITHUB_APP_ID || '-',
+	ENCRYPT_KEY: process.env.NEXT_PUBLIC_GITHUB_ENCRYPT_KEY || '-'
 } as const
 ```
 
@@ -25,7 +25,7 @@ export const GITHUB_CONFIG = {
 
 ## 2. 部署
 
-我这里熟悉 Vercel 部署，就以 Vercel 部署为例子。创建 Project => Import 这个项目
+以 Vercel 部署为例，创建 Project => Import 这个项目
 
 ![](/blogs/readme/730266f17fab9717.png)
 
@@ -99,10 +99,8 @@ export const GITHUB_CONFIG = {
 
 ### 6.1 网站配置
 
-首页有一个不显眼的配置按钮，点击就能看到现在可以配置的内容。
-
-![](/blogs/readme/cddb4710e08a5069.png)
-
+首页如图有一个不显眼蓝色框内的配置按钮，点击就能看到现在可以配置的内容。
+![](/blogs/readme/ScreenShot_2026-03-09_130551_344.png)
 ## 7. 写 blog
 
 写 blog 的图片管理，可能会有疑惑。图片管理推荐逻辑是先点击 **+ 号** 添加图片，（推荐先压缩好，尺寸推荐宽度不超过 1200）。然后将上传好的图片直接拖入文案编辑区，这就已经添加好了，点击右上角预览就可以看到效果。
@@ -140,25 +138,3 @@ export const GITHUB_CONFIG = {
 `src/app/blog/page.tsx` 文件，下图位置，删除这部分代码。
 
 ![](/blogs/readme/a190410a273b2bea.png)
-
-## 9. 互助群
-
-对于完全不是**程序员**的用户，确实会对于更新代码后，如何同步，如何**合并代码**手足无措。我创建了一个 **QQ群**（加群会简单点），或者 vx 群还是 tg 群会好一点可以 issue 里面说下就行。
-
-QQ 群：[https://qm.qq.com/q/spdpenr4k2](https://qm.qq.com/q/spdpenr4k2)
-> 不好意思，之前的那个qq群ID 不知道为啥搜不到😂
-
-微信群：刚建好了一个微信群，没有 qq 的可以用这个微信群
-![](/blogs/readme/1e38ea817ede4f75.webp)
-
-tg 群：1月1号，才创建的 tg 群 https://t.me/public_blog_2025
-
-应该主要是我自己亲自帮助你们遇到问题怎么办。（后续看看有没有好心人）
-
-希望多多的非程序员加入 blogger 行列，web blog 还是很好玩的，属于自己的 blog 世界。
-
-游戏资产不一定属于你的，你只有**使用权**，但这个 blog **网站、内容、仓库一定是属于你的**
-
-## 友链
-
-既然你已经看到这了，应该创建好，或者有你自己的 blog 了，那就提一个友链 pr 吧。我会主观评价你的 blog 打分。😁 
