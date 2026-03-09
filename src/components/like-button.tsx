@@ -13,7 +13,7 @@ type LikeButtonProps = {
 	delay?: number
 }
 
-const ENDPOINT = 'https://blog-liker.yysuni1001.workers.dev/api/like'
+const ENDPOINT = 'https://blog-liker.学习1001.workers.dev/api/like'
 const FETCH_TIMEOUT = 5000 // 5秒超时
 
 // 带超时的 fetch 函数
