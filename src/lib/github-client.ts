@@ -159,7 +159,11 @@ export async function getRef(token: string, owner: string, repo: string, ref: st
 	if (res.status === 404) {
 		const errorText = await res.text()
 		console.error('[getRef] 404 Error details:', errorText)
-		throw new Error(`找不到引用：${ref}，请检查仓库 ${owner}/${repo} 是否存在该分支`)
+		console.error('[getRef] 可能原因：')
+		console.error('1. GitHub App 未安装在仓库上')
+		console.error('2. GitHub App 没有 Contents 写入权限')
+		console.error('3. 分支不存在')
+		throw new Error(`找不到引用：${ref}。请检查：1) GitHub App 是否已安装在 ${owner}/${repo} 仓库；2) App 是否有 Contents 读写权限`)
 	}
 	if (res.status === 422) handle422Error()
 	if (!res.ok) {
