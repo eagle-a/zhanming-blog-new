@@ -1,10 +1,11 @@
 {
-  "title": "Hello!",
+  "title": "Blog 的使用引导",
   "tags": [
-    "关于我"
+    "开源"
   ],
   "date": "2026-03-08T10:00",
-  "summary": "个人简介",
+  "summary": "项目的部署说明以及注意事项",
+  "cover": "/blogs/readme/9532a65cc32ca5eb.png",
   "hidden": false,
   "category": ""
 }
