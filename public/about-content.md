@@ -1,6 +1,6 @@
 ## 关于我
 
-我是 **孙召顺**（@eagle-a），一名热爱技术的在校大学生。
+我是 **孙召顺**（@eagle-a），一名热爱学习的在校大学生。
 
 ### 基本信息
 - **姓名**: 孙召顺
@@ -22,7 +22,7 @@
 - 网站开发
 
 ### 个人主页
-- 网站：https://eagle-a.github.io
+- 网站：https://zhanmingblog.cc.cd
 - GitHub：https://github.com/eagle-a
 
 ---

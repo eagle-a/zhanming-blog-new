@@ -1,6 +1,6 @@
 # eagle-a Blog
 
-> 一名热爱技术的在校大学生的个人博客
+> 一名热爱学习的在校大学生的个人博客
 >
 > 网站：https://zhanmingblog.cc.cd
 >
