@@ -1,5 +1,5 @@
 {
 	"title": "关于本站",
 	"description": "一名热爱学习的在校大学生的个人博客",
-	"content": "/about-content.md"
+	"content": "## 关于我\n\n我是 **孙召顺**（[@eagle-a](https://github.com/eagle-a)），一名热爱学习的在校大学生。\n\n### 基本信息\n- **姓名**: 孙召顺\n- **出生年月**: 2004.06\n- **职业**: Student\n\n### 教育经历\n- 2022 ~ 至今 **Harbin Engineering University** 本科在读\n\n### 兴趣爱好\n- 编程\n- 前端开发\n- 音乐\n\n### 技能\n- 自动化\n- 嵌入式软件\n- Linux\n- 网站开发\n\n### 个人主页\n- 网站：https://zhanmingblog.cc.cd\n- GitHub：https://github.com/eagle-a\n\n---\n\n📦 网站基于 Github 仓库完全存储，所有内容版本可控\n\n🚀 无后端，无 serverless function，纯静态站点\n\n✏️ 文章通过可视化 UI 直接编辑并提交到 Github 仓库\n\n## 技术栈\n\n- Next.js\n- React\n- TypeScript\n- Tailwind CSS\n- Motion\n- Github API\n\n---\n\n© 2026 eagle-a. All rights reserved."
 }
