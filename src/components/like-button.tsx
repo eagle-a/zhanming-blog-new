@@ -3,12 +3,24 @@ import { motion, AnimatePresence } from 'motion/react'
 import { Heart } from 'lucide-react'
 import clsx from 'clsx'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner' // 推荐用toast提示，无依赖可换alert
 
 type LikeButtonProps = {
-	slug?: string // 保留参数以兼容调用，但实际不再使用
+	slug?: string
 	className?: string
 	delay?: number
-	initialCount?: number // 可选：初始显示的数字，默认 0
+	initialCount?: number
+}
+
+// 补充2次、3次点赞提示，覆盖更多节点
+const LIKE_TIPS = {
+	1: "感谢你的第一次点赞 ❤️",
+	2: "第二次心动！谢谢你的喜欢 💓",
+	3: "三连赞啦！太给力了 ✨",
+	5: "太棒了！第5次点赞，你是真爱粉～",
+	10: "哇！第10次点赞，太感谢你的支持啦 🎉",
+	20: "天呐！20次点赞，你就是我的超级粉丝 💖",
+	50: "50次点赞达成！这份心意我收下啦 🥰"
 }
 
 export default function LikeButton({ 
@@ -40,13 +52,22 @@ export default function LikeButton({
 		}
 	}, [justLiked])
 
+	// 获取当前点赞数对应的提示文案
+	const getLikeTip = (currentCount: number) => {
+		// 精准匹配当前次数的提示
+		return LIKE_TIPS[currentCount as keyof typeof LIKE_TIPS] || null
+	}
+
 	const handleLike = useCallback(() => {
-		// 1. 更新状态
+		// 1. 计算新的点赞数
+		const newCount = count + 1
+		
+		// 2. 更新状态
 		setLiked(true)
 		setJustLiked(true)
-		setCount(prev => prev + 1)
+		setCount(newCount)
 
-		// 2. 创建粒子效果
+		// 3. 创建粒子效果
 		const newParticles = Array.from({ length: 6 }, (_, i) => ({
 			id: Date.now() + i,
 			x: Math.random() * 60 - 30,
@@ -54,11 +75,19 @@ export default function LikeButton({
 		}))
 		setParticles(newParticles)
 
-		// 3. 清除粒子
+		// 4. 清除粒子
 		setTimeout(() => setParticles([]), 1000)
 		
-		// 这里不再有网络请求，所以不需要 try-catch fetch
-		// console.log(`[LocalLike] 点赞成功，当前计数: ${count + 1}`);
+		// 5. 显示对应次数的提示（包含2、3次）
+		const tip = getLikeTip(newCount)
+		if (tip) {
+			// 方式1：使用toast轻提示（推荐）
+			toast.success(tip)
+			// 方式2：无toast库时用alert
+			// alert(tip)
+		}
+
+		console.log(`[LocalLike] 点赞成功，当前计数: ${newCount}`);
 	}, [count])
 
 	if (!show) return null;
