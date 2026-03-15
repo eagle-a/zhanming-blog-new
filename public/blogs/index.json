@@ -1,92 +1,102 @@
 [
-  {
-    "slug": "readme",
-    "title": "部署说明",
-    "tags": ["部署说明"],
-    "date": "2026-03-08T10:00",
-    "summary": "部署说明",
-    "cover": "",
-    "hidden": false,
-    "category": "总结"
-  },
-  {
-    "slug": "diary-may-20",
-    "title": "日记：5月20日",
-    "tags": ["笔记"],
-    "date": "2025-05-20",
-    "summary": "错过了此生仅有的机会，等你多年后想起时是否懊悔",
-    "cover": "",
-    "hidden": false,
-    "category": "日记"
-  },
-  {
-    "slug": "diary-may-21",
-    "title": "日记：5月21日",
-    "tags": ["笔记"],
-    "date": "2025-05-21",
-    "summary": "焦虑是因为你有完成这件事的能力，25年的",
-    "cover": "",
-    "hidden": false,
-    "category": "日记"
-  },
-  {
-    "slug": "diary-august-27",
-    "title": "日记：8月27日",
-    "tags": ["笔记"],
-    "date": "2025-08-27",
-    "summary": "人生在世，其实不太需要接受别人的建议，只有经历了才知道。（deft）",
-    "cover": "",
-    "hidden": false,
-    "category": "日记"
-  },
-  {
-    "slug": "blog-deployment-guide",
-    "title": "Vue3 个人博客部署教程",
-    "tags": ["笔记"],
-    "date": "2025-03-04",
-    "summary": "Vue3 + Express-TS + MongoDB + Nginx + Docker 完整部署方案",
-    "cover": "",
-    "hidden": false,
-    "category": "总结"
-  },
-  {
-    "slug": "ai-mario-record",
-    "title": "AI玩马里奥记录",
-    "tags": ["笔记"],
-    "date": "2026-01-24",
-    "summary": "记录使用强化学习玩马里奥时运行代码的全过程，包括环境配置、依赖安装、常见问题解决等",
-    "cover": "",
-    "hidden": false,
-    "category": "专业笔记"
-  },
-  {
-    "slug": "february-23",
-    "title": "日记：2月23日",
-    "tags": ["笔记"],
-    "date": "2026-02-23",
-    "summary": "你是电竞运动员，25岁已经是大龄了。你是工程师，35岁年富力强。对于政治家来说，50岁好年轻啊",
-    "cover": "",
-    "hidden": false,
-    "category": "日记"
-  },
-  {
-    "slug": "first-article-2024",
-    "title": "第一个文章-2024.5.17",
-    "tags": ["笔记"],
-    "date": "2024-05-17",
-    "summary": "网站复活了，嘿嘿 –2025.3.4-18：45",
-    "cover": "",
-    "hidden": false,
-    "category": "日记"
-  },
-  {
-    "slug": "control-theory",
-    "title": "控制理论-李雅普诺夫能量函数理解",
-    "tags": ["笔记"],
-    "date": "2025-04-12",
-    "summary": "控制理论分类文章，包含李雅普诺夫能量函数理解",
-    "cover": "",
-    "hidden": false,
-    "category": "专业笔记"
-  }
+	{
+		"slug": "readme",
+		"title": "部署说明",
+		"tags": ["部署说明"],
+		"date": "2026-03-08T10:00",
+		"summary": "部署说明",
+		"cover": "",
+		"hidden": false,
+		"category": "总结"
+	},
+	{
+		"slug": "diary-may-20",
+		"title": "日记：5月20日",
+		"tags": ["笔记"],
+		"date": "2025-05-20",
+		"summary": "错过了此生仅有的机会，等你多年后想起时是否懊悔",
+		"cover": "",
+		"hidden": false,
+		"category": "日记"
+	},
+	{
+		"slug": "diary-may-21",
+		"title": "日记：5月21日",
+		"tags": ["笔记"],
+		"date": "2025-05-21",
+		"summary": "焦虑是因为你有完成这件事的能力，25年的",
+		"cover": "",
+		"hidden": false,
+		"category": "日记"
+	},
+	{
+		"slug": "diary-august-27",
+		"title": "日记：8月27日",
+		"tags": ["笔记"],
+		"date": "2025-08-27",
+		"summary": "人生在世，其实不太需要接受别人的建议，只有经历了才知道。（deft）",
+		"cover": "",
+		"hidden": false,
+		"category": "日记"
+	},
+	{
+		"slug": "blog-deployment-guide",
+		"title": "Vue3 个人博客部署教程",
+		"tags": ["笔记"],
+		"date": "2025-03-04",
+		"summary": "Vue3 + Express-TS + MongoDB + Nginx + Docker 完整部署方案",
+		"cover": "",
+		"hidden": false,
+		"category": "总结"
+	},
+	{
+		"slug": "ai-mario-record",
+		"title": "AI玩马里奥记录",
+		"tags": ["笔记"],
+		"date": "2026-01-24",
+		"summary": "记录使用强化学习玩马里奥时运行代码的全过程，包括环境配置、依赖安装、常见问题解决等",
+		"cover": "",
+		"hidden": false,
+		"category": "专业笔记"
+	},
+	{
+		"slug": "february-23",
+		"title": "日记：2月23日",
+		"tags": ["笔记"],
+		"date": "2026-02-23",
+		"summary": "你是电竞运动员，25岁已经是大龄了。你是工程师，35岁年富力强。对于政治家来说，50岁好年轻啊",
+		"cover": "",
+		"hidden": false,
+		"category": "日记"
+	},
+	{
+		"slug": "first-article-2024",
+		"title": "第一个文章-2024.5.17",
+		"tags": ["笔记"],
+		"date": "2024-05-17",
+		"summary": "网站复活了，嘿嘿 –2025.3.4-18：45",
+		"cover": "",
+		"hidden": false,
+		"category": "日记"
+	},
+	{
+		"slug": "control-theory",
+		"title": "控制理论-李雅普诺夫能量函数理解",
+		"tags": ["笔记"],
+		"date": "2025-04-12",
+		"summary": "控制理论分类文章，包含李雅普诺夫能量函数理解",
+		"cover": "",
+		"hidden": false,
+		"category": "专业笔记"
+	},
+	{
+		"slug": "diary-feb-15",
+		"title": "日记：3月15日",
+		"tags": ["笔记"],
+		"date": "2026-03-15",
+		"summary": "大心境界",
+		"cover": "",
+		"hidden": false,
+		"category": "日记"
+	}
 ]
