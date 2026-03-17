@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "blog": "所有文章",
+    "projects": "我的專案",
+    "comments": "留言區",
+    "share": "推薦分享",
+    "links": "關於",
+    "rss": "RSS 訂閱",
+    "bloggers": "秘密空間",
+    "juya": "AI日報"
+  },
+  "languages": {
+    "zh-CN": "簡體中文",
+    "en": "English",
+    "zh-TW": "繁體中文",
+    "ja": "日本語",
+    "ko": "한국어"
+  },
+  "siteSettings": {
+    "waline": {
+      "title": "Waline 留言配置",
+      "serverURL": "伺服器 URL",
+      "serverURLHint": "需要部署 Waline 後端服務，或使用第三方服務",
+      "nick": "暱稱:",
+      "mail": "郵箱:",
+      "placeholder": "歡迎留言！(填寫郵箱可在被回覆時收到郵件提醒)",
+      "nickPlaceholder": "請輸入暱稱",
+      "mailPlaceholder": "請輸入郵箱（用於接收回覆通知）"
+    }
+  },
+  "common": {
+    "loading": "載入中...",
+    "error": "出錯了",
+    "retry": "重試",
+    "confirm": "確認",
+    "cancel": "取消",
+    "save": "儲存",
+    "delete": "刪除",
+    "edit": "編輯",
+    "add": "新增",
+    "search": "搜尋",
+    "close": "關閉",
+    "copy": "複製",
+    "copied": "已複製",
+    "success": "成功",
+    "failed": "失敗",
+    "submit": "提交",
+    "submitting": "提交中...",
+    "upload": "上傳",
+    "uploading": "上傳中...",
+    "download": "下載",
+    "downloading": "下載中...",
+    "noData": "暫無資料",
+    "noMore": "沒有更多了",
+    "loadMore": "載入更多",
+    "loadingMore": "載入更多...",
+    "empty": "空空如也",
+    "comingSoon": "敬請期待",
+    "underConstruction": "正在建設中...",
+    "pageNotFound": "頁面未找到",
+    "backToHome": "返回首頁"
+  },
+  "toast": {
+    "rssUrlCopied": "RSS 連結已複製"
+  }
+}

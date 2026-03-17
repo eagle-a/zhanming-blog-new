@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "blog": "All Articles",
+    "projects": "My Projects",
+    "comments": "Guestbook",
+    "share": "Recommendations",
+    "links": "About",
+    "rss": "RSS Subscribe",
+    "bloggers": "Secret Space",
+    "juya": "AI Daily"
+  },
+  "languages": {
+    "zh-CN": "Simplified Chinese",
+    "en": "English",
+    "zh-TW": "Traditional Chinese",
+    "ja": "Japanese",
+    "ko": "Korean"
+  },
+  "siteSettings": {
+    "waline": {
+      "title": "Waline Guestbook Configuration",
+      "serverURL": "Server URL",
+      "serverURLHint": "Need to deploy Waline backend service, or use third-party service",
+      "nick": "Nickname:",
+      "mail": "Email:",
+      "placeholder": "Welcome to leave a message! (Fill in your email to receive replies)",
+      "nickPlaceholder": "Please enter nickname",
+      "mailPlaceholder": "Please enter email (for reply notifications)"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error occurred",
+    "retry": "Retry",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "close": "Close",
+    "copy": "Copy",
+    "copied": "Copied",
+    "success": "Success",
+    "failed": "Failed",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "upload": "Upload",
+    "uploading": "Uploading...",
+    "download": "Download",
+    "downloading": "Downloading...",
+    "noData": "No data",
+    "noMore": "No more",
+    "loadMore": "Load more",
+    "loadingMore": "Loading more...",
+    "empty": "Empty",
+    "comingSoon": "Coming soon",
+    "underConstruction": "Under construction...",
+    "pageNotFound": "Page not found",
+    "backToHome": "Back to home"
+  },
+  "toast": {
+    "rssUrlCopied": "RSS URL copied"
+  }
+}

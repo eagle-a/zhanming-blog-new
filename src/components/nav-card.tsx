@@ -17,45 +17,17 @@ import ShareFilledSVG from '@/svgs/share-filled.svg'
 import ShareOutlineSVG from '@/svgs/share-outline.svg'
 import WebsiteFilledSVG from '@/svgs/website-filled.svg'
 import WebsiteOutlineSVG from '@/svgs/website-outline.svg'
+import CommentsOutlineSVG from '@/svgs/comments-outline.svg'
+import CommentsFilledSVG from '@/svgs/comments-filled.svg'
+import NewspaperOutlineSVG from '@/svgs/newspaper-outline.svg'
+import NewspaperFilledSVG from '@/svgs/newspaper-filled.svg'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
 import { cn } from '@/lib/utils'
 import { useSize } from '@/hooks/use-size'
 import { useConfigStore } from '@/app/(home)/stores/config-store'
 import { HomeDraggableLayer } from '@/app/(home)/home-draggable-layer'
-
-const list = [
-	{
-		icon: ScrollOutlineSVG,
-		iconActive: ScrollFilledSVG,
-		label: '近期文章',
-		href: '/blog'
-	},
-	{
-		icon: ProjectsOutlineSVG,
-		iconActive: ProjectsFilledSVG,
-		label: '我的项目',
-		href: '/projects'
-	},
-	{
-		icon: AboutOutlineSVG,
-		iconActive: AboutFilledSVG,
-		label: '关于网站',
-		href: '/about'
-	},
-	{
-		icon: ShareOutlineSVG,
-		iconActive: ShareFilledSVG,
-		label: '推荐分享',
-		href: '/share'
-	},
-	{
-		icon: WebsiteOutlineSVG,
-		iconActive: WebsiteFilledSVG,
-		label: '优秀博客',
-		href: '/bloggers'
-	}
-]
+import { useLanguage } from '@/i18n/context'
 
 const extraSize = 8
 
@@ -66,13 +38,54 @@ export default function NavCard() {
 	const { maxSM } = useSize()
 	const [hoveredIndex, setHoveredIndex] = useState<number>(0)
 	const { siteContent, cardStyles } = useConfigStore()
+	const { t } = useLanguage()
 	const styles = cardStyles.navCard
 	const hiCardStyles = cardStyles.hiCard
+
+	const list = useMemo(() => [
+		{
+			icon: ScrollOutlineSVG,
+			iconActive: ScrollFilledSVG,
+			label: t('nav.blog') || '近期文章',
+			href: '/blog'
+		},
+		{
+			icon: ProjectsOutlineSVG,
+			iconActive: ProjectsFilledSVG,
+			label: t('nav.projects') || '我的项目',
+			href: '/projects'
+		},
+		{
+			icon: AboutOutlineSVG,
+			iconActive: AboutFilledSVG,
+			label: t('nav.links') || '关于',
+			href: '/about'
+		},
+		{
+			icon: CommentsOutlineSVG,
+			iconActive: CommentsFilledSVG,
+			label: t('nav.comments') || '留言评论',
+			href: '/comments'
+		},
+		{
+			icon: ShareOutlineSVG,
+			iconActive: ShareFilledSVG,
+			label: t('nav.share') || '推荐分享',
+			href: '/share'
+		},
+		{
+			icon: NewspaperOutlineSVG,
+			iconActive: NewspaperFilledSVG,
+			label: t('nav.juya') || 'AI日报',
+			href: '/juya-ai-daily',
+			isNew: true
+		}
+	], [t])
 
 	const activeIndex = useMemo(() => {
 		const index = list.findIndex(item => pathname === item.href)
 		return index >= 0 ? index : undefined
-	}, [pathname])
+	}, [pathname, list])
 
 	useEffect(() => {
 		setShow(true)
@@ -102,7 +115,7 @@ export default function NavCard() {
 
 	const size = useMemo(() => {
 		if (form === 'mini') return { width: 64, height: 64 }
-		else if (form === 'icons') return { width: 340, height: 64 }
+		else if (form === 'icons') return { width: 380, height: 64 }
 		else return { width: styles.width, height: styles.height }
 	}, [form, styles])
 
@@ -116,6 +129,23 @@ export default function NavCard() {
 	}, [hoveredIndex, activeIndex, form])
 
 	if (maxSM) position = { x: center.x - size.width / 2, y: 16 }
+
+	// 渲染图标
+	const renderIcon = (item: any, isHovered: boolean) => {
+		// 检查是否是 Lucide 图标（函数组件）
+		if (typeof item.icon === 'function') {
+			const IconComponent = isHovered ? item.iconActive : item.icon
+			return (
+				<IconComponent
+					className={cn('h-6 w-6', isHovered ? 'text-brand' : 'text-secondary')}
+				/>
+			)
+		}
+
+		// SVG 组件
+		const IconComponent = isHovered ? item.iconActive : item.icon
+		return <IconComponent className={cn('absolute h-7 w-7', isHovered ? 'text-brand' : '')} />
+	}
 
 	if (show)
 		return (
@@ -139,7 +169,16 @@ export default function NavCard() {
 					)}
 
 					<Link className='flex items-center gap-3' href='/'>
-						<Image src='/images/avatar.png' alt='avatar' width={40} height={40} loading='eager' priority style={{ boxShadow: ' 0 12px 20px -5px #E2D9CE' }} className='rounded-full' />
+						<Image
+							src='/images/avatar.png'
+							alt='avatar'
+							width={40}
+							height={40}
+							loading='eager'
+							priority
+							style={{ boxShadow: ' 0 12px 20px -5px #E2D9CE' }}
+							className='rounded-full'
+						/>
 						{form === 'full' && <span className='font-averia mt-1 text-2xl leading-none font-medium'>{siteContent.meta.title}</span>}
 						{form === 'full' && <span className='text-brand mt-2 text-xs font-medium'>(开发中)</span>}
 					</Link>
@@ -178,9 +217,18 @@ export default function NavCard() {
 										className={cn('text-secondary text-md relative z-10 flex items-center gap-3 rounded-full px-5 py-3', form === 'icons' && 'p-0')}
 										onMouseEnter={() => setHoveredIndex(index)}>
 										<div className='flex h-7 w-7 items-center justify-center'>
-											{hoveredIndex == index ? <item.iconActive className='text-brand absolute h-7 w-7' /> : <item.icon className='absolute h-7 w-7' />}
+											{renderIcon(item, hoveredIndex === index)}
 										</div>
-										{form !== 'icons' && <span className={clsx(index == hoveredIndex && 'text-primary font-medium')}>{item.label}</span>}
+										{form !== 'icons' && (
+											<span className={clsx('flex items-center gap-2', index === hoveredIndex && 'text-primary font-medium')}>
+												{item.label}
+												{item.isNew && (
+													<span className='rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-bold text-white'>
+														NEW
+													</span>
+												)}
+											</span>
+										)}
 									</Link>
 								))}
 							</div>

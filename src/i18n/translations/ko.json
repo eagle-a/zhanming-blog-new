@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "blog": "모든 글",
+    "projects": "내 프로젝트",
+    "comments": "방명록",
+    "share": "추천 공유",
+    "links": "소개",
+    "rss": "RSS 구독",
+    "bloggers": "비밀 공간",
+    "juya": "AI 일일"
+  },
+  "languages": {
+    "zh-CN": "간체 중국어",
+    "en": "영어",
+    "zh-TW": "번체 중국어",
+    "ja": "일본어",
+    "ko": "한국어"
+  },
+  "siteSettings": {
+    "waline": {
+      "title": "Waline 방명록 구성",
+      "serverURL": "서버 URL",
+      "serverURLHint": "Waline 백엔드 서비스를 배포하거나 타사 서비스를 사용해야 합니다",
+      "nick": "닉네임:",
+      "mail": "이메일:",
+      "placeholder": "메시지를 남겨주세요! (답변을 받으려면 이메일을 입력하세요)",
+      "nickPlaceholder": "닉네임 입력",
+      "mailPlaceholder": "이메일 입력 (답변 알림용)"
+    }
+  },
+  "common": {
+    "loading": "로딩 중...",
+    "error": "오류 발생",
+    "retry": "재시도",
+    "confirm": "확인",
+    "cancel": "취소",
+    "save": "저장",
+    "delete": "삭제",
+    "edit": "편집",
+    "add": "추가",
+    "search": "검색",
+    "close": "닫기",
+    "copy": "복사",
+    "copied": "복사됨",
+    "success": "성공",
+    "failed": "실패",
+    "submit": "제출",
+    "submitting": "제출 중...",
+    "upload": "업로드",
+    "uploading": "업로드 중...",
+    "download": "다운로드",
+    "downloading": "다운로드 중...",
+    "noData": "데이터 없음",
+    "noMore": "더 이상 없음",
+    "loadMore": "더 불러오기",
+    "loadingMore": "불러오는 중...",
+    "empty": "비어 있음",
+    "comingSoon": "곧 출시",
+    "underConstruction": "공사 중...",
+    "pageNotFound": "페이지를 찾을 수 없음",
+    "backToHome": "홈으로 돌아가기"
+  },
+  "toast": {
+    "rssUrlCopied": "RSS URL이 복사되었습니다"
+  }
+}

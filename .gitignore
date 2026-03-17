@@ -49,3 +49,6 @@ next-env.d.ts
 
 # dist
 dist/
+
+# others
+别人的项目/

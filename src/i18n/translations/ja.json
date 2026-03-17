@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "blog": "すべての記事",
+    "projects": "マイプロジェクト",
+    "comments": "ゲストブック",
+    "share": "おすすめ",
+    "links": "について",
+    "rss": "RSS 購読",
+    "bloggers": "秘密の空間",
+    "juya": "AI日報"
+  },
+  "languages": {
+    "zh-CN": "简体中文",
+    "en": "English",
+    "zh-TW": "繁体中文",
+    "ja": "日本語",
+    "ko": "한국어"
+  },
+  "siteSettings": {
+    "waline": {
+      "title": "Walineゲストブック設定",
+      "serverURL": "サーバーURL",
+      "serverURLHint": "Walineバックエンドサービスをデプロイするか、サードパーティサービスを使用する必要があります",
+      "nick": "ニックネーム:",
+      "mail": "メール:",
+      "placeholder": "メッセージを残してください！（返信を受け取るにはメールを入力してください）",
+      "nickPlaceholder": "ニックネームを入力",
+      "mailPlaceholder": "メールを入力（返信通知用）"
+    }
+  },
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "retry": "再試行",
+    "confirm": "確認",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "delete": "削除",
+    "edit": "編集",
+    "add": "追加",
+    "search": "検索",
+    "close": "閉じる",
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "success": "成功",
+    "failed": "失敗",
+    "submit": "送信",
+    "submitting": "送信中...",
+    "upload": "アップロード",
+    "uploading": "アップロード中...",
+    "download": "ダウンロード",
+    "downloading": "ダウンロード中...",
+    "noData": "データがありません",
+    "noMore": "これ以上ありません",
+    "loadMore": "もっと読み込む",
+    "loadingMore": "読み込み中...",
+    "empty": "空です",
+    "comingSoon": "お楽しみに",
+    "underConstruction": "工事中...",
+    "pageNotFound": "ページが見つかりません",
+    "backToHome": "ホームに戻る"
+  },
+  "toast": {
+    "rssUrlCopied": "RSS URLをコピーしました"
+  }
+}
