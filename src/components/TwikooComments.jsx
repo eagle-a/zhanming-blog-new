@@ -17,16 +17,21 @@ export default function TwikooComments({ path }) {
     const loadTwikoo = async () => {
       try {
         const twikoo = await import('twikoo');
-        const { init } = twikoo.default || twikoo;
+        // Twikoo 导出方式为 twikoo.init
+        const init = twikoo.init || twikoo.default?.init;
 
-        init({
-          el: containerRef.current,
-          envId: envId,
-          path: path || window.location.pathname,
-          lang: language === 'zh-CN' ? 'zh-CN' : language,
-          // 可选配置
-          region: siteContent.twikoo?.region || 'ap-guangzhou',
-        });
+        if (typeof init === 'function') {
+          init({
+            el: containerRef.current,
+            envId: envId,
+            path: path || window.location.pathname,
+            lang: language === 'zh-CN' ? 'zh-CN' : language,
+            // 可选配置
+            region: siteContent.twikoo?.region || 'ap-guangzhou',
+          });
+        } else {
+          console.error('Twikoo init 函数未找到', twikoo);
+        }
       } catch (error) {
         console.error('Twikoo 加载失败:', error);
       }
