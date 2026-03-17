@@ -17,8 +17,8 @@ export default function TwikooComments({ path }) {
     const loadTwikoo = async () => {
       try {
         const twikoo = await import('twikoo');
-        // Twikoo 导出方式为 twikoo.init
-        const init = twikoo.init || twikoo.default?.init;
+        // Twikoo 导出方式为默认导出，直接调用即可
+        const init = twikoo.default || twikoo;
 
         if (typeof init === 'function') {
           init({
