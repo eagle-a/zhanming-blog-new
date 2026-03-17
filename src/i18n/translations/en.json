@@ -17,15 +17,12 @@
     "ko": "Korean"
   },
   "siteSettings": {
-    "waline": {
-      "title": "Waline Guestbook Configuration",
-      "serverURL": "Server URL",
-      "serverURLHint": "Need to deploy Waline backend service, or use third-party service",
-      "nick": "Nickname:",
-      "mail": "Email:",
-      "placeholder": "Welcome to leave a message! (Fill in your email to receive replies)",
-      "nickPlaceholder": "Please enter nickname",
-      "mailPlaceholder": "Please enter email (for reply notifications)"
+    "twikoo": {
+      "title": "Twikoo Configuration",
+      "envId": "Environment ID / URL",
+      "envIdHint": "Tencent Cloud environment ID or Vercel URL",
+      "region": "Tencent Cloud Region",
+      "regionHint": "If using Tencent Cloud, fill in region code (e.g., ap-guangzhou)"
     }
   },
   "common": {

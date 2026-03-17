@@ -77,8 +77,7 @@ export default function NavCard() {
 			icon: NewspaperOutlineSVG,
 			iconActive: NewspaperFilledSVG,
 			label: t('nav.juya') || 'AI日报',
-			href: '/juya-ai-daily',
-			isNew: true
+			href: '/juya-ai-daily'
 		}
 	], [t])
 

@@ -74,5 +74,9 @@
 	"beian": {
 		"text": "",
 		"link": ""
+	},
+	"twikoo": {
+		"envId": "https://twikoo-xxx.vercel.app",
+		"region": "ap-guangzhou"
 	}
 }

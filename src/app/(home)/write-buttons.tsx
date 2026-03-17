@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useSize } from '@/hooks/use-size'
 import DotsSVG from '@/svgs/dots.svg'
 import { HomeDraggableLayer } from './home-draggable-layer'
+import LanguageSwitcher from '@/components/language-switcher'
 
 export default function WriteButton() {
 	const center = useCenterStore()
@@ -56,6 +57,7 @@ export default function WriteButton() {
 					<PenSVG />
 					<span>写文章</span>
 				</motion.button>
+				<LanguageSwitcher />
 				<motion.button
 					initial={{ opacity: 0, scale: 0.6 }}
 					animate={{ opacity: 1, scale: 1 }}

@@ -17,15 +17,12 @@
     "ko": "한국어"
   },
   "siteSettings": {
-    "waline": {
-      "title": "Waline 留言配置",
-      "serverURL": "伺服器 URL",
-      "serverURLHint": "需要部署 Waline 後端服務，或使用第三方服務",
-      "nick": "暱稱:",
-      "mail": "郵箱:",
-      "placeholder": "歡迎留言！(填寫郵箱可在被回覆時收到郵件提醒)",
-      "nickPlaceholder": "請輸入暱稱",
-      "mailPlaceholder": "請輸入郵箱（用於接收回覆通知）"
+    "twikoo": {
+      "title": "Twikoo 留言配置",
+      "envId": "環境 ID / URL",
+      "envIdHint": "騰訊雲環境 ID 或 Vercel URL",
+      "region": "騰訊雲區域",
+      "regionHint": "如使用騰訊雲，填寫區域代碼（如 ap-guangzhou）"
     }
   },
   "common": {

@@ -17,15 +17,12 @@
     "ko": "한국어"
   },
   "siteSettings": {
-    "waline": {
-      "title": "Walineゲストブック設定",
-      "serverURL": "サーバーURL",
-      "serverURLHint": "Walineバックエンドサービスをデプロイするか、サードパーティサービスを使用する必要があります",
-      "nick": "ニックネーム:",
-      "mail": "メール:",
-      "placeholder": "メッセージを残してください！（返信を受け取るにはメールを入力してください）",
-      "nickPlaceholder": "ニックネームを入力",
-      "mailPlaceholder": "メールを入力（返信通知用）"
+    "twikoo": {
+      "title": "Twikoo設定",
+      "envId": "環境ID / URL",
+      "envIdHint": "Tencent Cloud環境IDまたはVercel URL",
+      "region": "Tencent Cloudリージョン",
+      "regionHint": "Tencent Cloudを使用する場合、リージョンコードを入力してください（例：ap-guangzhou）"
     }
   },
   "common": {
