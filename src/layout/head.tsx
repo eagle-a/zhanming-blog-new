@@ -19,17 +19,12 @@ export default function Head() {
 
 			<link href='https://fonts.googleapis.cn/css2?family=Averia+Gruesa+Libre&display=swap' rel='stylesheet' />
 
-			{/* Plausible Analytics - 只在生产环境加载 */}
-			{isProduction && (
-				<>
-					{/* Privacy-friendly analytics by Plausible */}
-					<Script
-						src='https://plausible.io/js/pa-O6zWmNeHq85ObmIKiKCxO.js'
-						strategy='lazyOnload'
-						data-domain='yourdomain.com'
-					/>
-				</>
-			)}
+			{/* Umami Analytics */}
+			<Script
+				src='https://umami-sigma-lovat.vercel.app/script.js'
+				strategy='lazyOnload'
+				data-website-id='c3602057-5d3b-4e78-86f1-a1a0869c22a3'
+			/>
 		</head>
 	)
 }
