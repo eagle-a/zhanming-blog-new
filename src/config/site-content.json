@@ -46,26 +46,19 @@
 			"type": "github",
 			"value": "https://github.com/eagle-a",
 			"label": "Github",
-			"order": 4
+			"order": 3
 		},
 		{
 			"id": "zhihu",
 			"type": "zhihu",
 			"value": "https://www.zhihu.com/people/23-86-80-47-84",
 			"label": "知乎",
-			"order": 3
+			"order": 2
 		},
 		{
 			"id": "email",
 			"type": "email",
 			"value": "2121612901@qq.com",
-			"label": "",
-			"order": 2
-		},
-		{
-			"id": "rss",
-			"type": "rss",
-			"value": "/subscribe",
 			"label": "",
 			"order": 1
 		}
