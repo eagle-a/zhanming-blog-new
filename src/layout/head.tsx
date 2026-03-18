@@ -1,3 +1,5 @@
+import Script from 'next/script'
+
 export default function Head() {
 	return (
 		<head>
@@ -13,6 +15,13 @@ export default function Head() {
 			<link rel='preconnect' href='https://fonts.gstatic.cn' crossOrigin='anonymous' />
 
 			<link href='https://fonts.googleapis.cn/css2?family=Averia+Gruesa+Libre&display=swap' rel='stylesheet' />
+
+			{/* Umami Analytics */}
+			<Script
+				src='https://umami-sigma-lovat.vercel.app/script.js'
+				strategy='lazyOnload'
+				data-website-id='c3602057-5d3b-4e78-86f1-a1a0869c22a3'
+			/>
 		</head>
 	)
 }
