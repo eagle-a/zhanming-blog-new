@@ -3,6 +3,7 @@
 import { motion } from 'motion/react'
 import { Rss, ExternalLink, Github, Globe, BookOpen, AlertCircle, Calendar, ChevronRight } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 
 const RSS_URL = 'https://imjuya.github.io/juya-ai-daily/rss.xml'
 
@@ -145,14 +146,12 @@ export default function JuyaAIDailyPage() {
               <Calendar className='h-6 w-6 text-brand' />
               最新早报
             </h2>
-            <a
-              href={RSS_URL}
-              target='_blank'
-              rel='noopener noreferrer'
+            <Link
+              href='/juya-ai-daily/preview'
               className='text-sm text-brand hover:underline'
             >
               查看全部 →
-            </a>
+            </Link>
           </div>
 
           <div className='space-y-4'>
