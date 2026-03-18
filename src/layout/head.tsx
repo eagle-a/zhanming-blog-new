@@ -11,6 +11,9 @@ export default function Head() {
 
 			<link rel='icon' href='/favicon.png' />
 
+			{/* RSS 自动发现链接 */}
+			<link rel='alternate' type='application/rss+xml' title='RSS 订阅' href='/rss.xml' />
+
 			<link rel='preconnect' href='https://fonts.googleapis.cn' />
 			<link rel='preconnect' href='https://fonts.gstatic.cn' crossOrigin='anonymous' />
 

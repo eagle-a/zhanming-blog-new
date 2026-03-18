@@ -15,6 +15,7 @@ import XiaohongshuSVG from '@/svgs/小红书.svg'
 import ZhihuSVG from '@/svgs/知乎.svg'
 import BilibiliSVG from '@/svgs/哔哩哔哩.svg'
 import QqSVG from '@/svgs/qq.svg'
+import RssSVG from '@/svgs/rss.svg'
 import { motion, AnimatePresence } from 'motion/react'
 import { useEffect, useState, useMemo, useRef } from 'react'
 import type React from 'react'
@@ -39,6 +40,7 @@ type SocialButtonType =
 	| 'zhihu'
 	| 'bilibili'
 	| 'qq'
+	| 'rss'
 
 interface SocialButtonConfig {
 	id: string
@@ -124,6 +126,7 @@ export default function SocialButtons() {
 		zhihu: ZhihuSVG,
 		bilibili: BilibiliSVG,
 		qq: QqSVG,
+		rss: RssSVG,
 		link: () => null
 	}
 
@@ -258,6 +261,20 @@ export default function SocialButtons() {
 					{...commonProps}
 					className='card relative flex items-center gap-2 rounded-xl px-3 py-2.5 font-medium whitespace-nowrap'>
 					{hasLabel ? button.label : button.value}
+				</motion.a>
+			)
+		}
+
+		if (button.type === 'rss') {
+			return (
+				<motion.a
+					key={button.id}
+					href={button.value}
+					target='_blank'
+					{...commonProps}
+					className={`card relative rounded-xl font-medium whitespace-nowrap bg-orange-500 text-white hover:bg-orange-600 ${hasLabel ? 'flex items-center gap-2 px-3 py-2.5' : 'p-1.5'}`}>
+					<Icon className={iconSize} />
+					{hasLabel && button.label}
 				</motion.a>
 			)
 		}

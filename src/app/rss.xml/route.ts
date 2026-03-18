@@ -112,8 +112,14 @@ export const dynamic = 'force-static'
 export const revalidate = false
 
 export function GET(): Response {
-	const title = siteContent.meta?.title || '2025 Blog'
-	const description = siteContent.meta?.description || 'Latest updates from 2025 Blog'
+	const title = siteContent.meta?.title || 'Blog'
+	const description = siteContent.meta?.description || 'Latest updates from Blog'
+	const username = siteContent.meta?.username || 'author'
+
+	// 获取最新的文章发布日期作为频道发布日期
+	const latestDate = blogs.length > 0
+		? new Date(blogs[0].date).toUTCString()
+		: new Date().toUTCString()
 
 	const items = blogs
 		.filter(item => item?.slug)
@@ -128,9 +134,19 @@ export function GET(): Response {
 		<atom:link href="${FEED_URL}" rel="self" type="application/rss+xml" />
 		<description>${escapeXml(description)}</description>
 		<language>zh-CN</language>
+		<copyright>© ${new Date().getFullYear()} ${escapeXml(username)}</copyright>
+		<managingEditor>${escapeXml(username)}</managingEditor>
+		<webMaster>${escapeXml(username)}</webMaster>
+		<pubDate>${latestDate}</pubDate>
+		<lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+		<generator>Next.js RSS Generator</generator>
 		<docs>https://www.rssboard.org/rss-specification</docs>
 		<ttl>60</ttl>
-		<lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+		<image>
+			<url>${SITE_ORIGIN}/favicon.png</url>
+			<title>${escapeXml(title)}</title>
+			<link>${SITE_ORIGIN}</link>
+		</image>
 		${items}
 	</channel>
 </rss>`
