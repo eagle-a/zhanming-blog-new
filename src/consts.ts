@@ -11,6 +11,6 @@ export const GITHUB_CONFIG = {
 	OWNER: process.env.NEXT_PUBLIC_GITHUB_OWNER || 'eagle-a',
 	REPO: process.env.NEXT_PUBLIC_GITHUB_REPO || 'zhanming-blog-new',
 	BRANCH: process.env.NEXT_PUBLIC_GITHUB_BRANCH || 'main',
-	APP_ID: process.env.NEXT_PUBLIC_GITHUB_APP_ID || '3036081',
-	ENCRYPT_KEY: process.env.NEXT_PUBLIC_GITHUB_ENCRYPT_KEY || '5a8bbf6e7d2125e898bb16a5cd83a1f3dda40841 '
+	APP_ID: process.env.NEXT_PUBLIC_GITHUB_APP_ID!,
+	ENCRYPT_KEY: process.env.NEXT_PUBLIC_GITHUB_ENCRYPT_KEY!
 } as const

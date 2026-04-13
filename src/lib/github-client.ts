@@ -20,13 +20,17 @@ function handle422Error(): void {
 }
 
 export function toBase64Utf8(input: string): string {
-	return btoa(unescape(encodeURIComponent(input)))
+	return btoa(
+		encodeURIComponent(input).replace(/%([0-9A-F]{2})/g, 
+			(_, p1) => String.fromCharCode(parseInt(p1, 16))
+		)
+	)
 }
 
 export function signAppJwt(appId: string, privateKeyPem: string): string {
 	const now = Math.floor(Date.now() / 1000)
 	const header = { alg: 'RS256', typ: 'JWT' }
-	const payload = { iat: now - 60, exp: now + 8 * 60, iss: appId }
+	const payload = { iat: now - 30, exp: now + 2 * 60, iss: appId }
 	const prv = KEYUTIL.getKey(privateKeyPem) as unknown as string
 	return KJUR.jws.JWS.sign('RS256', JSON.stringify(header), JSON.stringify(payload), prv)
 }
@@ -188,7 +192,11 @@ export async function readTextFileFromRepo(token: string, owner: string, repo: s
 	const data: any = await res.json()
 	if (Array.isArray(data) || !data.content) return null
 	try {
-		return decodeURIComponent(escape(atob(data.content)))
+		return decodeURIComponent(
+			Array.from(atob(data.content), c => 
+				'%' + c.charCodeAt(0).toString(16).padStart(2, '0')
+			).join('')
+		)
 	} catch {
 		return atob(data.content)
 	}

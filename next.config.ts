@@ -17,6 +17,24 @@ const nextConfig: NextConfig = {
 	experimental: {
 		scrollRestoration: false
 	},
+	async headers() {
+		return [{
+			source: '/:path*',
+			headers: [{
+				key: 'Content-Security-Policy',
+				value: [
+					"default-src 'self'",
+					"script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+					"style-src 'self' 'unsafe-inline'",
+					"img-src 'self' data: https:",
+					"connect-src 'self' https://api.github.com https://mylike.zhanmingblog.workers.dev https://mytwikoo-ashen.vercel.app",
+					"font-src 'self' https://fonts.gstatic.cn",
+					"frame-src 'none'",
+					"object-src 'none'"
+				].join('; ')
+			}]
+		}]
+	},
 	turbopack: {
 		root: __dirname,
 		rules: {
