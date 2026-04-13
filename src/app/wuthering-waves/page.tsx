@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react'
 
-// 卡池类型定义
+// 卡池类型定义（cardPoolType 字段）
 const POOL_TYPES: Record<number, string> = {
 	1: '角色活动唤取',
 	2: '武器活动唤取',
@@ -13,15 +13,9 @@ const POOL_TYPES: Record<number, string> = {
 	7: '武器活动唤取（2）',
 }
 
-// 各卡池 5 星保底抽数
+// 各卡池 5 星保底
 const PITY_LIMIT: Record<number, number> = {
-	1: 80,
-	2: 80,
-	3: 50,
-	4: 80,
-	5: 80,
-	6: 80,
-	7: 80,
+	1: 80, 2: 80, 3: 50, 4: 80, 5: 80, 6: 80, 7: 80,
 }
 
 interface GachaRecord {
@@ -38,13 +32,11 @@ interface PitySegment {
 	pulls: number
 	name: string | null
 	time: string | null
-	qualityLevel: number
 }
 
 interface PoolResult {
 	poolType: number
 	poolName: string
-	records: GachaRecord[]
 	segments: PitySegment[]
 	totalPulls: number
 	fiveStarCount: number
@@ -59,136 +51,96 @@ function buildPitySegments(records: GachaRecord[]): PitySegment[] {
 	for (const rec of records) {
 		pulls++
 		if (rec.qualityLevel >= 5) {
-			segments.push({ pulls, name: rec.name, time: rec.time, qualityLevel: rec.qualityLevel })
+			segments.push({ pulls, name: rec.name, time: rec.time })
 			pulls = 0
 		}
 	}
-
-	// 当前未出 5 星的进度
-	if (pulls > 0) {
-		segments.push({ pulls, name: null, time: null, qualityLevel: 0 })
-	}
+	if (pulls > 0) segments.push({ pulls, name: null, time: null })
 
 	return segments
 }
 
-function parseUrlParams(urlStr: string): Record<string, string> | null {
-	try {
-		const hashPart = urlStr.includes('#') ? urlStr.split('#')[1] : urlStr
-		const queryPart = hashPart.includes('?') ? hashPart.split('?')[1] : hashPart
-		const params: Record<string, string> = {}
-		for (const part of queryPart.split('&')) {
-			const [k, v] = part.split('=')
-			if (k && v) params[k] = decodeURIComponent(v)
-		}
-		return Object.keys(params).length > 0 ? params : null
-	} catch {
-		return null
+function groupByPool(records: GachaRecord[]): PoolResult[] {
+	const pools = new Map<number, GachaRecord[]>()
+	for (const rec of records) {
+		const list = pools.get(rec.cardPoolType) ?? []
+		list.push(rec)
+		pools.set(rec.cardPoolType, list)
 	}
+
+	const results: PoolResult[] = []
+	for (const [poolType, recs] of pools.entries()) {
+		const segments = buildPitySegments(recs)
+		const fiveStarCount = recs.filter(r => r.qualityLevel >= 5).length
+		const lastFiveIdx = [...recs].reverse().findIndex(r => r.qualityLevel >= 5)
+		const currentPity = lastFiveIdx === -1 ? recs.length : lastFiveIdx
+		const pityLimit = PITY_LIMIT[poolType] ?? 80
+
+		results.push({
+			poolType,
+			poolName: POOL_TYPES[poolType] ?? `卡池 ${poolType}`,
+			segments,
+			totalPulls: recs.length,
+			fiveStarCount,
+			currentPity,
+			pityLimit,
+		})
+	}
+
+	// 按卡池类型排序
+	return results.sort((a, b) => a.poolType - b.poolType)
 }
 
-async function fetchPoolRecords(
-	params: Record<string, string>,
-	cardPoolType: number,
-): Promise<GachaRecord[]> {
-	const body = {
-		cardPoolId: params.gacha_id || '',
-		cardPoolType,
-		languageCode: params.lang || 'zh-Hans',
-		playerId: params.player_id || '',
-		recordId: params.record_id || '',
-		resourcesId: params.resources_id || '',
-		serverId: params.svr_id || '',
-		serverArea: params.svr_area || 'cn',
-	}
-
-	// B服使用 aki-game2.com
-	const apiUrl = 'https://gmserver-api.aki-game2.com/gacha/record/query'
-
-	const res = await fetch(apiUrl, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify(body),
+function parseRecords(raw: string): GachaRecord[] {
+	const data = JSON.parse(raw) as unknown
+	if (!Array.isArray(data)) throw new Error('根节点必须是数组')
+	return data.map((item, i) => {
+		if (typeof item !== 'object' || item === null) throw new Error(`第 ${i + 1} 项不是对象`)
+		const r = item as Record<string, unknown>
+		const qualityLevel = Number(r.qualityLevel)
+		if (!Number.isFinite(qualityLevel)) throw new Error(`第 ${i + 1} 项缺少有效的 qualityLevel`)
+		return {
+			cardPoolType: Number(r.cardPoolType ?? 1),
+			resourceId: Number(r.resourceId ?? 0),
+			qualityLevel,
+			resourceType: String(r.resourceType ?? ''),
+			name: String(r.name ?? ''),
+			count: Number(r.count ?? 1),
+			time: String(r.time ?? ''),
+		}
 	})
+}
 
-	if (!res.ok) throw new Error(`请求失败: ${res.status}`)
-
-	const json = await res.json()
-	if (json.code !== 0) throw new Error(`API 错误: ${json.message || json.code}`)
-
-	return (json.data || []) as GachaRecord[]
+const pityColor = (pulls: number, limit: number) => {
+	const ratio = pulls / limit
+	if (ratio >= 0.9) return 'bg-red-400'
+	if (ratio >= 0.7) return 'bg-amber-400'
+	return 'bg-brand-secondary'
 }
 
 export default function Page() {
-	const [urlInput, setUrlInput] = useState('')
-	const [loading, setLoading] = useState(false)
+	const [input, setInput] = useState('')
 	const [error, setError] = useState<string | null>(null)
 	const [results, setResults] = useState<PoolResult[]>([])
 	const [activeTab, setActiveTab] = useState(0)
 
-	const analyze = useCallback(async () => {
+	const analyze = useCallback(() => {
 		setError(null)
-		setResults([])
-		const trimmed = urlInput.trim()
-		if (!trimmed) return
-
-		const params = parseUrlParams(trimmed)
-		if (!params || !params.player_id || !params.record_id) {
-			setError('无法解析 URL 参数，请确认粘贴了完整的抽卡记录链接')
-			return
-		}
-
-		setLoading(true)
+		const trimmed = input.trim()
+		if (!trimmed) { setResults([]); return }
 		try {
-			const poolTypes = [1, 2, 3, 5, 6, 7]
-			const poolResults: PoolResult[] = []
-
-			for (const poolType of poolTypes) {
-				try {
-					const records = await fetchPoolRecords(params, poolType)
-					if (records.length === 0) continue
-
-					const segments = buildPitySegments(records)
-					const fiveStarCount = records.filter(r => r.qualityLevel >= 5).length
-					const lastFiveStarIdx = [...records].reverse().findIndex(r => r.qualityLevel >= 5)
-					const currentPity = lastFiveStarIdx === -1 ? records.length : lastFiveStarIdx
-
-					poolResults.push({
-						poolType,
-						poolName: POOL_TYPES[poolType] || `卡池 ${poolType}`,
-						records,
-						segments,
-						totalPulls: records.length,
-						fiveStarCount,
-						currentPity,
-						pityLimit: PITY_LIMIT[poolType] || 80,
-					})
-				} catch {
-					// 某个卡池失败时跳过
-				}
-			}
-
-			if (poolResults.length === 0) {
-				setError('未获取到任何抽卡记录，请确认账号和 record_id 是否有效')
-			} else {
-				setResults(poolResults)
-				setActiveTab(0)
-			}
+			const records = parseRecords(trimmed)
+			const poolResults = groupByPool(records)
+			if (poolResults.length === 0) throw new Error('未解析到任何记录')
+			setResults(poolResults)
+			setActiveTab(0)
 		} catch (e) {
-			setError(e instanceof Error ? e.message : '获取失败，请检查网络或重试')
-		} finally {
-			setLoading(false)
+			setResults([])
+			setError(e instanceof Error ? e.message : '解析失败')
 		}
-	}, [urlInput])
+	}, [input])
 
 	const current = results[activeTab]
-
-	const pityColor = (pulls: number, limit: number) => {
-		const ratio = pulls / limit
-		if (ratio >= 0.9) return 'bg-red-400'
-		if (ratio >= 0.7) return 'bg-amber-400'
-		return 'bg-brand-secondary'
-	}
 
 	return (
 		<div className='mx-auto max-w-3xl space-y-6 px-4 py-24'>
@@ -197,40 +149,43 @@ export default function Page() {
 			<div className='space-y-2'>
 				<p className='text-secondary text-sm'>使用方法（B服 PC 端）：</p>
 				<ol className='text-secondary list-inside list-decimal space-y-1 text-sm'>
-					<li>启动鸣潮，进入游戏，打开任意卡池的「召唤历史」</li>
+					<li>进入游戏，打开任意卡池的「召唤历史」，等记录加载完成</li>
 					<li>
-						等记录加载完成后，打开游戏日志文件：
-						<code className='bg-card mx-1 rounded px-1 py-0.5 text-xs'>
-							Wuthering Waves Game\Client\Saved\Logs\Client.log
-						</code>
+						按 <span className='text-brand font-medium'>F12</span> 打开开发者工具，点击{' '}
+						<span className='text-brand font-medium'>Network</span> 面板
 					</li>
 					<li>
-						搜索 <code className='bg-card mx-1 rounded px-1 py-0.5 text-xs'>aki-gm-resources.aki-game.com/aki/gacha</code>，复制整个 URL
+						在请求列表中找到 <span className='text-brand font-medium'>query</span> 请求，点击后选{' '}
+						<span className='text-brand font-medium'>Preview</span> 面板
 					</li>
-					<li>粘贴到下方，点击分析</li>
+					<li>
+						右键 <span className='text-brand font-medium'>data</span> 数组 →{' '}
+						<span className='text-brand font-medium'>Copy Value</span>
+					</li>
+					<li>粘贴到下方输入框，点击分析（支持多卡池混合数据）</li>
 				</ol>
 			</div>
 
 			<div className='space-y-3'>
 				<textarea
-					value={urlInput}
-					onChange={e => setUrlInput(e.target.value)}
-					rows={3}
+					value={input}
+					onChange={e => setInput(e.target.value)}
+					rows={5}
 					spellCheck={false}
-					className='bg-card text-foreground focus-visible:ring-ring w-full resize-none rounded-xl border px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:outline-none'
-					placeholder='粘贴抽卡记录 URL：https://aki-gm-resources.aki-game.com/aki/gacha/index.html#/record?svr_id=...'
+					className='bg-card text-foreground focus-visible:ring-ring w-full resize-y rounded-xl border px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:outline-none'
+					style={{ maxHeight: '8rem' }}
+					placeholder='[{"cardPoolType":1,"qualityLevel":3,"name":"...","time":"..."}, ...]'
 				/>
 				<button
 					type='button'
 					onClick={analyze}
-					disabled={loading}
-					className='bg-brand rounded-xl px-5 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50'>
-					{loading ? '获取中…' : '分析'}
+					className='bg-brand rounded-xl px-5 py-2 text-sm font-medium text-white hover:opacity-90'>
+					分析
 				</button>
 			</div>
 
 			{error && (
-				<p className='text-destructive rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm'>
+				<p className='text-destructive text-sm' role='alert'>
 					{error}
 				</p>
 			)}
@@ -271,7 +226,7 @@ export default function Page() {
 								</div>
 							</div>
 
-							{/* 5 星记录列表 */}
+							{/* 5 星出货列表 */}
 							<div className='space-y-2'>
 								<h3 className='text-sm font-medium'>5 星出货记录</h3>
 								<ul className='space-y-2'>
@@ -285,14 +240,14 @@ export default function Page() {
 											</div>
 											<span className='text-foreground min-w-0 flex-1 truncate text-sm'>
 												{seg.name ? (
-													<span className='flex items-center gap-2'>
-														<span className='font-medium'>{seg.name}</span>
+													<span>
+														{seg.name}{' '}
 														<span className='text-secondary hidden text-xs group-hover:inline'>
-															{seg.time?.slice(0, 10)}
+															({seg.time?.slice(0, 10)})
 														</span>
 													</span>
 												) : (
-													<span className='text-secondary'>（未出 5 星，已垫 {seg.pulls} 抽）</span>
+													<span className='text-secondary'>（未到 5 星，已垫 {seg.pulls} 抽）</span>
 												)}
 											</span>
 										</li>
