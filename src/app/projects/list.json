@@ -4,7 +4,7 @@
 		"year": 2023,
 		"description": "GitHub 个人主页仓库，展示个人项目和技术栈，哈尔滨工程大学在读学生。",
 		"image": "https://github.com/eagle-a.png",
-		"url": "https://github.com/eagle-a/eagle-a",
+		"url": "https://zhanmingblog.cc.cd",
 		"tags": ["GitHub", "个人主页", "开源"],
 		"github": "https://github.com/eagle-a/eagle-a"
 	},
@@ -13,7 +13,7 @@
 		"year": 2026,
 		"description": "基于 Dart 语言开发的项目，探索 Flutter 跨平台应用开发。",
 		"image": "https://skillicons.dev/icons?i=dart",
-		"url": "https://github.com/eagle-a/scriptorium",
+		"url": "https://scriptorium.cc.cd",
 		"tags": ["Dart", "Flutter", "跨平台"],
 		"github": "https://github.com/eagle-a/scriptorium"
 	},
@@ -22,7 +22,7 @@
 		"year": 2026,
 		"description": "基于 Next.js + React + TypeScript 构建的个人博客系统，支持服务端渲染和静态导出。",
 		"image": "https://skillicons.dev/icons?i=nextjs",
-		"url": "https://github.com/eagle-a/zhanming-blog-new",
+		"url": "https://zhanmingblog.cc.cd",
 		"tags": ["Next.js", "React", "TypeScript", "博客"],
 		"github": "https://github.com/eagle-a/zhanming-blog-new"
 	},
@@ -49,7 +49,7 @@
 		"year": 2026,
 		"description": "颜色工具箱，支持颜色混合、转换、修改和详细信息查看。",
 		"image": "https://skillicons.dev/icons?i=svelte",
-		"url": "https://github.com/eagle-a/hue-tools",
+		"url": "https://hue-tools-six.vercel.app",
 		"tags": ["Svelte", "颜色工具", "Fork"],
 		"github": "https://github.com/eagle-a/hue-tools"
 	},
@@ -58,7 +58,7 @@
 		"year": 2026,
 		"description": "云端粘贴板工具，支持代码分享和文本存储。",
 		"image": "https://skillicons.dev/icons?i=js",
-		"url": "https://github.com/eagle-a/CloudPaste",
+		"url": "https://zhanming.cc.cd",
 		"tags": ["JavaScript", "工具", "Fork"],
 		"github": "https://github.com/eagle-a/CloudPaste"
 	},
@@ -67,7 +67,7 @@
 		"year": 2026,
 		"description": "支持 EXIF 信息展示的照片博客系统，一键部署到 Vercel。",
 		"image": "https://skillicons.dev/icons?i=vercel",
-		"url": "https://github.com/eagle-a/exif-photo-blog",
+		"url": "https://zhanmingphoto.cc.cd",
 		"tags": ["Vercel", "博客", "Fork"],
 		"github": "https://github.com/eagle-a/exif-photo-blog"
 	}
