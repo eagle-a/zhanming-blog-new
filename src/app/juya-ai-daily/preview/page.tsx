@@ -19,7 +19,7 @@ interface RSSChannel {
   items: RSSItem[]
 }
 
-const RSS_URL = 'https://raw.githubusercontent.com/imjuya/juya-ai-daily/gh-pages/rss.xml'
+const RSS_URL = 'https://imjuya.github.io/juya-ai-daily/rss.xml'
 
 export default function RSSPreviewPage() {
   const [channel, setChannel] = useState<RSSChannel | null>(null)
