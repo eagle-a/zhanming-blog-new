@@ -4,6 +4,8 @@ import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { Calendar, ExternalLink, Rss, ArrowLeft, Newspaper } from 'lucide-react'
 import Link from 'next/link'
+import { marked } from 'marked'
+import parse from 'html-react-parser'
 
 interface RSSItem {
   title: string
@@ -84,21 +86,18 @@ export default function RSSPreviewPage() {
   }
 
   const parseContent = (content: string) => {
-    // 简单的内容格式化
-    return content
+    // 使用 Markdown 渲染
+    const processedContent = content
       .replace(/视频版：/g, '\n\n**视频版：**')
       .replace(/哔哩哔哩/g, '[哔哩哔哩]')
       .replace(/YouTube/g, '[YouTube]')
       .replace(/概览/g, '\n\n**概览**')
-      .replace(/要闻/g, '\n\n**要闻**')
-      .replace(/模型发布/g, '\n\n**模型发布**')
-      .replace(/开发生态/g, '\n\n**开发生态**')
-      .replace(/产品应用/g, '\n\n**产品应用**')
-      .replace(/行业动态/g, '\n\n**行业动态**')
-      .replace(/技术与洞察/g, '\n\n**技术与洞察**')
-      .replace(/前瞻与传闻/g, '\n\n**前瞻与传闻**')
-      .replace(/↗ #\d+/g, '')
+      .replace(/要点/g, '\n\n**要点**')
+      .replace(/参考/g, '\n\n**参考**')
+      .replace(/\n\n\n+/g, '\n\n')
       .trim()
+    
+    return parse(marked(processedContent))
   }
 
   if (loading) {

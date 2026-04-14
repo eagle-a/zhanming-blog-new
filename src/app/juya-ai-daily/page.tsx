@@ -4,6 +4,8 @@ import { motion } from 'motion/react'
 import { Rss, ExternalLink, Github, Globe, BookOpen, AlertCircle, Calendar, ChevronRight, Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { marked } from 'marked'
+import parse from 'html-react-parser'
 
 const RSS_URL = 'https://imjuya.github.io/juya-ai-daily/rss.xml'
 
@@ -268,9 +270,9 @@ export default function JuyaAIDailyPage() {
                     </a>
                   </h3>
                   
-                  <p className='text-secondary text-sm leading-relaxed'>
-                    {article.summary}
-                  </p>
+                  <div className='text-secondary text-sm leading-relaxed prose prose-sm max-w-none'>
+                    {parse(marked(article.summary))}
+                  </div>
                   
                   <div className='mt-4 flex items-center justify-between'>
                     <a
