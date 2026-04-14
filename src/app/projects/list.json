@@ -9,15 +9,6 @@
 		"github": "https://github.com/eagle-a/eagle-a"
 	},
 	{
-		"name": "scriptorium",
-		"year": 2026,
-		"description": "基于 Dart 语言开发的项目，探索 Flutter 跨平台应用开发。",
-		"image": "https://skillicons.dev/icons?i=dart",
-		"url": "https://scriptorium.cc.cd",
-		"tags": ["Dart", "Flutter", "跨平台"],
-		"github": "https://github.com/eagle-a/scriptorium"
-	},
-	{
 		"name": "zhanming-blog-new",
 		"year": 2026,
 		"description": "基于 Next.js + React + TypeScript 构建的个人博客系统，支持服务端渲染和静态导出。",
@@ -52,15 +43,6 @@
 		"url": "https://hue-tools-six.vercel.app",
 		"tags": ["Svelte", "颜色工具", "Fork"],
 		"github": "https://github.com/eagle-a/hue-tools"
-	},
-	{
-		"name": "CloudPaste",
-		"year": 2026,
-		"description": "云端粘贴板工具，支持代码分享和文本存储。",
-		"image": "https://skillicons.dev/icons?i=js",
-		"url": "https://zhanming.cc.cd",
-		"tags": ["JavaScript", "工具", "Fork"],
-		"github": "https://github.com/eagle-a/CloudPaste"
 	},
 	{
 		"name": "exif-photo-blog",
