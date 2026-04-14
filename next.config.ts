@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
 					"img-src 'self' data: https:",
 					"connect-src 'self' https://api.github.com https://mylike.zhanmingblog.workers.dev https://mytwikoo-ashen.vercel.app https://imjuya.github.io",
 					"font-src 'self' https://fonts.gstatic.cn",
-					"frame-src 'none'",
+					"frame-src 'self' https://vercel.live",
 					"object-src 'none'"
 				].join('; ')
 			}]
