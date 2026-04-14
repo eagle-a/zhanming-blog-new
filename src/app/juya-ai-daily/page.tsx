@@ -5,7 +5,7 @@ import { Rss, ExternalLink, Github, Globe, BookOpen, AlertCircle, Calendar, Chev
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-const RSS_URL = 'https://imjuya.github.io/juya-ai-daily/rss.xml'
+const RSS_URL = 'https://raw.githubusercontent.com/imjuya/juya-ai-daily/gh-pages/rss.xml'
 
 // 文章数据类型
 interface Article {
