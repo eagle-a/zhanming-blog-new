@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'motion/react'
-import { Rss, ExternalLink, Github, Globe, BookOpen, AlertCircle, Calendar, ChevronRight } from 'lucide-react'
+import { Rss, ExternalLink, Github, Globe, BookOpen, AlertCircle, Calendar, ChevronRight, Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
@@ -16,82 +16,144 @@ interface Article {
   summary: string
 }
 
-// 模拟文章数据（实际应从RSS获取）
-const articles: Article[] = [
-  {
-    id: 30,
-    date: '2026-03-18',
-    title: 'AI 早报 2026-03-18',
-    link: 'https://github.com/imjuya/juya-ai-daily/issues/30',
-    summary: 'OpenAI发布GPT-5.4 mini与GPT-5.4 nano模型；H Company联合NVIDIA发布Holotron-12B模型；英伟达推出120亿参数Nemotron 3 VoiceChat语音模型；Meta发布OMT系统支持1600多种语言；乐天发布Rakuten AI 3.0；Hermes Agent发布v0.3.0；Mistral AI推出Forge；Ollama发布0.18.1版本'
-  },
-  {
-    id: 29,
-    date: '2026-03-17',
-    title: 'AI 早报 2026-03-17',
-    link: 'https://github.com/imjuya/juya-ai-daily/issues/29',
-    summary: 'Google逐步向香港用户开放Gemini应用；Mistral AI发布Mistral Small 4开源混合专家模型；Mistral AI发布首个Lean 4开源代码Agent Leanstral；腾讯开源Covo-Audio-Chat语音模型；IBM开源Granite-4.0-1b-speech语音模型；阿里通义开源Fun-CineForge多模态配音模型；OpenAI Codex支持Subagent机制'
-  },
-  {
-    id: 28,
-    date: '2026-03-16',
-    title: 'AI 早报 2026-03-16',
-    link: 'https://github.com/imjuya/juya-ai-daily/issues/28',
-    summary: '智谱发布GLM-5-Turbo；智谱开启GLM Coding Plan限时服务窗口；智谱AI发布龙虾套餐；NotebookLM向Pro用户开放电影级视频概览；央视3·15曝光GEO业务投毒AI大模型；微软首家上线验证NVIDIA Vera Rubin NVL72系统；传月之暗面拟融资10亿美元'
-  },
-  {
-    id: 27,
-    date: '2026-03-15',
-    title: 'AI 早报 2026-03-15',
-    link: 'https://github.com/imjuya/juya-ai-daily/issues/27',
-    summary: 'Claude推出限时促销非高峰及周末使用额度翻倍；智谱推迟GLM Coding Plan续订；StepFun发布Step 3.5 Flash模型训练数据；Z Code发布V0.22.1；传字节跳动暂停Seedance 2.0全球发布；OpenClaw支持接入实时Chrome会话；腾讯云启动"龙虾"全国免费安装'
-  },
-  {
-    id: 25,
-    date: '2026-03-14',
-    title: 'AI 早报 2026-03-14',
-    link: 'https://github.com/imjuya/juya-ai-daily/issues/25',
-    summary: 'Claude正式开放100万token上下文；上海人工智能实验室发布InternVL-U统一多模态模型；智谱调整GLM Coding Plan折扣；Codex应用上线自动化功能；Chrome 146正式发布支持MCP；CopilotKit开源OpenGenerativeUI；Vue作者尤雨溪推出Vite原生部署平台Void；Qoder支持BYOK接入多家大模型'
-  },
-  {
-    id: 24,
-    date: '2026-03-13',
-    title: 'AI 早报 2026-03-13',
-    link: 'https://github.com/imjuya/juya-ai-daily/issues/24',
-    summary: 'GitHub调整Copilot学生计划；Claude支持生成式UI；OpenAI视频API上线新功能；NVIDIA发布NVILA-8B-HD-Video模型；Claude Code推出语音模式；Google调整Antigravity计费；Google Gemini API可设置消费上限；OpenRouter上线Auto Exacto'
-  },
-  {
-    id: 23,
-    date: '2026-03-12',
-    title: 'AI 早报 2026-03-12',
-    link: 'https://github.com/imjuya/juya-ai-daily/issues/23',
-    summary: '英伟达发布并开源混合架构大模型Nemotron 3 Super；xAI在API中上线Grok 4.20系列；OpenRouter上线两款Stealth模型；龙猫在API中上线LongCat-Flash-Omni；MiroMind发布MiroThinker系列Agent；Reka发布70亿参数Reka Edge模型；Antigravity调整AI订阅计划权益'
-  },
-  {
-    id: 22,
-    date: '2026-03-11',
-    title: 'AI 早报 2026-03-11',
-    link: 'https://github.com/imjuya/juya-ai-daily/issues/22',
-    summary: '谷歌发布Gemini Embedding 2原生多模态嵌入模型；Google升级Workspace Gemini功能；Tencent AI Lab开源LeVo 2音乐模型；Fish Audio开源S2文本转语音模型；Hume AI开源TADA；OpenAI调整Codex服务；Claude Code引入/btw命令；JetBrains上线Air'
-  },
-  {
-    id: 21,
-    date: '2026-03-10',
-    title: 'AI 早报 2026-03-10',
-    link: 'https://github.com/imjuya/juya-ai-daily/issues/21',
-    summary: 'Anthropic为Claude Code推出Code Review自动化审查功能；小红书开源FireRed-Image-Edit-1.1图像编辑模型；小红书REDtech发布REDSearcher开源深度搜索框架；JetBrains宣布Junie CLI编码助手进入Beta；吴恩达发布Context Hub；OpenRouter推出应用与智能体排名；Gemini CLI推出极简模式'
-  },
-  {
-    id: 20,
-    date: '2026-03-09',
-    title: 'AI 早报 2026-03-09',
-    link: 'https://github.com/imjuya/juya-ai-daily/issues/20',
-    summary: '深圳龙岗拟扶持OpenClaw；工信部预警其安全风险；Codex重置Plus与Pro订阅限额；OpenClaw发布v2026.3.7；Karpathy开源autoresearch；Kilo发布PinchBench榜单；传腾讯内测QClaw本地部署包'
+// RSS 数据类型
+interface RSSItem {
+  title: string
+  link: string
+  pubDate: string
+  description: string
+}
+
+interface RSSChannel {
+  title: string
+  link: string
+  description: string
+  items: RSSItem[]
+}
+
+// 缓存相关
+const CACHE_KEY = 'juya-ai-daily-cache'
+const CACHE_DURATION = 5 * 60 * 1000 // 5分钟缓存
+
+// 获取缓存数据
+function getCachedData(): Article[] | null {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY)
+    if (!cached) return null
+    
+    const { data, timestamp } = JSON.parse(cached)
+    const now = Date.now()
+    
+    if (now - timestamp > CACHE_DURATION) {
+      localStorage.removeItem(CACHE_KEY)
+      return null
+    }
+    
+    return data
+  } catch {
+    return null
   }
-]
+}
+
+// 设置缓存数据
+function setCachedData(data: Article[]): void {
+  try {
+    const cacheData = {
+      data,
+      timestamp: Date.now()
+    }
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData))
+  } catch {
+    // 忽略缓存错误
+  }
+}
+
+// 解析 RSS 数据的函数
+async function fetchRSSData(): Promise<Article[]> {
+  // 先检查缓存
+  const cachedData = getCachedData()
+  if (cachedData) {
+    return cachedData
+  }
+
+  try {
+    const response = await fetch(RSS_URL)
+    const xmlText = await response.text()
+    
+    const parser = new DOMParser()
+    const xmlDoc = parser.parseFromString(xmlText, 'text/xml')
+    
+    const channelEl = xmlDoc.querySelector('channel')
+    if (!channelEl) {
+      throw new Error('Invalid RSS format')
+    }
+
+    const items: RSSItem[] = []
+    const itemElements = channelEl.querySelectorAll('item')
+    
+    itemElements.forEach((item) => {
+      const title = item.querySelector('title')?.textContent || ''
+      const link = item.querySelector('link')?.textContent || ''
+      const pubDate = item.querySelector('pubDate')?.textContent || ''
+      const description = item.querySelector('description')?.textContent || ''
+      
+      items.push({ title, link, pubDate, description })
+    })
+
+    // 转换为 Article 格式并只取前10条
+    const articles = items.slice(0, 10).map((item, index) => {
+      // 从标题中提取日期
+      const dateMatch = item.title.match(/(\d{4}-\d{2}-\d{2})/)
+      const date = dateMatch ? dateMatch[1] : new Date(item.pubDate).toISOString().split('T')[0]
+      
+      // 从链接中提取 issue ID
+      const idMatch = item.link.match(/\/issues\/(\d+)/)
+      const id = idMatch ? parseInt(idMatch[1]) : index + 1
+      
+      return {
+        id,
+        date,
+        title: item.title,
+        link: item.link,
+        summary: item.description.replace(/<[^>]*>/g, '') // 移除 HTML 标签
+      }
+    })
+    
+    // 设置缓存
+    setCachedData(articles)
+    
+    return articles
+  } catch (error) {
+    console.error('Failed to fetch RSS data:', error)
+    return []
+  }
+}
 
 export default function JuyaAIDailyPage() {
+  const [articles, setArticles] = useState<Article[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [expandedArticle, setExpandedArticle] = useState<number | null>(null)
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        const data = await fetchRSSData()
+        setArticles(data)
+        if (data.length === 0) {
+          setError('暂无数据，请稍后重试')
+        }
+      } catch (err) {
+        console.error('Failed to load RSS data:', err)
+        setError('加载失败，请稍后重试')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
 
   return (
     <div className='flex flex-col items-center px-6 pt-32 pb-12 max-sm:px-0 min-h-screen'>
@@ -154,8 +216,26 @@ export default function JuyaAIDailyPage() {
             </Link>
           </div>
 
-          <div className='space-y-4'>
-            {articles.map((article, index) => (
+          {/* 加载状态 */}
+          {loading && (
+            <div className='flex items-center justify-center py-12'>
+              <Loader2 className='h-8 w-8 animate-spin text-brand' />
+              <span className='ml-2 text-secondary'>正在加载最新早报...</span>
+            </div>
+          )}
+
+          {/* 错误状态 */}
+          {error && !loading && (
+            <div className='rounded-xl bg-red-500/10 p-6 text-center'>
+              <AlertCircle className='mx-auto h-8 w-8 text-red-500 mb-2' />
+              <p className='text-red-700'>{error}</p>
+            </div>
+          )}
+
+          {/* 文章列表 */}
+          {!loading && !error && articles.length > 0 && (
+            <div className='space-y-4'>
+              {articles.map((article, index) => (
               <motion.article
                 key={article.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -206,7 +286,8 @@ export default function JuyaAIDailyPage() {
                 </div>
               </motion.article>
             ))}
-          </div>
+            </div>
+          )}
         </motion.div>
 
         {/* 相关链接 */}
