@@ -24,6 +24,21 @@ export default function Page() {
 	const { content, loading } = useMarkdownRender(data.content)
 	const hideEditButton = siteContent.hideEditButton ?? false
 
+	// 加载 content.md 文件
+	useEffect(() => {
+		const loadContentMd = async () => {
+			try {
+				const response = await fetch('/about/content.md')
+				const contentText = await response.text()
+				setData(prev => ({ ...prev, content: contentText }))
+				setOriginalData(prev => ({ ...prev, content: contentText }))
+			} catch (error) {
+				console.error('Failed to load content.md:', error)
+			}
+		}
+		loadContentMd()
+	}, [])
+
 	const handleChoosePrivateKey = async (file: File) => {
 		try {
 			const text = await file.text()
