@@ -120,12 +120,6 @@
   <div>
     <img src="/about/certificates/images/2022041222_1747130210218_sign_page1.jpg" alt="荣誉证书2" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
   </div>
-  <div>
-    <img src="/about/certificates/images/CET4_202303_230201222110427_1_page1.jpg" alt="英语四级证书" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-  </div>
-  <div>
-    <img src="/about/certificates/images/CET6_202306_230201231219106_1_page1.jpg" alt="英语六级证书" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-  </div>
 </div>
 
 - 英语四级 546 分
