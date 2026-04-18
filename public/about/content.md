@@ -121,7 +121,7 @@
 - 2024 中国大学生数学建模竞赛省级一等奖（2024.10）
 - 2023 中国大学生数学建模竞赛省级一等奖（2023.09）
 
-### 其他荣誉证书
+### 其他荣誉
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
   <div>
     <img src="./certificates/images/2022041222_1747130163338_sign_page1.jpg" alt="荣誉证书1" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
@@ -139,3 +139,5 @@
 - 业余无线电 A 类操作证书
 - C1 驾驶证
 - 校三等奖学金（大三上）
+- 校优秀学生干部（大二下）
+- 校优秀共青团员（大一上）
