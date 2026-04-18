@@ -5,13 +5,8 @@
 20岁
 18726727768
 18726727768@163.com
-预备党员
 
 [个人网站](https://zhanmingblog.cc.cd) | [GitHub](https://github.com/eagle-a)
-
-哈尔滨工程大学（本科）
-
-和我聊聊
 
 ### 个人简介
 孙召顺，专业：自动化，综合成绩优秀，主修课程平均分90+。在校期间，对知识保有好奇和热爱，喜欢一鼓作气的探究，具备较强的自主学习能力。学习上，对嵌入式开发、电机控制算法等领域有深入研究。工作上，待人诚恳，不怕吃苦，内心坚韧；能虚心听取建议，责任感和适应能力强，重视团队氛围的建设。生活上，兴趣广泛，涉猎面广，不玩游戏，厌恶虚度。在保证学习的前提下，积极参加课外活动和科创竞赛，获得过全国大学生智能车竞赛国家一等奖、数学建模竞赛省级一等奖等竞赛奖项。
@@ -124,9 +119,6 @@
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
   <div>
     <img src="./certificates/images/2022041222_1747130163338_sign_page1.jpg" alt="荣誉证书1" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-  </div>
-  <div>
-    <img src="./certificates/images/2022041222_1747130210218_sign_page1.jpg" alt="荣誉证书3" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
   </div>
 </div>
 
