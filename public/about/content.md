@@ -92,22 +92,19 @@
 ## 获得荣誉
 
 ### 全国大学生智能车竞赛
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin: 20px 0;">
-  <div>
-    <img src="/about/certificates/images/哈尔滨工程大学_孙召顺_一等奖_24414986_page1.jpg" alt="智能车竞赛一等奖" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-  </div>
-</div>
-
 - 第十九届**全国大学生智能车竞赛总决赛一等奖**（2024.08）
 - 第十九届全国大学生智能车竞赛东北赛区一等奖（2024.07）
 
 ### 数学建模竞赛
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin: 20px 0;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 15px 0;">
   <div>
     <img src="/about/certificates/images/哈尔滨工程大学_孙召顺_一等奖_50580038_page1.jpg" alt="数学建模竞赛一等奖" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
   </div>
   <div>
     <img src="/about/certificates/images/2404650_page1.jpg" alt="美国数学建模竞赛M奖" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+  </div>
+  <div>
+    <img src="/about/certificates/images/哈尔滨工程大学_孙召顺_一等奖_24414986_page1.jpg" alt="智能车竞赛一等奖" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
   </div>
 </div>
 
@@ -116,9 +113,18 @@
 - 2023 中国大学生数学建模竞赛省级一等奖（2023.09）
 
 ### 其他荣誉
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 15px 0;">
   <div>
     <img src="/about/certificates/images/2022041222_1747130163338_sign_page1.jpg" alt="荣誉证书1" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+  </div>
+  <div>
+    <img src="/about/certificates/images/2022041222_1747130210218_sign_page1.jpg" alt="荣誉证书2" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+  </div>
+  <div>
+    <img src="/about/certificates/images/CET4_202303_230201222110427_1_page1.jpg" alt="英语四级证书" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+  </div>
+  <div>
+    <img src="/about/certificates/images/CET6_202306_230201231219106_1_page1.jpg" alt="英语六级证书" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
   </div>
 </div>
 
