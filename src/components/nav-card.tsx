@@ -179,7 +179,7 @@ export default function NavCard() {
 							className='rounded-full'
 						/>
 						{form === 'full' && <span className='font-averia mt-1 text-2xl leading-none font-medium'>{siteContent.meta.title}</span>}
-						{form === 'full' && <span className='text-brand mt-2 text-xs font-medium'>(开发中)</span>}
+						{form === 'full' && <span className='text-brand mt-2 text-xs font-medium'>(思考中)</span>}
 					</Link>
 
 					{(form === 'full' || form === 'icons') && (
