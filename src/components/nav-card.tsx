@@ -187,34 +187,36 @@ export default function NavCard() {
 							{form !== 'icons' && <div className='text-secondary mt-6 text-sm uppercase'>General</div>}
 
 							<div className={cn('relative mt-2 space-y-2', form === 'icons' && 'mt-0 flex items-center gap-6 space-y-0')}>
-								<motion.div
-									className='absolute max-w-[230px] rounded-full border'
-									layoutId='nav-hover'
-									initial={false}
-									animate={
-										form === 'icons'
-											? {
-													left: hoveredIndex * (itemHeight + 24) - extraSize,
-													top: -extraSize,
-													width: itemHeight + extraSize * 2,
-													height: itemHeight + extraSize * 2
-												}
-											: { top: hoveredIndex * (itemHeight + 8), left: 0, width: '100%', height: itemHeight }
-									}
-									transition={{
-										type: 'spring',
-										stiffness: 400,
-										damping: 30
-									}}
-									style={{ backgroundImage: 'linear-gradient(to right bottom, var(--color-border) 60%, var(--color-card) 100%)' }}
-								/>
+								{!maxSM && (
+									<motion.div
+										className='absolute max-w-[230px] rounded-full border'
+										layoutId='nav-hover'
+										initial={false}
+										animate={
+											form === 'icons'
+												? {
+														left: hoveredIndex * (itemHeight + 24) - extraSize,
+														top: -extraSize,
+														width: itemHeight + extraSize * 2,
+														height: itemHeight + extraSize * 2
+													}
+												: { top: hoveredIndex * (itemHeight + 8), left: 0, width: '100%', height: itemHeight }
+										}
+										transition={{
+											type: 'spring',
+											stiffness: 400,
+											damping: 30
+										}}
+										style={{ backgroundImage: 'linear-gradient(to right bottom, var(--color-border) 60%, var(--color-card) 100%)' }}
+									/>
+								)}
 
 								{list.map((item, index) => (
 									<Link
 										key={item.href}
 										href={item.href}
 										className={cn('text-secondary text-md relative z-10 flex items-center gap-3 rounded-full px-5 py-3', form === 'icons' && 'p-0')}
-										onMouseEnter={() => setHoveredIndex(index)}>
+										onMouseEnter={maxSM ? undefined : () => setHoveredIndex(index)}>
 										<div className='flex h-7 w-7 items-center justify-center'>
 											{renderIcon(item, hoveredIndex === index)}
 										</div>
