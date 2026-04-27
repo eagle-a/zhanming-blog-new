@@ -98,5 +98,15 @@
 		"cover": "",
 		"hidden": false,
 		"category": "日记"
+	},
+	{
+		"slug": "diary-april-27-comsol",
+		"title": "学习日记：COMSOL 微纳光子学仿真资源整理",
+		"tags": ["笔记", "COMSOL", "光子学"],
+		"date": "2026-04-27",
+		"summary": "整理 COMSOL 微纳光子学仿真的官方文档、顶刊论文补充材料及学习路径，为微环谐振腔仿真做准备",
+		"cover": "",
+		"hidden": false,
+		"category": "日记"
 	}
 ]
