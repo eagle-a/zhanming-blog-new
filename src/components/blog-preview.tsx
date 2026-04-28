@@ -46,7 +46,10 @@ export function BlogPreview({ markdown, title, tags, date, summary, cover, slug,
 	return (
 		<>
 			{/* 阅读进度条 */}
-			<div className='fixed top-0 left-0 z-50 h-[2px] bg-brand transition-[width] duration-150 ease-out' style={{ width: `${progress}%` }} />
+			<div
+				className='fixed top-0 left-0 z-50 h-[3px] bg-brand shadow-[0_1px_6px_rgba(0,0,0,0.18)] transition-[width] duration-150 ease-out'
+				style={{ width: `${progress}%` }}
+			/>
 			<div className='mx-auto flex max-w-[1140px] justify-center gap-6 px-6 pt-28 pb-12 max-sm:px-0'>
 				<motion.article
 					initial={{ opacity: 0 }}
