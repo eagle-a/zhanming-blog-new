@@ -1,11 +1,11 @@
 {
-  "title": "Blog 的使用引导",
+  "title": "部署说明",
   "tags": [
-    "开源"
+    "部署说明"
   ],
   "date": "2026-03-08T10:00",
-  "summary": "项目的部署说明以及注意事项",
+  "summary": "部署说明",
   "cover": "/blogs/readme/9532a65cc32ca5eb.png",
   "hidden": false,
-  "category": ""
+  "category": "总结"
 }

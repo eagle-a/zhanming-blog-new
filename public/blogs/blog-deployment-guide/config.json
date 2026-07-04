@@ -1,9 +1,11 @@
 {
-  "title": "个人博客网站部署教程（Vue3+Express-TS+MongoDB+Nginx+Docker）",
+  "title": "Vue3 个人博客部署教程",
   "tags": [
     "笔记"
   ],
-  "date": "2026-01-24",
-  "summary": "个人博客网站部署教程（Vue3+Express-TS+MongoDB+Nginx+Docker）\n\n 关于作者\n\n项目 | 信息  \n---|---  \n姓名 | 孙召顺  \n年龄 | 200",
-  "cover": ""
+  "date": "2025-03-04",
+  "summary": "Vue3 + Express-TS + MongoDB + Nginx + Docker 完整部署方案",
+  "cover": "",
+  "hidden": false,
+  "category": "总结"
 }
