@@ -1,5 +1,6 @@
 import { marked } from 'marked'
 import type { Tokens } from 'marked'
+import { sanitizeHtml } from './sanitize-html'
 
 export type TocItem = { id: string; text: string; level: number }
 
@@ -227,7 +228,7 @@ export async function renderMarkdown(markdown: string): Promise<MarkdownRenderRe
 			}
 		}
 	}
-	const html = (marked.parser(tokens) as string) || ''
+	const html = sanitizeHtml((marked.parser(tokens) as string) || '')
 
 	return { html, toc }
 }

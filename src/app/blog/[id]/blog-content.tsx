@@ -8,12 +8,15 @@ import { BlogPreview } from '@/components/blog-preview'
 import { loadBlog, type LoadedBlog } from '@/lib/load-blog'
 import { useReadArticles } from '@/hooks/use-read-articles'
 import LiquidGrass from '@/components/liquid-grass'
+import blogIndex from '@/../public/blogs/index.json'
+import { useAuthStore } from '@/hooks/use-auth'
 
 export default function BlogContent() {
 	const params = useParams() as { id?: string | string[] }
 	const slug = Array.isArray(params?.id) ? params.id[0] : params?.id || ''
 	const router = useRouter()
 	const { markAsRead } = useReadArticles()
+	const { isAuth } = useAuthStore()
 
 	const [blog, setBlog] = useState<LoadedBlog | null>(null)
 	const [error, setError] = useState<string | null>(null)
@@ -23,6 +26,12 @@ export default function BlogContent() {
 		let cancelled = false
 		async function run() {
 			if (!slug) return
+			const indexItem = blogIndex.find(item => item.slug === slug)
+			if (indexItem?.hidden && !isAuth) {
+				setError('文章不存在')
+				setLoading(false)
+				return
+			}
 			try {
 				setLoading(true)
 				const blogData = await loadBlog(slug)
@@ -42,7 +51,7 @@ export default function BlogContent() {
 		return () => {
 			cancelled = true
 		}
-	}, [slug, markAsRead])
+	}, [slug, markAsRead, isAuth])
 
 	const title = useMemo(() => (blog?.config.title ? blog.config.title : slug), [blog?.config.title, slug])
 	const date = useMemo(() => dayjs(blog?.config.date).format('YYYY年 M月 D日'), [blog?.config.date])

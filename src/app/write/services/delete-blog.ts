@@ -3,9 +3,10 @@ import { getAuthToken } from '@/lib/auth'
 import { GITHUB_CONFIG } from '@/consts'
 import { createBlob, createCommit, createTree, getRef, listRepoFilesRecursive, toBase64Utf8, TreeItem, updateRef } from '@/lib/github-client'
 import { removeBlogFromIndex } from '@/lib/blog-index'
+import { assertValidSlug } from '@/lib/config-validation'
 
 export async function deleteBlog(slug: string): Promise<void> {
-	if (!slug) throw new Error('需要 slug')
+	slug = assertValidSlug(slug)
 
 	const token = await getAuthToken()
 

@@ -2,18 +2,15 @@
 	"name": "zhanming-blog-new",
 	"version": "0.1.0",
 	"private": true,
+	"packageManager": "pnpm@11.4.0",
 	"scripts": {
 		"dev": "next dev --turbopack -p 2025",
 		"svg": "node scripts/gen-svgs-index.js",
-		"build": "next build",
-		"start": "next start",
-		"build:cf": "opennextjs-cloudflare build",
-		"preview": "opennextjs-cloudflare preview",
-		"deploy": "opennextjs-cloudflare deploy",
-		"cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+		"test": "node --no-warnings --experimental-strip-types --test tests/*.test.ts",
+		"typecheck": "tsc --noEmit",
+		"build": "next build"
 	},
 	"dependencies": {
-		"@opennextjs/cloudflare": "^1.14.4",
 		"@types/jsrsasign": "^10.5.15",
 		"@vercel/analytics": "^2.0.1",
 		"@vercel/speed-insights": "^1.2.0",
@@ -26,9 +23,9 @@
 		"lucide-react": "^0.553.0",
 		"marked": "^17.0.0",
 		"motion": "^12.23.24",
-		"next": "16.0.10",
-		"react": "19.2.1",
-		"react-dom": "19.2.1",
+		"next": "16.3.0",
+		"react": "19.2.8",
+		"react-dom": "19.2.8",
 		"shiki": "^3.15.0",
 		"sonner": "^2.0.7",
 		"swr": "^2.3.6",
@@ -45,13 +42,10 @@
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
 		"babel-plugin-react-compiler": "1.0.0",
-		"baseline-browser-mapping": "^2.10.0",
-		"code-inspector-plugin": "^1.2.10",
-		"next-sitemap": "^4.2.3",
+		"baseline-browser-mapping": "^2.11.12",
 		"prettier": "^3.6.2",
 		"prettier-plugin-tailwindcss": "^0.7.1",
 		"tailwindcss": "^4",
-		"typescript": "^5.9.3",
-		"wrangler": "^4.53.0"
+		"typescript": "^5.9.3"
 	}
 }

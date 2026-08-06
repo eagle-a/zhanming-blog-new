@@ -2,3 +2,8 @@ allowBuilds:
   esbuild: false
   sharp: false
   workerd: false
+
+overrides:
+  '@babel/plugin-transform-modules-systemjs': 7.29.4
+  js-yaml: 4.3.0
+  svgo: 3.3.4

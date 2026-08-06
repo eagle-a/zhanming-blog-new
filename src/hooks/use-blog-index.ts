@@ -1,6 +1,7 @@
 import useSWR from 'swr'
 import { useAuthStore } from '@/hooks/use-auth'
 import type { BlogIndexItem } from '@/app/blog/types'
+import { filterPublicBlogs } from '@/lib/blog-visibility'
 
 export type { BlogIndexItem } from '@/app/blog/types'
 
@@ -25,7 +26,7 @@ export function useBlogIndex() {
 
 	let result = data || []
 	if (!isAuth) {
-		result = result.filter(item => !item.hidden)
+		result = filterPublicBlogs(result)
 	}
 
 	return {
@@ -38,7 +39,7 @@ export function useBlogIndex() {
 export function useLatestBlog() {
 	const { items, loading, error } = useBlogIndex()
 
-	const latestBlog = items.length > 0 ? items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0] : null
+	const latestBlog = items.length > 0 ? [...items].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0] : null
 
 	return {
 		blog: latestBlog,

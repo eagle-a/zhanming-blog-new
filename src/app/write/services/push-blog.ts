@@ -7,6 +7,7 @@ import type { ImageItem } from '../types'
 import { getFileExt } from '@/lib/utils'
 import { toast } from 'sonner'
 import { formatDateTimeLocal } from '../stores/write-store'
+import { assertValidSlug } from '@/lib/config-validation'
 
 export type PushBlogParams = {
 	form: {
@@ -28,9 +29,9 @@ export type PushBlogParams = {
 export async function pushBlog(params: PushBlogParams): Promise<void> {
 	const { form, cover, images, mode = 'create', originalSlug } = params
 
-	if (!form?.slug) throw new Error('需要 slug')
+	const slug = assertValidSlug(form?.slug || '')
 
-	if (mode === 'edit' && originalSlug && originalSlug !== form.slug) {
+	if (mode === 'edit' && originalSlug && originalSlug !== slug) {
 		throw new Error('编辑模式下不支持修改 slug，请保持原 slug 不变')
 	}
 
@@ -41,8 +42,8 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
 	const refData = await getRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`)
 	const latestCommitSha = refData.sha
 
-	const basePath = `public/blogs/${form.slug}`
-	const commitMessage = mode === 'edit' ? `更新文章: ${form.slug}` : `新增文章: ${form.slug}`
+	const basePath = `public/blogs/${slug}`
+	const commitMessage = mode === 'edit' ? `更新文章: ${slug}` : `新增文章: ${slug}`
 
 	// collect all local images (content + cover)
 	const allLocalImages: Array<{ img: Extract<ImageItem, { type: 'file' }>; id: string }> = []
@@ -75,7 +76,7 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
 			const hash = img.hash || (await hashFileSHA256(img.file))
 			const ext = getFileExt(img.file.name)
 			const filename = `${hash}${ext}`
-			const publicPath = `/blogs/${form.slug}/${filename}`
+			const publicPath = `/blogs/${slug}/${filename}`
 
 			if (!uploadedHashes.has(hash)) {
 				const path = `${basePath}/${filename}`
@@ -144,7 +145,7 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
 		GITHUB_CONFIG.OWNER,
 		GITHUB_CONFIG.REPO,
 		{
-			slug: form.slug,
+			slug,
 			title: form.title,
 			tags: form.tags,
 			date: dateStr,

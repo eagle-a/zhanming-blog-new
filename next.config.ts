@@ -1,6 +1,4 @@
 import { NextConfig } from 'next'
-import { codeInspectorPlugin } from 'code-inspector-plugin'
-
 const nextConfig: NextConfig = {
 	output: 'export',
 	distDir: 'dist',
@@ -17,32 +15,11 @@ const nextConfig: NextConfig = {
 		imageSizes: [16, 32, 48, 64, 96, 128, 256, 384]
 	},
 	devIndicators: false,
-	reactStrictMode: false,
+	reactStrictMode: true,
 	reactCompiler: true,
 	pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
-	typescript: {
-		ignoreBuildErrors: true
-	},
 	experimental: {
 		scrollRestoration: false
-	},
-	async headers() {
-		return [{
-			source: '/:path*',
-			headers: [{
-				key: 'Content-Security-Policy',
-				value: [
-					"default-src 'self'",
-					"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live",
-					"style-src 'self' 'unsafe-inline' https://fonts.googleapis.cn",
-					"img-src 'self' data: https:",
-					"connect-src 'self' https://api.github.com https://mylike.zhanmingblog.workers.dev https://mytwikoo-ashen.vercel.app https://imjuya.github.io",
-					"font-src 'self' https://fonts.gstatic.cn",
-					"frame-src 'self' https://vercel.live",
-					"object-src 'none'"
-				].join('; ')
-			}]
-		}]
 	},
 	turbopack: {
 		root: __dirname,
@@ -51,9 +28,6 @@ const nextConfig: NextConfig = {
 				loaders: ['@svgr/webpack'],
 				as: '*.js'
 			}
-			// ...codeInspectorPlugin({
-			// 	bundler: 'turbopack'
-			// })
 		},
 
 		resolveExtensions: ['.mdx', '.tsx', '.ts', '.jsx', '.js', '.mjs', '.json', 'css']

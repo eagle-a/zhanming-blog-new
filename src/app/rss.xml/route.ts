@@ -5,24 +5,28 @@ import siteContent from '@/config/site-content.json'
 import blogIndex from '@/../public/blogs/index.json'
 import type { BlogIndexItem } from '@/app/blog/types'
 import { marked } from 'marked'
+import { filterPublicBlogs } from '@/lib/blog-visibility'
+import { sanitizeHtml } from '@/lib/sanitize-html'
+import { assertValidSlug, resolveSiteUrl } from '@/lib/config-validation'
 
 // 配置 marked 为同步模式
 marked.use({
-  async: false
+	async: false
 })
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://eagle-a.github.io'
 const FEED_PATH = '/rss.xml'
-const SITE_ORIGIN = SITE_URL.replace(/\/$/, '')
+const SITE_ORIGIN = resolveSiteUrl(
+	process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://eagle-a.github.io')
+)
 const FEED_URL = `${SITE_ORIGIN}${FEED_PATH}`
 const PUBLIC_DIR = path.join(process.cwd(), 'public')
 
-const blogs = blogIndex as BlogIndexItem[]
+const blogs = filterPublicBlogs(blogIndex as BlogIndexItem[])
 
 const escapeXml = (value: string): string =>
 	value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
 
-const wrapCdata = (value: string): string => `<![CDATA[${value}]]>`
+const wrapCdata = (value: string): string => `<![CDATA[${value.replace(/]]>/g, ']]]]><![CDATA[>')}]]>`
 
 const getExtension = (input: string): string | undefined => {
 	const clean = input.split(/[?#]/)[0]
@@ -69,17 +73,18 @@ const buildEnclosure = (cover?: string): string | null => {
 }
 
 const serializeItem = (item: BlogIndexItem): string => {
-	const link = `${SITE_ORIGIN}/blog/${item.slug}`
+	const slug = assertValidSlug(item.slug)
+	const link = `${SITE_ORIGIN}/blog/${slug}`
 	const title = escapeXml(item.title || item.slug)
 
 	// 读取完整的文章内容
 	let content = item.summary || ''
 	try {
-		const blogPath = path.join(PUBLIC_DIR, 'blogs', item.slug, 'index.md')
+		const blogPath = path.join(PUBLIC_DIR, 'blogs', slug, 'index.md')
 		if (fs.existsSync(blogPath)) {
 			const markdown = fs.readFileSync(blogPath, 'utf8')
 			// 转换 markdown 为 HTML (使用同步方法)
-			content = marked.parse(markdown) as string
+			content = sanitizeHtml(marked.parse(markdown, { async: false }) as string)
 		}
 	} catch (error) {
 		console.error(`Error reading blog content for ${item.slug}:`, error)
@@ -117,9 +122,7 @@ export function GET(): Response {
 	const username = siteContent.meta?.username || 'author'
 
 	// 获取最新的文章发布日期作为频道发布日期
-	const latestDate = blogs.length > 0
-		? new Date(blogs[0].date).toUTCString()
-		: new Date().toUTCString()
+	const latestDate = blogs.length > 0 ? new Date(blogs[0].date).toUTCString() : new Date().toUTCString()
 
 	const items = blogs
 		.filter(item => item?.slug)

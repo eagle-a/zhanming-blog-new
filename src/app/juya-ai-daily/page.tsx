@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { marked } from 'marked'
 import parse from 'html-react-parser'
+import { sanitizeHtml } from '@/lib/sanitize-html'
 
 const RSS_URL = 'https://imjuya.github.io/juya-ai-daily/rss.xml'
 
@@ -271,7 +272,7 @@ export default function JuyaAIDailyPage() {
                   </h3>
                   
                   <div className='text-secondary text-sm leading-relaxed prose prose-sm max-w-none'>
-                    {parse(marked(article.summary))}
+                    {parse(sanitizeHtml(marked.parse(article.summary, { async: false }) as string))}
                   </div>
                   
                   <div className='mt-4 flex items-center justify-between'>

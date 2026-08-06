@@ -3,10 +3,11 @@ import { GITHUB_CONFIG } from '@/consts'
 import { getAuthToken } from '@/lib/auth'
 import { createBlob, createCommit, createTree, getRef, listRepoFilesRecursive, toBase64Utf8, type TreeItem, updateRef } from '@/lib/github-client'
 import type { BlogIndexItem } from '@/lib/blog-index'
+import { assertValidSlug } from '@/lib/config-validation'
 
 export async function saveBlogEdits(originalItems: BlogIndexItem[], nextItems: BlogIndexItem[], categories: string[]): Promise<void> {
 	const removedSlugs = originalItems.filter(item => !nextItems.some(next => next.slug === item.slug)).map(item => item.slug)
-	const uniqueRemoved = Array.from(new Set(removedSlugs.filter(Boolean)))
+	const uniqueRemoved = Array.from(new Set(removedSlugs.filter(Boolean).map(assertValidSlug)))
 
 	const token = await getAuthToken()
 
@@ -71,4 +72,3 @@ export async function saveBlogEdits(originalItems: BlogIndexItem[], nextItems: B
 
 	toast.success('保存成功！请等待页面部署后刷新')
 }
-

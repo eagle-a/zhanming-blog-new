@@ -132,19 +132,14 @@ export const useWriteStore = create<WriteStore>((set, get) => ({
 
 		return resultImages
 	},
-	deleteImage: id =>
-		set(state => {
-			for (const it of state.images) {
-				if (it.type === 'file' && it.id === id) {
-					URL.revokeObjectURL(it.previewUrl)
-
-					if (it.id === state.cover?.id) {
-						set({ cover: null })
-					}
-				}
-			}
-			return { images: state.images.filter(it => it.id !== id) }
-		}),
+	deleteImage: id => {
+		const target = get().images.find(it => it.id === id)
+		if (target?.type === 'file') URL.revokeObjectURL(target.previewUrl)
+		set(state => ({
+			images: state.images.filter(it => it.id !== id),
+			cover: state.cover?.id === id ? null : state.cover
+		}))
+	},
 
 	// Cover state
 	cover: null,

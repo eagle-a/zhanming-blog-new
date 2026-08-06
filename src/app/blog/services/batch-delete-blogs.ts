@@ -3,9 +3,10 @@ import { getAuthToken } from '@/lib/auth'
 import { GITHUB_CONFIG } from '@/consts'
 import { createBlob, createCommit, createTree, getRef, listRepoFilesRecursive, toBase64Utf8, type TreeItem, updateRef } from '@/lib/github-client'
 import { removeBlogsFromIndex } from '@/lib/blog-index'
+import { assertValidSlug } from '@/lib/config-validation'
 
 export async function batchDeleteBlogs(slugs: string[]): Promise<void> {
-	const uniqueSlugs = Array.from(new Set(slugs.filter(Boolean)))
+	const uniqueSlugs = Array.from(new Set(slugs.filter(Boolean).map(assertValidSlug)))
 	if (uniqueSlugs.length === 0) {
 		throw new Error('需要至少选择一篇文章')
 	}
@@ -53,4 +54,3 @@ export async function batchDeleteBlogs(slugs: string[]): Promise<void> {
 
 	toast.success('删除成功！请等待页面部署后刷新')
 }
-

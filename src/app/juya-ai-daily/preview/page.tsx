@@ -6,6 +6,7 @@ import { Calendar, ExternalLink, Rss, ArrowLeft, Newspaper } from 'lucide-react'
 import Link from 'next/link'
 import { marked } from 'marked'
 import parse from 'html-react-parser'
+import { sanitizeHtml } from '@/lib/sanitize-html'
 
 interface RSSItem {
   title: string
@@ -97,7 +98,7 @@ export default function RSSPreviewPage() {
       .replace(/\n\n\n+/g, '\n\n')
       .trim()
     
-    return parse(marked(processedContent))
+    return parse(sanitizeHtml(marked.parse(processedContent, { async: false }) as string))
   }
 
   if (loading) {

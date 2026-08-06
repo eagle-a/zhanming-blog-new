@@ -3,6 +3,7 @@ import parse, { type HTMLReactParserOptions, Element, type DOMNode } from 'html-
 import { renderMarkdown, type TocItem } from '@/lib/markdown-renderer'
 import { MarkdownImage } from '@/components/markdown-image'
 import { CodeBlock } from '@/components/code-block'
+import { sanitizeHtml } from '@/lib/sanitize-html'
 
 type MarkdownRenderResult = {
 	content: ReactElement | null
@@ -25,7 +26,7 @@ export function useMarkdownRender(markdown: string): MarkdownRenderResult {
 				if (!cancelled) {
 					// Extract pre elements and replace with placeholders before parsing
 					const codeBlocks: Array<{ placeholder: string; code: string; preHtml: string }> = []
-					let processedHtml = html.replace(/<pre\s+data-code="([^"]*)"([^>]*)>([\s\S]*?)<\/pre>/g, (match, codeAttr, attrs, content) => {
+					let processedHtml = sanitizeHtml(html).replace(/<pre\s+data-code="([^"]*)"([^>]*)>([\s\S]*?)<\/pre>/g, (match, codeAttr, attrs, content) => {
 						const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`
 						// Decode HTML entities in code attribute
 						const code = codeAttr
@@ -52,25 +53,23 @@ export function useMarkdownRender(markdown: string): MarkdownRenderResult {
 							// Handle code block placeholders in text nodes
 							if (domNode.type === 'text' && domNode.data && domNode.data.includes('__CODE_BLOCK_')) {
 								const text = domNode.data
-								const result = text
-												.split(/(__CODE_BLOCK_\d+__)/)
-												.filter(Boolean);
+								const result = text.split(/(__CODE_BLOCK_\d+__)/).filter(Boolean)
 
 								return (
 									<>
 										{result.map((item, index) => {
-											if(item.startsWith('__CODE_BLOCK_')){
+											if (item.startsWith('__CODE_BLOCK_')) {
 												const block = codeBlocks.find(b => b.placeholder === item)
-												if(block){
+												if (block) {
 													const preElement = parse(block.preHtml) as ReactElement
 													return (
-														<CodeBlock key={block.placeholder} code={block.code}>{preElement}</CodeBlock>
+														<CodeBlock key={block.placeholder} code={block.code}>
+															{preElement}
+														</CodeBlock>
 													)
 												}
-											}else{
-												return item
-													? <Fragment key={index}>{item}</Fragment>
-													: null
+											} else {
+												return item ? <Fragment key={index}>{item}</Fragment> : null
 											}
 										})}
 									</>

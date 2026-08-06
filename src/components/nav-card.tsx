@@ -42,44 +42,47 @@ export default function NavCard() {
 	const styles = cardStyles.navCard
 	const hiCardStyles = cardStyles.hiCard
 
-	const list = useMemo(() => [
-		{
-			icon: ScrollOutlineSVG,
-			iconActive: ScrollFilledSVG,
-			label: t('nav.blog') || '近期文章',
-			href: '/blog'
-		},
-		{
-			icon: ProjectsOutlineSVG,
-			iconActive: ProjectsFilledSVG,
-			label: t('nav.projects') || '我的项目',
-			href: '/projects'
-		},
-		{
-			icon: AboutOutlineSVG,
-			iconActive: AboutFilledSVG,
-			label: t('nav.links') || '关于',
-			href: '/about'
-		},
-		{
-			icon: CommentsOutlineSVG,
-			iconActive: CommentsFilledSVG,
-			label: t('nav.comments') || '留言评论',
-			href: '/comments'
-		},
-		{
-			icon: ShareOutlineSVG,
-			iconActive: ShareFilledSVG,
-			label: t('nav.share') || '推荐分享',
-			href: '/share'
-		},
-		{
-			icon: NewspaperOutlineSVG,
-			iconActive: NewspaperFilledSVG,
-			label: t('nav.juya') || 'AI日报',
-			href: '/juya-ai-daily'
-		}
-	], [t])
+	const list = useMemo(
+		() => [
+			{
+				icon: ScrollOutlineSVG,
+				iconActive: ScrollFilledSVG,
+				label: t('nav.blog') || '近期文章',
+				href: '/blog'
+			},
+			{
+				icon: ProjectsOutlineSVG,
+				iconActive: ProjectsFilledSVG,
+				label: t('nav.projects') || '我的项目',
+				href: '/projects'
+			},
+			{
+				icon: AboutOutlineSVG,
+				iconActive: AboutFilledSVG,
+				label: t('nav.links') || '关于',
+				href: '/about'
+			},
+			{
+				icon: CommentsOutlineSVG,
+				iconActive: CommentsFilledSVG,
+				label: t('nav.comments') || '留言评论',
+				href: '/comments'
+			},
+			{
+				icon: ShareOutlineSVG,
+				iconActive: ShareFilledSVG,
+				label: t('nav.share') || '推荐分享',
+				href: '/share'
+			},
+			{
+				icon: NewspaperOutlineSVG,
+				iconActive: NewspaperFilledSVG,
+				label: t('nav.juya') || 'AI日报',
+				href: '/juya-ai-daily'
+			}
+		],
+		[t]
+	)
 
 	const activeIndex = useMemo(() => {
 		const index = list.findIndex(item => pathname === item.href)
@@ -134,11 +137,7 @@ export default function NavCard() {
 		// 检查是否是 Lucide 图标（函数组件）
 		if (typeof item.icon === 'function') {
 			const IconComponent = isHovered ? item.iconActive : item.icon
-			return (
-				<IconComponent
-					className={cn('h-6 w-6', isHovered ? 'text-brand' : 'text-secondary')}
-				/>
-			)
+			return <IconComponent className={cn('h-6 w-6', isHovered ? 'text-brand' : 'text-secondary')} />
 		}
 
 		// SVG 组件
@@ -215,18 +214,9 @@ export default function NavCard() {
 										href={item.href}
 										className={cn('text-secondary text-md relative z-10 flex items-center gap-3 rounded-full px-5 py-3', form === 'icons' && 'p-0')}
 										onMouseEnter={() => setHoveredIndex(index)}>
-										<div className='flex h-7 w-7 items-center justify-center'>
-											{renderIcon(item, hoveredIndex === index)}
-										</div>
+										<div className='flex h-7 w-7 items-center justify-center'>{renderIcon(item, hoveredIndex === index)}</div>
 										{form !== 'icons' && (
-											<span className={clsx('flex items-center gap-2', index === hoveredIndex && 'text-primary font-medium')}>
-												{item.label}
-												{item.isNew && (
-													<span className='rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-bold text-white'>
-														NEW
-													</span>
-												)}
-											</span>
+											<span className={clsx('flex items-center gap-2', index === hoveredIndex && 'text-primary font-medium')}>{item.label}</span>
 										)}
 									</Link>
 								))}

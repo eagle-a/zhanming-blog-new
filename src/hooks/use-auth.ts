@@ -1,6 +1,5 @@
 import { create } from 'zustand'
-import { clearAllAuthCache, getAuthToken as getToken, hasAuth as checkAuth, getPemFromCache, savePemToCache } from '@/lib/auth'
-import { useConfigStore } from '@/app/(home)/stores/config-store'
+import { getAuthToken as getToken } from '@/lib/auth'
 interface AuthStore {
 	// State
 	isAuth: boolean
@@ -17,21 +16,16 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 	isAuth: false,
 	privateKey: null,
 
-	setPrivateKey: async (key: string) => {
+	setPrivateKey: (key: string) => {
 		set({ isAuth: true, privateKey: key })
-		const { siteContent } = useConfigStore.getState()
-		if (siteContent?.isCachePem) {
-			await savePemToCache(key)
-		}
 	},
 
 	clearAuth: () => {
-		clearAllAuthCache()
-		set({ isAuth: false })
+		set({ isAuth: false, privateKey: null })
 	},
 
 	refreshAuthState: async () => {
-		set({ isAuth: await checkAuth() })
+		set(state => ({ isAuth: Boolean(state.privateKey) }))
 	},
 
 	getAuthToken: async () => {
@@ -40,15 +34,3 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 		return token
 	}
 }))
-
-getPemFromCache().then((key) => {
-	if (key) {
-		useAuthStore.setState({ privateKey: key })
-	}
-})
-
-checkAuth().then((isAuth) => {
-	if (isAuth) {
-		useAuthStore.setState({ isAuth })
-	}
-})

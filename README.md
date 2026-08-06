@@ -27,14 +27,18 @@ NEXT_PUBLIC_SITE_URL=https://你的域名.vercel.app
 
 # GitHub App 配置（如需在线编辑功能）
 NEXT_PUBLIC_GITHUB_APP_ID=你的GitHubAppID
-NEXT_PUBLIC_GITHUB_ENCRYPT_KEY=自定义加密密钥
+# 可选：点赞接口的公开 slug 前缀
+NEXT_PUBLIC_BLOG_SLUG_KEY=
 ```
+
+缺少 GitHub App 相关变量时，在线编辑会明确提示配置缺失，不会默认写入作者的仓库。
 
 ### 3. Vercel 一键部署
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/eagle-a/zhanming-blog-new)
 
 部署步骤：
+
 1. 点击上方按钮进入 Vercel 部署页面
 2. 选择你的 GitHub 账号和 fork 的仓库
 3. 填写项目名称
@@ -42,6 +46,8 @@ NEXT_PUBLIC_GITHUB_ENCRYPT_KEY=自定义加密密钥
 5. 点击 Deploy 开始部署
 
 部署完成后，Vercel 会自动分配一个域名，你也可以绑定自己的自定义域名。
+
+本项目只支持 Vercel 静态导出。Cloudflare/OpenNext 配置已移除，不要运行 Cloudflare 部署命令。
 
 ---
 
@@ -58,7 +64,7 @@ NEXT_PUBLIC_GITHUB_ENCRYPT_KEY=自定义加密密钥
 7. 生成 **Private key** 并下载保存
 8. 安装 App 到你的仓库
 
-将 App ID 和加密密钥配置到 Vercel 的环境变量中，即可使用在线编辑功能。
+将 App ID 配置到 Vercel 环境变量；使用编辑功能时，在页面中临时选择下载的 Private Key。
 
 ---
 
@@ -93,14 +99,18 @@ public/blogs/
 
 ```json
 {
-  "title": "博客标题",
-  "tags": ["标签1", "标签2"],
-  "date": "2026-03-08T12:00",
-  "summary": "博客摘要",
-  "cover": "/blogs/文件夹名/cover.png",
-  "hidden": false
+	"title": "博客标题",
+	"tags": ["标签1", "标签2"],
+	"date": "2026-03-08T12:00",
+	"summary": "博客摘要",
+	"cover": "/blogs/文件夹名/cover.png",
+	"hidden": false
 }
 ```
+
+`hidden` 只表示从公开文章列表、RSS 和 sitemap 中隐藏。因为这是静态站，`public/blogs/` 下的文件本身仍然可以被直接访问；它不是权限控制，也不能存放真正私密的内容。
+
+在线编辑功能会在浏览器中读取你选择的 GitHub App Private Key，并直接调用 GitHub API。私钥只保存在当前页面内存中，刷新后需要重新输入；这不是服务端认证，不要在公共电脑或不可信浏览器中使用。
 
 ---
 
@@ -133,6 +143,7 @@ const LiquidGrass = dynamic(() => import('@/components/liquid-grass'), { ssr: fa
 ### 配置首页内容
 
 首页内容在 `src/app/(home)` 目录：
+
 - `page.tsx` - 首页主文件
 - `hi-card.tsx` - HiCard 内容
 

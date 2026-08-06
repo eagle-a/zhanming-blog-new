@@ -1,4 +1,5 @@
 import type { BlogConfig } from '@/app/blog/types'
+import { assertValidSlug } from '@/lib/config-validation'
 
 export type { BlogConfig } from '@/app/blog/types'
 
@@ -37,13 +38,11 @@ function calculateStats(text: string): BlogStats {
  * Used by both view page and edit page
  */
 export async function loadBlog(slug: string): Promise<LoadedBlog> {
-	if (!slug) {
-		throw new Error('Slug is required')
-	}
+	const safeSlug = assertValidSlug(slug)
 
 	// Load config.json
 	let config: BlogConfig = {}
-	const configRes = await fetch(`/blogs/${encodeURIComponent(slug)}/config.json`)
+	const configRes = await fetch(`/blogs/${encodeURIComponent(safeSlug)}/config.json`)
 	if (configRes.ok) {
 		try {
 			config = await configRes.json()
@@ -53,7 +52,7 @@ export async function loadBlog(slug: string): Promise<LoadedBlog> {
 	}
 
 	// Load index.md
-	const mdRes = await fetch(`/blogs/${encodeURIComponent(slug)}/index.md`)
+	const mdRes = await fetch(`/blogs/${encodeURIComponent(safeSlug)}/index.md`)
 	if (!mdRes.ok) {
 		throw new Error('Blog not found')
 	}
@@ -62,7 +61,7 @@ export async function loadBlog(slug: string): Promise<LoadedBlog> {
 	const stats = calculateStats(markdown)
 
 	return {
-		slug,
+		slug: safeSlug,
 		config,
 		markdown,
 		cover: config.cover,
