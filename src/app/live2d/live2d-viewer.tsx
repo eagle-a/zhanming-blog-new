@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-/** PIXI Application 实例（CDN 加载，无类型包） */
+/** PIXI Application 实例（外部脚本加载，无类型包） */
 interface PixiAppInstance {
 	stage: { addChild: (child: unknown) => void }
 	view: HTMLCanvasElement
@@ -17,15 +17,24 @@ interface Live2DModelInstance {
 	scale: { set: (x: number, y: number) => void }
 }
 
-const CDN_SCRIPTS = [
-	'https://unpkg.com/pixi.js@6.2.0/dist/browser/pixi.min.js',
-	'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js',
-	'https://unpkg.com/pixi-live2d-display/dist/cubism4.min.js'
+const LIVE2D_SCRIPTS = [
+	{
+		src: 'https://unpkg.com/pixi.js@6.2.0/dist/browser/pixi.min.js',
+		integrity: 'sha384-ZQoAYxX6eQyrW/Vpb2MtCic46Xg+z/qJ5G9WZDWnwW4SEjmApGxIpTyQUzlgDsVG'
+	},
+	{
+		src: 'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js',
+		integrity: 'sha384-MeKqhuhBpq1ZqqshjOzqDOQJ/00BuDVdnNeYgPKul9hmgROzmT17WkmUeFJ9Jlrb'
+	},
+	{
+		src: 'https://unpkg.com/pixi-live2d-display@0.4.0/dist/cubism4.min.js',
+		integrity: 'sha384-x73Ez+8Lf2UpkuWDPMvQ/T8scXzifx3geDffp4EdBI2/r/z+NlTxlHA5xySHOP7n'
+	}
 ]
 
 const MODEL_URL = '/live2d/live2d.model3.json'
 
-function loadScript(src: string, timeout = 10000): Promise<void> {
+function loadScript(src: string, integrity: string, timeout = 10000): Promise<void> {
 	return new Promise((resolve, reject) => {
 		if (document.querySelector(`script[src="${src}"]`)) {
 			resolve()
@@ -34,6 +43,7 @@ function loadScript(src: string, timeout = 10000): Promise<void> {
 
 		const script = document.createElement('script')
 		script.src = src
+		script.integrity = integrity
 		script.crossOrigin = 'anonymous'
 
 		const timeoutId = setTimeout(() => {
@@ -66,8 +76,8 @@ export default function Live2DViewer() {
 
 		const init = async () => {
 			try {
-				for (const src of CDN_SCRIPTS) {
-					await loadScript(src)
+				for (const script of LIVE2D_SCRIPTS) {
+					await loadScript(script.src, script.integrity)
 				}
 
 				const PIXI = (window as unknown as { PIXI: unknown }).PIXI

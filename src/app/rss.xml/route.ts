@@ -78,7 +78,8 @@ const serializeItem = (item: BlogIndexItem): string => {
 	const title = escapeXml(item.title || item.slug)
 
 	// 读取完整的文章内容
-	let content = item.summary || ''
+	const sanitizedSummary = sanitizeHtml(item.summary || '')
+	let content = sanitizedSummary
 	try {
 		const blogPath = path.join(PUBLIC_DIR, 'blogs', slug, 'index.md')
 		if (fs.existsSync(blogPath)) {
@@ -90,7 +91,7 @@ const serializeItem = (item: BlogIndexItem): string => {
 		console.error(`Error reading blog content for ${item.slug}:`, error)
 	}
 
-	const description = wrapCdata(item.summary || content.substring(0, 200) + '...')
+	const description = wrapCdata(sanitizedSummary || content.substring(0, 200) + '...')
 	const contentEncoded = wrapCdata(content)
 	const pubDate = new Date(item.date).toUTCString()
 	const categories = (item.tags || [])
