@@ -1,4 +1,5 @@
 import { get } from '@vercel/blob'
+import { isAllowedMediaPathname } from '@/lib/media-url'
 import { routeErrorResponse } from '@/lib/route-errors'
 
 export const runtime = 'nodejs'
@@ -8,7 +9,7 @@ export async function GET(_request: Request, context: { params: Promise<{ pathna
 	try {
 		const { pathname: segments } = await context.params
 		const pathname = segments.join('/')
-		if (!/^blog\/[a-z0-9_-]{1,100}\/[a-f0-9]{64}\.[a-z0-9]{1,10}$/i.test(pathname)) {
+		if (!isAllowedMediaPathname(pathname)) {
 			return new Response('Not found', { status: 404 })
 		}
 		const result = await get(pathname, { access: 'private', token: process.env.BLOB_READ_WRITE_TOKEN })
@@ -17,7 +18,9 @@ export async function GET(_request: Request, context: { params: Promise<{ pathna
 			headers: {
 				'Content-Type': result.blob.contentType || 'application/octet-stream',
 				'Cache-Control': 'public, max-age=31536000, immutable',
-				'ETag': result.blob.etag
+				ETag: result.blob.etag,
+				'Content-Security-Policy': "sandbox; default-src 'none'; style-src 'unsafe-inline'",
+				'X-Content-Type-Options': 'nosniff'
 			}
 		})
 	} catch (error) {

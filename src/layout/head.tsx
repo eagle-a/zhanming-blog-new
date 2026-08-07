@@ -1,10 +1,10 @@
-export default function Head() {
+export default function Head({ faviconUrl = '/favicon.png' }: { faviconUrl?: string }) {
 	return (
 		<head>
 			<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
 			<link rel='manifest' href='/manifest.json' />
 
-			<link rel='icon' href='/favicon.png' />
+			<link rel='icon' href={faviconUrl} />
 
 			{/* RSS 自动发现链接 */}
 			<link rel='alternate' type='application/rss+xml' title='RSS 订阅' href='/rss.xml' />

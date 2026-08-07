@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { del } from '@vercel/blob'
 import { upload } from '@vercel/blob/client'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/neon-serverless'
 import * as schema from '../src/db/schema.ts'
 import { mediaProxyUrl } from '../src/lib/media-url.ts'
@@ -11,7 +11,7 @@ import { mediaProxyUrl } from '../src/lib/media-url.ts'
 const baseUrl = process.env.CMS_TEST_BASE_URL || 'http://localhost:2025'
 const password = process.env.CMS_TEST_PASSWORD
 const databaseUrl = process.env.DATABASE_URL
-const slug = 'codex-smoke-test'
+const slug = `codex-smoke-test-${Date.now()}`
 
 if (!password) throw new Error('CMS_TEST_PASSWORD is required')
 if (!databaseUrl) throw new Error('DATABASE_URL is required')
@@ -19,7 +19,13 @@ if (!databaseUrl) throw new Error('DATABASE_URL is required')
 const db = drizzle(databaseUrl, { schema })
 let blobUrl: string | undefined
 let blobPathname: string | undefined
+let contentBlobUrl: string | undefined
+let contentBlobPathname: string | undefined
+let cookie: string | undefined
+let originalSnippets: string[] | undefined
+let snippetsRestored = false
 let failure: unknown
+const contentMarker = `codex-content-smoke-${Date.now()}`
 
 async function requestJson(url: string, init?: RequestInit): Promise<{ response: Response; body: any }> {
 	const response = await fetch(url, init)
@@ -34,8 +40,58 @@ try {
 		body: JSON.stringify({ password })
 	})
 	if (!login.response.ok) throw new Error(`Login failed: ${login.response.status}`)
-	const cookie = login.response.headers.getSetCookie()[0]?.split(';')[0]
+	cookie = login.response.headers.getSetCookie()[0]?.split(';')[0]
 	if (!cookie) throw new Error('Login did not return a session cookie')
+	if (!login.response.headers.getSetCookie()[0]?.includes('HttpOnly')) throw new Error('Admin session cookie is not HttpOnly')
+
+	const contentBefore = await requestJson(`${baseUrl}/api/content/snippets`)
+	if (!contentBefore.response.ok || !Array.isArray(contentBefore.body.data) || typeof contentBefore.body.version !== 'number') {
+		throw new Error('Runtime snippets document could not be read')
+	}
+	const snippetsBefore = contentBefore.body.data as string[]
+	originalSnippets = snippetsBefore
+	const contentUpdated = await requestJson(`${baseUrl}/api/admin/content/snippets`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json', Cookie: cookie, Origin: baseUrl },
+		body: JSON.stringify({ data: [...snippetsBefore, contentMarker], expectedVersion: contentBefore.body.version })
+	})
+	if (!contentUpdated.response.ok || contentUpdated.body.version !== contentBefore.body.version + 1) {
+		throw new Error(`Content update failed: ${contentUpdated.response.status} ${JSON.stringify(contentUpdated.body)}`)
+	}
+	const publicContent = await requestJson(`${baseUrl}/api/content/snippets`)
+	if (!publicContent.response.ok || !publicContent.body.data.includes(contentMarker)) throw new Error('Public content did not reflect the update')
+
+	const contentConflict = await requestJson(`${baseUrl}/api/admin/content/snippets`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json', Cookie: cookie, Origin: baseUrl },
+		body: JSON.stringify({ data: snippetsBefore, expectedVersion: contentBefore.body.version })
+	})
+	if (contentConflict.response.status !== 409) throw new Error('Stale content version was not rejected')
+
+	const contentRestored = await requestJson(`${baseUrl}/api/admin/content/snippets`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json', Cookie: cookie, Origin: baseUrl },
+		body: JSON.stringify({ data: snippetsBefore, expectedVersion: contentUpdated.body.version })
+	})
+	if (!contentRestored.response.ok) throw new Error('Runtime snippets document could not be restored')
+	snippetsRestored = true
+
+	const contentImage = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><desc>${contentMarker}</desc></svg>`)
+	const contentSha256 = createHash('sha256').update(contentImage).digest('hex')
+	const contentPathname = `content/site/${contentSha256}.svg`
+	const contentBlob = await upload(contentPathname, contentImage, {
+		access: 'private',
+		contentType: 'image/svg+xml',
+		handleUploadUrl: `${baseUrl}/api/admin/media/upload`,
+		headers: { Cookie: cookie, Origin: baseUrl },
+		clientPayload: JSON.stringify({ namespace: 'site', sha256: contentSha256, mimeType: 'image/svg+xml', size: contentImage.byteLength })
+	})
+	contentBlobUrl = contentBlob.url
+	contentBlobPathname = contentBlob.pathname
+	const contentMedia = await fetch(`${baseUrl}${mediaProxyUrl(contentBlob.pathname)}`)
+	if (!contentMedia.ok || contentMedia.headers.get('content-security-policy')?.includes('sandbox') !== true) {
+		throw new Error('Content Blob proxy verification failed')
+	}
 
 	const imagePath = path.join(process.cwd(), 'public', 'blogs', 'readme', '730266f17fab9717.png')
 	const image = await readFile(imagePath)
@@ -75,8 +131,10 @@ try {
 	}
 
 	const media = await fetch(`${baseUrl}${proxyUrl}`)
-	if (!media.ok || media.headers.get('content-type') !== 'image/png' || (await media.arrayBuffer()).byteLength !== image.byteLength) {
-		throw new Error('Private Blob proxy verification failed')
+	const mediaBytes = (await media.arrayBuffer()).byteLength
+	const mediaType = media.headers.get('content-type')
+	if (!media.ok || mediaType !== 'image/png' || mediaBytes !== image.byteLength) {
+		throw new Error(`Private Blob proxy verification failed: status=${media.status} type=${mediaType} bytes=${mediaBytes} expected=${image.byteLength}`)
 	}
 
 	const updated = await requestJson(`${baseUrl}/api/admin/posts/${slug}`, {
@@ -105,14 +163,49 @@ try {
 	const missing = await fetch(`${baseUrl}/api/posts/${slug}`)
 	if (missing.status !== 404) throw new Error('Deleted post remained publicly visible')
 
-	console.log(JSON.stringify({ login: true, upload: true, create: true, update: true, delete: true, cacheInvalidation: true }, null, 2))
+	console.log(
+		JSON.stringify(
+			{
+				login: true,
+				articleUpload: true,
+				contentUpload: true,
+				articleCreateUpdateDelete: true,
+				contentVersionUpdate: true,
+				contentConflict: true,
+				contentRestored: true,
+				cacheInvalidation: true
+			},
+			null,
+			2
+		)
+	)
 } catch (error) {
 	failure = error
 } finally {
+	if (originalSnippets && !snippetsRestored) {
+		await db.transaction(async tx => {
+			await tx.execute(sql`select pg_advisory_xact_lock(hashtext('snippets'))`)
+			const [current] = await tx.select().from(schema.contentDocuments).where(eq(schema.contentDocuments.key, 'snippets')).for('update').limit(1)
+			if (!current || !Array.isArray(current.data) || !current.data.includes(contentMarker)) return
+			const nextVersion = current.version + 1
+			await tx
+				.update(schema.contentDocuments)
+				.set({ data: originalSnippets, version: nextVersion, updatedAt: new Date() })
+				.where(eq(schema.contentDocuments.key, 'snippets'))
+			await tx.insert(schema.contentDocumentRevisions).values({
+				documentKey: 'snippets',
+				version: nextVersion,
+				data: originalSnippets,
+				createdBy: 'cms-smoke-cleanup'
+			})
+		})
+	}
 	await db.delete(schema.posts).where(eq(schema.posts.slug, slug))
 	await db.delete(schema.tags).where(eq(schema.tags.name, 'cms-smoke'))
 	if (blobPathname) await db.delete(schema.media).where(eq(schema.media.pathname, blobPathname))
+	if (contentBlobPathname) await db.delete(schema.media).where(eq(schema.media.pathname, contentBlobPathname))
 	if (blobUrl) await del(blobUrl, { token: process.env.BLOB_READ_WRITE_TOKEN })
+	if (contentBlobUrl) await del(contentBlobUrl, { token: process.env.BLOB_READ_WRITE_TOKEN })
 	await db.$client.end()
 }
 

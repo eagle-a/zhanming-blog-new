@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'motion/react'
 import { toast } from 'sonner'
 import initialList from './list.json'
 import { RandomLayout } from './components/random-layout'
 import UploadDialog from './components/upload-dialog'
 import { pushPictures } from './services/push-pictures'
-import { useAuthStore } from '@/hooks/use-auth'
+import { useAdminAction } from '@/hooks/use-admin-action'
+import { useContentDocument } from '@/hooks/use-content-document'
 import { useConfigStore } from '@/app/(home)/stores/config-store'
 import type { ImageItem } from '../projects/components/image-upload-dialog'
 import { useRouter } from 'next/navigation'
@@ -27,12 +28,17 @@ export default function Page() {
 	const [isSaving, setIsSaving] = useState(false)
 	const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
 	const [imageItems, setImageItems] = useState<Map<string, ImageItem>>(new Map())
-	const keyInputRef = useRef<HTMLInputElement>(null)
 	const router = useRouter()
 
-	const { isAuth, setPrivateKey } = useAuthStore()
+	const { isAuth, runAuthenticated } = useAdminAction()
+	const picturesDocument = useContentDocument<Picture[]>('pictures', initialList as Picture[])
 	const { siteContent } = useConfigStore()
 	const hideEditButton = siteContent.hideEditButton ?? false
+
+	useEffect(() => {
+		setPictures(picturesDocument.data)
+		setOriginalPictures(picturesDocument.data)
+	}, [picturesDocument.data])
 
 	const handleUploadSubmit = ({ images, description }: { images: ImageItem[]; description: string }) => {
 		const now = new Date().toISOString()
@@ -109,7 +115,7 @@ export default function Page() {
 			} else {
 				// 删除特定索引的文件项
 				next.delete(`${pictureId}::${imageIndex}`)
-				
+
 				// 重新索引：删除索引 imageIndex 后，后面的索引需要前移
 				// 例如：删除索引 1，原来的索引 2 变成 1，索引 3 变成 2
 				const keysToUpdate: Array<{ oldKey: string; newKey: string }> = []
@@ -126,7 +132,7 @@ export default function Page() {
 						}
 					}
 				}
-				
+
 				// 执行重新索引
 				for (const { oldKey, newKey } of keysToUpdate) {
 					const value = next.get(oldKey)
@@ -155,35 +161,22 @@ export default function Page() {
 		})
 	}
 
-	const handleChoosePrivateKey = async (file: File) => {
-		try {
-			const text = await file.text()
-			setPrivateKey(text)
-			await handleSave()
-		} catch (error) {
-			console.error('Failed to read private key:', error)
-			toast.error('读取密钥文件失败')
-		}
-	}
-
 	const handleSaveClick = () => {
-		if (!isAuth) {
-			keyInputRef.current?.click()
-		} else {
-			handleSave()
-		}
+		void runAuthenticated(handleSave)
 	}
 
 	const handleSave = async () => {
 		setIsSaving(true)
 
 		try {
-			await pushPictures({
+			const saved = await pushPictures({
 				pictures,
-				imageItems
+				imageItems,
+				expectedVersion: picturesDocument.version
 			})
 
-			setOriginalPictures(pictures)
+			setPictures(saved.data)
+			setOriginalPictures(saved.data)
 			setImageItems(new Map())
 			setIsEditMode(false)
 			toast.success('保存成功！')
@@ -201,7 +194,7 @@ export default function Page() {
 		setIsEditMode(false)
 	}
 
-	const buttonText = isAuth ? '保存' : '导入密钥'
+	const buttonText = isAuth ? '保存' : '登录并保存'
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -219,18 +212,6 @@ export default function Page() {
 
 	return (
 		<>
-			<input
-				ref={keyInputRef}
-				type='file'
-				accept='.pem'
-				className='hidden'
-				onChange={async e => {
-					const f = e.target.files?.[0]
-					if (f) await handleChoosePrivateKey(f)
-					if (e.currentTarget) e.currentTarget.value = ''
-				}}
-			/>
-
 			<RandomLayout pictures={pictures} isEditMode={isEditMode} onDeleteSingle={handleDeleteSingleImage} onDeleteGroup={handleDeleteGroup} />
 
 			{pictures.length === 0 && (

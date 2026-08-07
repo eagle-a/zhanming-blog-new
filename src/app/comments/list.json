@@ -1,5 +1,5 @@
 {
 	"title": "关于本站",
-	"description": "一个基于 Github 的现代化博客系统",
-	"content": "📦网站基于 Github 仓库完全存储，所有内容版本可控\n\n🚀无后端，无 serverless function，纯静态站点\n\n✏️文章通过可视化 UI 直接编辑并提交到 Github 仓库\n\n🔑所有用户都可以编辑，提交需要 Owner 的 Private Key\n\n## 技术栈\n\n- Next.js\n- React\n- TypeScript\n- Tailwind CSS\n- Motion\n- Github API"
+	"description": "一个部署在 Vercel 的现代化博客系统",
+	"content": "📦文章与站点配置存储在 Neon PostgreSQL，上传媒体存储在私有 Vercel Blob\n\n🚀内容更新不需要重新构建或提交 GitHub\n\n✏️管理员可通过站内界面编辑，系统保留版本号与修订历史\n\n## 技术栈\n\n- Next.js\n- React\n- TypeScript\n- Tailwind CSS\n- Motion\n- Neon PostgreSQL\n- Vercel Blob"
 }

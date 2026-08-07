@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { toast } from 'sonner'
 import { Plus, X } from 'lucide-react'
 import { DialogModal } from '@/components/dialog-modal'
-import { useAuthStore } from '@/hooks/use-auth'
+import { useAdminAction } from '@/hooks/use-admin-action'
+import { useContentDocument } from '@/hooks/use-content-document'
 import { useConfigStore } from '@/app/(home)/stores/config-store'
 import initialList from './list.json'
 import { pushSnippets } from './services/push-snippets'
@@ -21,11 +22,16 @@ export default function Page() {
 	const [isManageOpen, setIsManageOpen] = useState(false)
 	const [draftSnippets, setDraftSnippets] = useState<string[]>([])
 	const [newSnippet, setNewSnippet] = useState('')
-	const keyInputRef = useRef<HTMLInputElement>(null)
-
-	const { isAuth, setPrivateKey } = useAuthStore()
+	const { isAuth, runAuthenticated } = useAdminAction()
+	const snippetsDocument = useContentDocument<string[]>('snippets', initialList as string[])
 	const { siteContent } = useConfigStore()
 	const hideEditButton = siteContent.hideEditButton ?? false
+
+	useEffect(() => {
+		setSnippets(snippetsDocument.data)
+		setOriginalSnippets(snippetsDocument.data)
+		setCurrentSnippet(getRandomSnippet(snippetsDocument.data))
+	}, [snippetsDocument.data])
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -44,8 +50,9 @@ export default function Page() {
 	const handleSave = async () => {
 		setIsSaving(true)
 		try {
-			await pushSnippets({ snippets })
-			setOriginalSnippets(snippets)
+			const saved = await pushSnippets({ snippets, expectedVersion: snippetsDocument.version })
+			setSnippets(saved.data)
+			setOriginalSnippets(saved.data)
 			setIsEditMode(false)
 			toast.success('保存成功！')
 		} catch (error: any) {
@@ -57,27 +64,12 @@ export default function Page() {
 	}
 
 	const handleSaveClick = () => {
-		if (!isAuth) {
-			keyInputRef.current?.click()
-		} else {
-			void handleSave()
-		}
+		void runAuthenticated(handleSave)
 	}
 
 	const handleCancel = () => {
 		setSnippets(originalSnippets)
 		setIsEditMode(false)
-	}
-
-	const handleChoosePrivateKey = async (file: File) => {
-		try {
-			const text = await file.text()
-			await setPrivateKey(text)
-			await handleSave()
-		} catch (error) {
-			console.error('Failed to read private key:', error)
-			toast.error('读取密钥文件失败')
-		}
 	}
 
 	const openManageDialog = () => {
@@ -117,22 +109,10 @@ export default function Page() {
 		setNewSnippet('')
 	}
 
-	const buttonText = isAuth ? '保存' : '导入密钥'
+	const buttonText = isAuth ? '保存' : '登录并保存'
 
 	return (
 		<>
-			<input
-				ref={keyInputRef}
-				type='file'
-				accept='.pem'
-				className='hidden'
-				onChange={async e => {
-					const file = e.target.files?.[0]
-					if (file) await handleChoosePrivateKey(file)
-					if (e.currentTarget) e.currentTarget.value = ''
-				}}
-			/>
-
 			<div className='flex min-h-[70vh] flex-col items-center justify-center px-6 py-24'>
 				<div className='w-full max-w-3xl text-center'>
 					<p className='text-2xl leading-relaxed font-semibold'>{currentSnippet || '无'}</p>

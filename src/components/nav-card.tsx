@@ -168,7 +168,7 @@ export default function NavCard() {
 
 					<Link className='flex items-center gap-3' href='/'>
 						<Image
-							src='/images/avatar.png'
+							src={siteContent.avatarUrl || '/images/avatar.png'}
 							alt='avatar'
 							width={40}
 							height={40}

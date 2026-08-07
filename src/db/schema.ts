@@ -91,5 +91,35 @@ export const media = pgTable(
 	]
 )
 
+export const contentDocuments = pgTable(
+	'content_documents',
+	{
+		key: text('key').primaryKey(),
+		data: jsonb('data').notNull(),
+		version: bigint('version', { mode: 'number' }).notNull().default(1),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+		updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
+	},
+	table => [check('content_documents_version_positive', sql`${table.version} > 0`)]
+)
+
+export const contentDocumentRevisions = pgTable(
+	'content_document_revisions',
+	{
+		id: bigserial('id', { mode: 'number' }).primaryKey(),
+		documentKey: text('document_key')
+			.notNull()
+			.references(() => contentDocuments.key, { onDelete: 'cascade' }),
+		version: bigint('version', { mode: 'number' }).notNull(),
+		data: jsonb('data').notNull(),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+		createdBy: text('created_by').notNull().default('admin')
+	},
+	table => [
+		uniqueIndex('content_document_revisions_key_version_unique').on(table.documentKey, table.version),
+		index('content_document_revisions_key_idx').on(table.documentKey)
+	]
+)
+
 export type PostRow = typeof posts.$inferSelect
 export type NewPostRow = typeof posts.$inferInsert

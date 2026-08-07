@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'motion/react'
 import { toast } from 'sonner'
 import GridView from './grid-view'
 import CreateDialog from './components/create-dialog'
 import { pushShares } from './services/push-shares'
-import { useAuthStore } from '@/hooks/use-auth'
+import { useAdminAction } from '@/hooks/use-admin-action'
+import { useContentDocument } from '@/hooks/use-content-document'
 import { useConfigStore } from '@/app/(home)/stores/config-store'
 import initialList from './list.json'
 import type { Share } from './components/share-card'
@@ -20,11 +21,15 @@ export default function Page() {
 	const [editingShare, setEditingShare] = useState<Share | null>(null)
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 	const [logoItems, setLogoItems] = useState<Map<string, LogoItem>>(new Map())
-	const keyInputRef = useRef<HTMLInputElement>(null)
-
-	const { isAuth, setPrivateKey } = useAuthStore()
+	const { isAuth, runAuthenticated } = useAdminAction()
+	const sharesDocument = useContentDocument<Share[]>('shares', initialList as Share[])
 	const { siteContent } = useConfigStore()
 	const hideEditButton = siteContent.hideEditButton ?? false
+
+	useEffect(() => {
+		setShares(sharesDocument.data)
+		setOriginalShares(sharesDocument.data)
+	}, [sharesDocument.data])
 
 	const handleUpdate = (updatedShare: Share, oldShare: Share, logoItem?: LogoItem) => {
 		setShares(prev => prev.map(s => (s.url === oldShare.url ? updatedShare : s)))
@@ -63,37 +68,22 @@ export default function Page() {
 		}
 	}
 
-	const handleChoosePrivateKey = async (file: File) => {
-		try {
-			const text = await file.text()
-			setPrivateKey(text)
-			// 选择文件后自动保存
-			await handleSave()
-		} catch (error) {
-			console.error('Failed to read private key:', error)
-			toast.error('读取密钥文件失败')
-		}
-	}
-
 	const handleSaveClick = () => {
-		if (!isAuth) {
-			keyInputRef.current?.click()
-		} else {
-			handleSave()
-		}
+		void runAuthenticated(handleSave)
 	}
 
 	const handleSave = async () => {
 		setIsSaving(true)
 
 		try {
-			const updatedShares = await pushShares({
+			const saved = await pushShares({
 				shares,
-				logoItems
+				logoItems,
+				expectedVersion: sharesDocument.version
 			})
 
-			setShares(updatedShares)
-			setOriginalShares(updatedShares)
+			setShares(saved.data)
+			setOriginalShares(saved.data)
 			setLogoItems(new Map())
 			setIsEditMode(false)
 			toast.success('保存成功！')
@@ -111,7 +101,7 @@ export default function Page() {
 		setIsEditMode(false)
 	}
 
-	const buttonText = isAuth ? '保存' : '导入密钥'
+	const buttonText = isAuth ? '保存' : '登录并保存'
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -129,18 +119,6 @@ export default function Page() {
 
 	return (
 		<>
-			<input
-				ref={keyInputRef}
-				type='file'
-				accept='.pem'
-				className='hidden'
-				onChange={async e => {
-					const f = e.target.files?.[0]
-					if (f) await handleChoosePrivateKey(f)
-					if (e.currentTarget) e.currentTarget.value = ''
-				}}
-			/>
-
 			<GridView shares={shares} isEditMode={isEditMode} onUpdate={handleUpdate} onDelete={handleDelete} />
 
 			<motion.div initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} className='absolute top-4 right-6 flex gap-3 max-sm:hidden'>

@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'motion/react'
 import { toast } from 'sonner'
 import { DialogModal } from '@/components/dialog-modal'
-import { useAuthStore } from '@/hooks/use-auth'
+import { useAdminAction } from '@/hooks/use-admin-action'
+import { useContentDocument } from '@/hooks/use-content-document'
 import { useConfigStore } from '../stores/config-store'
 import { pushSiteContent } from '../services/push-site-content'
 import type { SiteContent, CardStyles } from '../stores/config-store'
@@ -20,15 +21,16 @@ interface ConfigDialogProps {
 type TabType = 'site' | 'color' | 'layout'
 
 export default function ConfigDialog({ open, onClose }: ConfigDialogProps) {
-	const { isAuth, setPrivateKey } = useAuthStore()
+	const { isAuth, runAuthenticated } = useAdminAction()
 	const { siteContent, setSiteContent, cardStyles, setCardStyles, regenerateBubbles } = useConfigStore()
+	const siteDocument = useContentDocument<SiteContent>('site', siteContent)
+	const cardStylesDocument = useContentDocument<CardStyles>('card-styles', cardStyles)
 	const [formData, setFormData] = useState<SiteContent>(siteContent)
 	const [cardStylesData, setCardStylesData] = useState<CardStyles>(cardStyles)
 	const [originalData, setOriginalData] = useState<SiteContent>(siteContent)
 	const [originalCardStyles, setOriginalCardStyles] = useState<CardStyles>(cardStyles)
 	const [isSaving, setIsSaving] = useState(false)
 	const [activeTab, setActiveTab] = useState<TabType>('site')
-	const keyInputRef = useRef<HTMLInputElement>(null)
 	const [faviconItem, setFaviconItem] = useState<FileItem | null>(null)
 	const [avatarItem, setAvatarItem] = useState<FileItem | null>(null)
 	const [artImageUploads, setArtImageUploads] = useState<ArtImageUploads>({})
@@ -79,23 +81,8 @@ export default function ConfigDialog({ open, onClose }: ConfigDialogProps) {
 		}
 	}, [faviconItem, avatarItem, artImageUploads, backgroundImageUploads, socialButtonImageUploads])
 
-	const handleChoosePrivateKey = async (file: File) => {
-		try {
-			const text = await file.text()
-			setPrivateKey(text)
-			await handleSave()
-		} catch (error) {
-			console.error('Failed to read private key:', error)
-			toast.error('读取密钥文件失败')
-		}
-	}
-
 	const handleSaveClick = () => {
-		if (!isAuth) {
-			keyInputRef.current?.click()
-		} else {
-			handleSave()
-		}
+		void runAuthenticated(handleSave)
 	}
 
 	const handleSave = async () => {
@@ -111,7 +98,7 @@ export default function ConfigDialog({ open, onClose }: ConfigDialogProps) {
 			const currentBackgroundImages = formData.backgroundImages ?? []
 			const removedBackgroundImages = originalBackgroundImages.filter(orig => !currentBackgroundImages.some(current => current.id === orig.id))
 
-			await pushSiteContent(
+			const saved = await pushSiteContent(
 				formData,
 				cardStylesData,
 				faviconItem,
@@ -120,11 +107,12 @@ export default function ConfigDialog({ open, onClose }: ConfigDialogProps) {
 				removedArtImages,
 				backgroundImageUploads,
 				removedBackgroundImages,
-				socialButtonImageUploads
+				socialButtonImageUploads,
+				{ site: siteDocument.version, cardStyles: cardStylesDocument.version }
 			)
-			setSiteContent(formData)
+			setSiteContent(saved.updatedSite)
 			setCardStyles(cardStylesData)
-			updateThemeVariables(formData.theme)
+			updateThemeVariables(saved.updatedSite.theme)
 			setFaviconItem(null)
 			setAvatarItem(null)
 			setArtImageUploads({})
@@ -219,7 +207,7 @@ export default function ConfigDialog({ open, onClose }: ConfigDialogProps) {
 		onClose()
 	}
 
-	const buttonText = isAuth ? '保存' : '导入密钥'
+	const buttonText = isAuth ? '保存' : '登录并保存'
 
 	const tabs: { id: TabType; label: string }[] = [
 		{ id: 'site', label: '网站设置' },
@@ -229,19 +217,7 @@ export default function ConfigDialog({ open, onClose }: ConfigDialogProps) {
 
 	return (
 		<>
-			<input
-				ref={keyInputRef}
-				type='file'
-				accept='.pem'
-				className='hidden'
-				onChange={async e => {
-					const f = e.target.files?.[0]
-					if (f) await handleChoosePrivateKey(f)
-					if (e.currentTarget) e.currentTarget.value = ''
-				}}
-			/>
-
-			<DialogModal open={open} onClose={handleCancel} className='card scrollbar-none max-h-[90vh] min-h-[600px] w-[640px] overflow-y-auto'>
+			<DialogModal open={open} onClose={handleCancel} className='card max-h-[90vh] min-h-[600px] w-[640px] scrollbar-none overflow-y-auto'>
 				<div className='mb-6 flex items-center justify-between'>
 					<div className='flex gap-1'>
 						{tabs.map(tab => (

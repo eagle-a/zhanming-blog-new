@@ -30,5 +30,5 @@ export async function hashFileSHA256(file: File): Promise<string> {
 		const h = bytes[i].toString(16).padStart(2, '0')
 		hex += h
 	}
-	return hex.slice(0, 16)
+	return hex
 }

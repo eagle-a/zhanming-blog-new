@@ -11,6 +11,7 @@
 		"admin:secrets": "node scripts/generate-admin-secrets.mjs",
 		"cms:smoke": "node --env-file-if-exists=.env.local --no-warnings --experimental-strip-types scripts/smoke-test-cms.ts",
 		"migrate:legacy": "node --env-file-if-exists=.env.local --no-warnings --experimental-strip-types scripts/migrate-legacy-blogs.ts",
+		"migrate:content": "node --env-file-if-exists=.env.local --no-warnings --experimental-strip-types scripts/migrate-site-content.ts",
 		"svg": "node scripts/gen-svgs-index.js",
 		"test": "node --no-warnings --experimental-strip-types --test tests/*.test.ts",
 		"typecheck": "tsc --noEmit",
@@ -18,7 +19,6 @@
 	},
 	"dependencies": {
 		"@neondatabase/serverless": "^1.1.0",
-		"@types/jsrsasign": "^10.5.15",
 		"@vercel/analytics": "^2.0.1",
 		"@vercel/blob": "^2.6.1",
 		"@vercel/speed-insights": "^1.2.0",
@@ -26,7 +26,6 @@
 		"dayjs": "^1.11.18",
 		"drizzle-orm": "^0.45.2",
 		"html-react-parser": "^5.2.8",
-		"jsrsasign": "^11.1.0",
 		"katex": "^0.16.27",
 		"lottie-web": "^5.13.0",
 		"lucide-react": "^0.553.0",

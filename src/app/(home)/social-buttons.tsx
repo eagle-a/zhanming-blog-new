@@ -166,7 +166,7 @@ export default function SocialButtons() {
 				qq: 'QQ号已复制到剪贴板'
 			}
 
-			const isImagePath = button.value.startsWith('/images/social-buttons/')
+			const isImagePath = button.value.startsWith('/') || /^https:\/\//i.test(button.value)
 			const isOpen = openDropdowns[button.id] || false
 
 			if (isImagePath && (button.type === 'wechat' || button.type === 'qq')) {
@@ -272,7 +272,7 @@ export default function SocialButtons() {
 					href={button.value}
 					target='_blank'
 					{...commonProps}
-					className={`card relative rounded-xl font-medium whitespace-nowrap bg-orange-500 text-white hover:bg-orange-600 ${hasLabel ? 'flex items-center gap-2 px-3 py-2.5' : 'p-1.5'}`}>
+					className={`card relative rounded-xl bg-orange-500 font-medium whitespace-nowrap text-white hover:bg-orange-600 ${hasLabel ? 'flex items-center gap-2 px-3 py-2.5' : 'p-1.5'}`}>
 					<Icon className={iconSize} />
 					{hasLabel && button.label}
 				</motion.a>

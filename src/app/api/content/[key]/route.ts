@@ -1,0 +1,19 @@
+import { getCachedContentDocument } from '@/lib/content-repository'
+import { isContentDocumentKey } from '@/lib/content-validation'
+import { routeErrorResponse } from '@/lib/route-errors'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+export async function GET(_request: Request, { params }: { params: Promise<{ key: string }> }): Promise<Response> {
+	try {
+		const { key } = await params
+		if (!isContentDocumentKey(key)) return Response.json({ error: '配置不存在' }, { status: 404 })
+		const document = await getCachedContentDocument(key)
+		return Response.json(document, {
+			headers: { 'Cache-Control': 'public, max-age=0, must-revalidate' }
+		})
+	} catch (error) {
+		return routeErrorResponse(error)
+	}
+}

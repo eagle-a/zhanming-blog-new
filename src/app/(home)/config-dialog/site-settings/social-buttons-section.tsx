@@ -8,21 +8,7 @@ import type { SocialButtonImageUploads } from './types'
 import { hashFileSHA256 } from '@/lib/file-utils'
 
 type SocialButtonType =
-	| 'github'
-	| 'juejin'
-	| 'email'
-	| 'link'
-	| 'x'
-	| 'tg'
-	| 'wechat'
-	| 'facebook'
-	| 'tiktok'
-	| 'instagram'
-	| 'weibo'
-	| 'xiaohongshu'
-	| 'zhihu'
-	| 'bilibili'
-	| 'qq'
+	'github' | 'juejin' | 'email' | 'link' | 'x' | 'tg' | 'wechat' | 'facebook' | 'tiktok' | 'instagram' | 'weibo' | 'xiaohongshu' | 'zhihu' | 'bilibili' | 'qq'
 
 interface SocialButtonConfig {
 	id: string
@@ -199,7 +185,7 @@ export function SocialButtonsSection({ formData, setFormData, socialButtonImageU
 											删除图片
 										</button>
 									</div>
-								) : button.value && button.value.startsWith('/images/social-buttons/') ? (
+								) : button.value && (button.value.startsWith('/') || /^https:\/\//i.test(button.value)) ? (
 									<div className='relative flex flex-1 items-center gap-2'>
 										<img src={button.value} alt='preview' className='h-10 w-10 rounded-lg object-cover' />
 										<input

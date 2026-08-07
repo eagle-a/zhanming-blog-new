@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'motion/react'
 import { toast } from 'sonner'
 import { useMarkdownRender } from '@/hooks/use-markdown-render'
 import { pushAbout, type AboutData } from './services/push-about'
-import { useAuthStore } from '@/hooks/use-auth'
+import { useAdminAction } from '@/hooks/use-admin-action'
+import { useContentDocument } from '@/hooks/use-content-document'
 import { useConfigStore } from '@/app/(home)/stores/config-store'
 import LikeButton from '@/components/like-button'
 import GithubSVG from '@/svgs/github.svg'
@@ -17,45 +18,19 @@ export default function Page() {
 	const [isEditMode, setIsEditMode] = useState(false)
 	const [isSaving, setIsSaving] = useState(false)
 	const [isPreviewMode, setIsPreviewMode] = useState(false)
-	const keyInputRef = useRef<HTMLInputElement>(null)
-
-	const { isAuth, setPrivateKey } = useAuthStore()
+	const { isAuth, runAuthenticated } = useAdminAction()
+	const aboutDocument = useContentDocument<AboutData>('about', initialData as AboutData)
 	const { siteContent } = useConfigStore()
 	const { content, loading } = useMarkdownRender(data.content)
 	const hideEditButton = siteContent.hideEditButton ?? false
 
-	// 加载 content.md 文件
 	useEffect(() => {
-		const loadContentMd = async () => {
-			try {
-				const response = await fetch('/about/content.md')
-				const contentText = await response.text()
-				setData(prev => ({ ...prev, content: contentText }))
-				setOriginalData(prev => ({ ...prev, content: contentText }))
-			} catch (error) {
-				console.error('Failed to load content.md:', error)
-			}
-		}
-		loadContentMd()
-	}, [])
-
-	const handleChoosePrivateKey = async (file: File) => {
-		try {
-			const text = await file.text()
-			setPrivateKey(text)
-			await handleSave()
-		} catch (error) {
-			console.error('Failed to read private key:', error)
-			toast.error('读取密钥文件失败')
-		}
-	}
+		setData(aboutDocument.data)
+		setOriginalData(aboutDocument.data)
+	}, [aboutDocument.data])
 
 	const handleSaveClick = () => {
-		if (!isAuth) {
-			keyInputRef.current?.click()
-		} else {
-			handleSave()
-		}
+		void runAuthenticated(handleSave)
 	}
 
 	const handleEnterEditMode = () => {
@@ -67,9 +42,9 @@ export default function Page() {
 		setIsSaving(true)
 
 		try {
-			await pushAbout(data)
-
-			setOriginalData(data)
+			const saved = await pushAbout(data, aboutDocument.version)
+			setData(saved.data)
+			setOriginalData(saved.data)
 			setIsEditMode(false)
 			setIsPreviewMode(false)
 			toast.success('保存成功！')
@@ -87,7 +62,7 @@ export default function Page() {
 		setIsPreviewMode(false)
 	}
 
-	const buttonText = isAuth ? '保存' : '导入密钥'
+	const buttonText = isAuth ? '保存' : '登录并保存'
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -106,18 +81,6 @@ export default function Page() {
 
 	return (
 		<>
-			<input
-				ref={keyInputRef}
-				type='file'
-				accept='.pem'
-				className='hidden'
-				onChange={async e => {
-					const f = e.target.files?.[0]
-					if (f) await handleChoosePrivateKey(f)
-					if (e.currentTarget) e.currentTarget.value = ''
-				}}
-			/>
-
 			<div className='flex flex-col items-center justify-center px-6 pt-32 pb-12 max-sm:px-0'>
 				<div className='w-full max-w-[800px]'>
 					{isEditMode ? (
@@ -184,7 +147,7 @@ export default function Page() {
 
 					<div className='mt-8 flex items-center justify-center gap-6'>
 						<motion.a
-							href='https://github.com/YYsuni/2025-blog-public'
+							href='https://github.com/eagle-a/zhanming-blog-new'
 							target='_blank'
 							rel='noreferrer'
 							initial={{ opacity: 0, scale: 0.6 }}

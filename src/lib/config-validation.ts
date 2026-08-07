@@ -1,10 +1,3 @@
-export type GitHubConfigInput = {
-	owner: string
-	repo: string
-	branch: string
-	appId: string
-}
-
 const SAFE_SLUG = /^[a-z0-9][a-z0-9_-]{0,99}$/i
 
 export function validateSlug(slug: string): boolean {
@@ -17,20 +10,6 @@ export function assertValidSlug(slug: string): string {
 		throw new Error('slug 只能包含字母、数字、短横线和下划线，长度 1-100')
 	}
 	return normalized
-}
-
-export function validateGitHubConfig(config: GitHubConfigInput): void {
-	const missing = Object.entries(config)
-		.filter(([, value]) => !String(value || '').trim())
-		.map(([key]) => key)
-
-	if (missing.length > 0) {
-		throw new Error(`Missing GitHub configuration: ${missing.join(', ')}`)
-	}
-
-	if (!/^\d+$/.test(config.appId.trim())) {
-		throw new Error('GitHub App ID must be numeric')
-	}
 }
 
 export function resolveSiteUrl(rawUrl?: string): string {
