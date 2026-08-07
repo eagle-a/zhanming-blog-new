@@ -9,18 +9,28 @@ import { usePublish } from '../hooks/use-publish'
 export function WriteActions() {
 	const { loading, mode, form, loadBlogForEdit, originalSlug, updateForm } = useWriteStore()
 	const { openPreview } = usePreviewStore()
-	const { isAuth, onChoosePrivateKey, onPublish, onDelete } = usePublish()
+	const { isAuth, login, onPublish, onDelete } = usePublish()
 	const [saving, setSaving] = useState(false)
-	const keyInputRef = useRef<HTMLInputElement>(null)
 	const mdInputRef = useRef<HTMLInputElement>(null)
 	const router = useRouter()
 
-	const handleImportOrPublish = () => {
+	const handleImportOrPublish = async () => {
 		if (!isAuth) {
-			keyInputRef.current?.click()
-		} else {
-			onPublish()
+			const password = window.prompt('请输入文章后台密码')
+			if (!password) return
+			try {
+				setSaving(true)
+				await login(password)
+				toast.success('登录成功')
+				await onPublish()
+			} catch (error) {
+				toast.error(error instanceof Error ? error.message : '登录失败')
+			} finally {
+				setSaving(false)
+			}
+			return
 		}
+		await onPublish()
 	}
 
 	const handleCancel = () => {
@@ -34,11 +44,11 @@ export function WriteActions() {
 		}
 	}
 
-	const buttonText = isAuth ? (mode === 'edit' ? '更新' : '发布') : '导入密钥'
+	const buttonText = isAuth ? (mode === 'edit' ? '更新' : '发布') : mode === 'edit' ? '登录并更新' : '登录并发布'
 
 	const handleDelete = () => {
 		if (!isAuth) {
-			toast.info('请先导入密钥')
+			toast.info('请先登录文章后台')
 			return
 		}
 		const confirmMsg = form?.title ? `确定删除《${form.title}》吗？该操作不可恢复。` : '确定删除当前文章吗？该操作不可恢复。'
@@ -68,17 +78,6 @@ export function WriteActions() {
 
 	return (
 		<>
-			<input
-				ref={keyInputRef}
-				type='file'
-				accept='.pem'
-				className='hidden'
-				onChange={async e => {
-					const f = e.target.files?.[0]
-					if (f) await onChoosePrivateKey(f)
-					if (e.currentTarget) e.currentTarget.value = ''
-				}}
-			/>
 			<input ref={mdInputRef} type='file' accept='.md' className='hidden' onChange={handleMdFileChange} />
 
 			<ul className='absolute top-4 right-6 flex items-center gap-2'>
@@ -116,7 +115,7 @@ export function WriteActions() {
 					whileHover={{ scale: 1.05 }}
 					whileTap={{ scale: 0.95 }}
 					className='bg-card rounded-xl border px-4 py-2 text-sm'
-					disabled={loading}
+					disabled={loading || saving}
 					onClick={handleImportMd}>
 					导入 MD
 				</motion.button>

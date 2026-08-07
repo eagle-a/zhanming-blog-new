@@ -1,7 +1,6 @@
 import useSWR from 'swr'
-import { useAuthStore } from '@/hooks/use-auth'
 import type { BlogIndexItem } from '@/app/blog/types'
-import { filterPublicBlogs } from '@/lib/blog-visibility'
+import { useAdminSession } from '@/hooks/use-admin-session'
 
 export type { BlogIndexItem } from '@/app/blog/types'
 
@@ -18,19 +17,15 @@ const fetcher = async (url: string) => {
 }
 
 export function useBlogIndex() {
-	const { isAuth } = useAuthStore()
-	const { data, error, isLoading } = useSWR<BlogIndexItem[]>('/blogs/index.json', fetcher, {
+	const { isAuth } = useAdminSession()
+	const endpoint = isAuth ? '/api/posts?scope=all' : '/api/posts'
+	const { data, error, isLoading } = useSWR<BlogIndexItem[]>(endpoint, fetcher, {
 		revalidateOnFocus: false,
 		revalidateOnReconnect: true
 	})
 
-	let result = data || []
-	if (!isAuth) {
-		result = filterPublicBlogs(result)
-	}
-
 	return {
-		items: result,
+		items: data || [],
 		loading: isLoading,
 		error
 	}

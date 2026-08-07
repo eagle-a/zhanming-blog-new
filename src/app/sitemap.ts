@@ -1,10 +1,11 @@
 import { MetadataRoute } from 'next'
-import blogIndex from '@/../public/blogs/index.json'
 import type { BlogIndexItem } from '@/app/blog/types'
-import { filterPublicBlogs } from '@/lib/blog-visibility'
 import { assertValidSlug, resolveSiteUrl } from '@/lib/config-validation'
+import { getCachedPublishedPosts } from '@/lib/posts-repository'
+import { allowDevelopmentLegacyFallback, readLegacyPosts } from '@/lib/legacy-blog-reader'
 
-export const dynamic = 'force-static'
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 	// 域名配置：
@@ -17,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
 	console.log(`[Sitemap] Generating for: ${baseUrl}`)
 
-	const posts: BlogIndexItem[] = filterPublicBlogs(blogIndex as BlogIndexItem[])
+	const posts: BlogIndexItem[] = allowDevelopmentLegacyFallback() ? readLegacyPosts(false) : await getCachedPublishedPosts()
 
 	const postEntries: MetadataRoute.Sitemap = posts.map(post => ({
 		url: `${baseUrl}/blog/${assertValidSlug(post.slug)}`,

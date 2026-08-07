@@ -14,6 +14,7 @@ export type LoadedBlog = {
 	markdown: string
 	cover?: string
 	stats: BlogStats
+	version?: number
 }
 
 function calculateStats(text: string): BlogStats {
@@ -34,29 +35,36 @@ function calculateStats(text: string): BlogStats {
 }
 
 /**
- * Load blog data from public/blogs/{slug}
- * Used by both view page and edit page
+ * Load blog data from the server article API.
  */
 export async function loadBlog(slug: string): Promise<LoadedBlog> {
 	const safeSlug = assertValidSlug(slug)
 
-	// Load config.json
-	let config: BlogConfig = {}
-	const configRes = await fetch(`/blogs/${encodeURIComponent(safeSlug)}/config.json`)
-	if (configRes.ok) {
-		try {
-			config = await configRes.json()
-		} catch {
-			config = {}
-		}
-	}
-
-	// Load index.md
-	const mdRes = await fetch(`/blogs/${encodeURIComponent(safeSlug)}/index.md`)
-	if (!mdRes.ok) {
+	const response = await fetch(`/api/posts/${encodeURIComponent(safeSlug)}`, { cache: 'no-store', credentials: 'same-origin' })
+	if (!response.ok) {
 		throw new Error('Blog not found')
 	}
-	const markdown = await mdRes.text()
+	const post = (await response.json()) as {
+		title: string
+		tags: string[]
+		date: string
+		summary?: string
+		cover?: string
+		hidden?: boolean
+		category?: string
+		contentMd: string
+		version?: number
+	}
+	const markdown = post.contentMd
+	const config: BlogConfig = {
+		title: post.title,
+		tags: post.tags,
+		date: post.date,
+		summary: post.summary,
+		cover: post.cover,
+		hidden: post.hidden,
+		category: post.category
+	}
 
 	const stats = calculateStats(markdown)
 
@@ -65,6 +73,7 @@ export async function loadBlog(slug: string): Promise<LoadedBlog> {
 		config,
 		markdown,
 		cover: config.cover,
-		stats
+		stats,
+		version: post.version
 	}
 }

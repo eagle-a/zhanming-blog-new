@@ -1,13 +1,11 @@
-import { toBase64Utf8, getRef, createTree, createCommit, updateRef, createBlob, type TreeItem } from '@/lib/github-client'
-import { fileToBase64NoPrefix, hashFileSHA256 } from '@/lib/file-utils'
-import { prepareBlogsIndex } from '@/lib/blog-index'
-import { getAuthToken } from '@/lib/auth'
-import { GITHUB_CONFIG } from '@/consts'
+import { upload } from '@vercel/blob/client'
+import { mutate } from 'swr'
+import { hashFileSHA256 } from '@/lib/file-utils'
 import type { ImageItem } from '../types'
 import { getFileExt } from '@/lib/utils'
-import { toast } from 'sonner'
 import { formatDateTimeLocal } from '../stores/write-store'
 import { assertValidSlug } from '@/lib/config-validation'
+import { mediaProxyUrl } from '@/lib/media-url'
 
 export type PushBlogParams = {
 	form: {
@@ -19,6 +17,7 @@ export type PushBlogParams = {
 		summary?: string
 		hidden?: boolean
 		category?: string
+		version?: number
 	}
 	cover?: ImageItem | null
 	images?: ImageItem[]
@@ -26,155 +25,70 @@ export type PushBlogParams = {
 	originalSlug?: string | null
 }
 
+async function responseError(response: Response): Promise<string> {
+	try {
+		const body = (await response.json()) as { error?: string }
+		return body.error || '保存失败'
+	} catch {
+		return '保存失败'
+	}
+}
+
 export async function pushBlog(params: PushBlogParams): Promise<void> {
 	const { form, cover, images, mode = 'create', originalSlug } = params
-
-	const slug = assertValidSlug(form?.slug || '')
-
+	const slug = assertValidSlug(form.slug || '')
 	if (mode === 'edit' && originalSlug && originalSlug !== slug) {
 		throw new Error('编辑模式下不支持修改 slug，请保持原 slug 不变')
 	}
 
-	// 获取认证 token（自动从全局认证状态获取）
-	const token = await getAuthToken()
+	const localImages = new Map<string, Extract<ImageItem, { type: 'file' }>>()
+	for (const image of images || []) if (image.type === 'file') localImages.set(image.id, image)
+	if (cover?.type === 'file') localImages.set(cover.id, cover)
 
-	toast.info('正在获取分支信息...')
-	const refData = await getRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`)
-	const latestCommitSha = refData.sha
+	let contentMd = form.md
+	let coverUrl = cover?.type === 'url' ? cover.url : undefined
 
-	const basePath = `public/blogs/${slug}`
-	const commitMessage = mode === 'edit' ? `更新文章: ${slug}` : `新增文章: ${slug}`
+	for (const [id, image] of localImages) {
+		const sha256 = image.hash || (await hashFileSHA256(image.file))
+		const pathname = `blog/${slug}/${sha256}${getFileExt(image.file.name)}`
+		const blob = await upload(pathname, image.file, {
+			access: 'private',
+			handleUploadUrl: '/api/admin/media/upload',
+			contentType: image.file.type || 'application/octet-stream',
+			multipart: image.file.size > 5 * 1024 * 1024,
+			clientPayload: JSON.stringify({
+				slug,
+				sha256,
+				mimeType: image.file.type || 'image/png',
+				size: image.file.size
+			})
+		})
 
-	// collect all local images (content + cover)
-	const allLocalImages: Array<{ img: Extract<ImageItem, { type: 'file' }>; id: string }> = []
-
-	// add content images
-	for (const img of images || []) {
-		if (img.type === 'file') {
-			allLocalImages.push({ img, id: img.id })
-		}
+		const publicMediaUrl = mediaProxyUrl(blob.pathname)
+		contentMd = contentMd.split(`(local-image:${id})`).join(`(${publicMediaUrl})`)
+		if (cover?.type === 'file' && cover.id === id) coverUrl = publicMediaUrl
 	}
 
-	// add cover if local
-	if (cover?.type === 'file') {
-		allLocalImages.push({ img: cover, id: cover.id })
-	}
-
-	toast.info('正在准备文件...')
-
-	const uploadedHashes = new Set<string>()
-	let mdToUpload = form.md
-	let coverPath: string | undefined
-
-	// prepare tree items for all files
-	const treeItems: TreeItem[] = []
-
-	// process all images
-	if (allLocalImages.length > 0) {
-		toast.info('正在上传图片...')
-		for (const { img, id } of allLocalImages) {
-			const hash = img.hash || (await hashFileSHA256(img.file))
-			const ext = getFileExt(img.file.name)
-			const filename = `${hash}${ext}`
-			const publicPath = `/blogs/${slug}/${filename}`
-
-			if (!uploadedHashes.has(hash)) {
-				const path = `${basePath}/${filename}`
-				const contentBase64 = await fileToBase64NoPrefix(img.file)
-				// create blob for image
-				const blobData = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, contentBase64, 'base64')
-				treeItems.push({
-					path,
-					mode: '100644',
-					type: 'blob',
-					sha: blobData.sha
-				})
-				uploadedHashes.add(hash)
-			}
-
-			// replace placeholder in markdown
-			const placeholder = `local-image:${id}`
-			mdToUpload = mdToUpload.split(`(${placeholder})`).join(`(${publicPath})`)
-
-			// set cover path if this is the cover
-			if (cover?.type === 'file' && cover.id === id) {
-				coverPath = publicPath
-			}
-		}
-	}
-
-	// handle external cover URL
-	if (cover?.type === 'url') {
-		coverPath = cover.url
-	}
-
-	toast.info('正在创建文件...')
-
-	// create blob for index.md
-	const mdBlob = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, toBase64Utf8(mdToUpload), 'base64')
-	treeItems.push({
-		path: `${basePath}/index.md`,
-		mode: '100644',
-		type: 'blob',
-		sha: mdBlob.sha
-	})
-
-	// create blob for config.json
-	const dateStr = form.date || formatDateTimeLocal()
-	const config = {
+	const payload = {
+		slug,
 		title: form.title,
+		summary: form.summary || '',
+		contentMd,
+		coverUrl: coverUrl || null,
+		category: form.category || null,
 		tags: form.tags,
-		date: dateStr,
-		summary: form.summary,
-		cover: coverPath,
-		hidden: form.hidden,
-		category: form.category
+		status: form.hidden ? 'draft' : 'published',
+		publishedAt: form.date || formatDateTimeLocal(),
+		expectedVersion: mode === 'edit' ? form.version : undefined
 	}
-
-	const configBlob = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, toBase64Utf8(JSON.stringify(config, null, 2)), 'base64')
-	treeItems.push({
-		path: `${basePath}/config.json`,
-		mode: '100644',
-		type: 'blob',
-		sha: configBlob.sha
+	const endpoint = mode === 'edit' ? `/api/admin/posts/${encodeURIComponent(slug)}` : '/api/admin/posts'
+	const response = await fetch(endpoint, {
+		method: mode === 'edit' ? 'PATCH' : 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		credentials: 'same-origin',
+		body: JSON.stringify(payload)
 	})
+	if (!response.ok) throw new Error(await responseError(response))
 
-	// prepare and create blob for blogs index
-	const indexJson = await prepareBlogsIndex(
-		token,
-		GITHUB_CONFIG.OWNER,
-		GITHUB_CONFIG.REPO,
-		{
-			slug,
-			title: form.title,
-			tags: form.tags,
-			date: dateStr,
-			summary: form.summary,
-			cover: coverPath,
-			hidden: form.hidden,
-			category: form.category
-		},
-		GITHUB_CONFIG.BRANCH
-	)
-	const indexBlob = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, toBase64Utf8(indexJson), 'base64')
-	treeItems.push({
-		path: 'public/blogs/index.json',
-		mode: '100644',
-		type: 'blob',
-		sha: indexBlob.sha
-	})
-
-	// create tree
-	toast.info('正在创建文件树...')
-	const treeData = await createTree(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, treeItems, latestCommitSha)
-
-	// create commit
-	toast.info('正在创建提交...')
-	const commitData = await createCommit(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, commitMessage, treeData.sha, [latestCommitSha])
-
-	// update branch reference
-	toast.info('正在更新分支...')
-	await updateRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`, commitData.sha)
-
-	toast.success('发布成功！')
+	await Promise.all([mutate('/api/posts'), mutate('/api/posts?scope=all'), mutate('/api/categories'), mutate(`/api/posts/${encodeURIComponent(slug)}`)])
 }

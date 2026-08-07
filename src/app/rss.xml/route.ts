@@ -2,12 +2,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import siteContent from '@/config/site-content.json'
-import blogIndex from '@/../public/blogs/index.json'
 import type { BlogIndexItem } from '@/app/blog/types'
 import { marked } from 'marked'
-import { filterPublicBlogs } from '@/lib/blog-visibility'
 import { sanitizeHtml } from '@/lib/sanitize-html'
 import { assertValidSlug, resolveSiteUrl } from '@/lib/config-validation'
+import { getCachedPublishedPost, getCachedPublishedPosts } from '@/lib/posts-repository'
+import { allowDevelopmentLegacyFallback, readLegacyPosts } from '@/lib/legacy-blog-reader'
 
 // 配置 marked 为同步模式
 marked.use({
@@ -20,8 +20,6 @@ const SITE_ORIGIN = resolveSiteUrl(
 )
 const FEED_URL = `${SITE_ORIGIN}${FEED_PATH}`
 const PUBLIC_DIR = path.join(process.cwd(), 'public')
-
-const blogs = filterPublicBlogs(blogIndex as BlogIndexItem[])
 
 const escapeXml = (value: string): string =>
 	value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
@@ -72,21 +70,16 @@ const buildEnclosure = (cover?: string): string | null => {
 	return `<enclosure url="${escapeXml(absoluteUrl)}" type="${type}" length="${length}" />`
 }
 
-const serializeItem = (item: BlogIndexItem): string => {
+const serializeItem = async (item: BlogIndexItem): Promise<string> => {
 	const slug = assertValidSlug(item.slug)
 	const link = `${SITE_ORIGIN}/blog/${slug}`
 	const title = escapeXml(item.title || item.slug)
 
-	// 读取完整的文章内容
 	const sanitizedSummary = sanitizeHtml(item.summary || '')
 	let content = sanitizedSummary
 	try {
-		const blogPath = path.join(PUBLIC_DIR, 'blogs', slug, 'index.md')
-		if (fs.existsSync(blogPath)) {
-			const markdown = fs.readFileSync(blogPath, 'utf8')
-			// 转换 markdown 为 HTML (使用同步方法)
-			content = sanitizeHtml(marked.parse(markdown, { async: false }) as string)
-		}
+		const post = await getCachedPublishedPost(slug)
+		if (post) content = sanitizeHtml(marked.parse(post.contentMd, { async: false }) as string)
 	} catch (error) {
 		console.error(`Error reading blog content for ${item.slug}:`, error)
 	}
@@ -114,10 +107,11 @@ const serializeItem = (item: BlogIndexItem): string => {
 		</item>`.trim()
 }
 
-export const dynamic = 'force-static'
-export const revalidate = false
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
-export function GET(): Response {
+export async function GET(): Promise<Response> {
+	const blogs = allowDevelopmentLegacyFallback() ? readLegacyPosts(false) : await getCachedPublishedPosts()
 	const title = siteContent.meta?.title || 'Blog'
 	const description = siteContent.meta?.description || 'Latest updates from Blog'
 	const username = siteContent.meta?.username || 'author'
@@ -125,10 +119,7 @@ export function GET(): Response {
 	// 获取最新的文章发布日期作为频道发布日期
 	const latestDate = blogs.length > 0 ? new Date(blogs[0].date).toUTCString() : new Date().toUTCString()
 
-	const items = blogs
-		.filter(item => item?.slug)
-		.map(serializeItem)
-		.join('')
+	const items = (await Promise.all(blogs.filter(item => item?.slug).map(serializeItem))).join('')
 
 	const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">

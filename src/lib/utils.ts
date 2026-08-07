@@ -27,6 +27,8 @@ export function getFileExt(filename: string): string {
 	if (lower.endsWith('.jpeg')) return '.jpeg'
 	if (lower.endsWith('.webp')) return '.webp'
 	if (lower.endsWith('.png')) return '.png'
+	if (lower.endsWith('.gif')) return '.gif'
+	if (lower.endsWith('.avif')) return '.avif'
 	if (lower.endsWith('.svg')) return '.svg'
 	return '.png'
 }

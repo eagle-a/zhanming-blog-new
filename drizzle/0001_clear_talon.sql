@@ -1,0 +1,3 @@
+CREATE INDEX "posts_public_published_idx" ON "posts" USING btree ("published_at" DESC NULLS LAST,"id" DESC NULLS LAST) WHERE "posts"."status" = 'published' AND "posts"."deleted_at" IS NULL;--> statement-breakpoint
+ALTER TABLE "media" ADD CONSTRAINT "media_size_nonnegative" CHECK ("media"."size" >= 0);--> statement-breakpoint
+ALTER TABLE "posts" ADD CONSTRAINT "posts_version_positive" CHECK ("posts"."version" > 0);

@@ -6,7 +6,7 @@ import weekOfYear from 'dayjs/plugin/weekOfYear'
 import { motion } from 'motion/react'
 
 dayjs.extend(weekOfYear)
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ANIMATION_DELAY, INIT_DELAY } from '@/consts'
 import ShortLineSVG from '@/svgs/short-line.svg'
@@ -14,9 +14,8 @@ import { useBlogIndex, type BlogIndexItem } from '@/hooks/use-blog-index'
 import { useCategories } from '@/hooks/use-categories'
 import { useReadArticles } from '@/hooks/use-read-articles'
 import ZhihuSVG from '@/svgs/知乎.svg'
-import { useAuthStore } from '@/hooks/use-auth'
+import { useAdminSession } from '@/hooks/use-admin-session'
 import { useConfigStore } from '@/app/(home)/stores/config-store'
-import { readFileAsText } from '@/lib/file-utils'
 import { cn } from '@/lib/utils'
 import { saveBlogEdits } from './services/save-blog-edits'
 import { Check } from 'lucide-react'
@@ -29,12 +28,11 @@ export default function BlogPage() {
 	const { items, loading } = useBlogIndex()
 	const { categories: categoriesFromServer } = useCategories()
 	const { isRead } = useReadArticles()
-	const { isAuth, setPrivateKey } = useAuthStore()
+	const { isAuth, login } = useAdminSession()
 	const { siteContent } = useConfigStore()
 	const hideEditButton = siteContent.hideEditButton ?? false
 	const enableCategories = siteContent.enableCategories ?? false
 
-	const keyInputRef = useRef<HTMLInputElement>(null)
 	const [editMode, setEditMode] = useState(false)
 	const [editableItems, setEditableItems] = useState<BlogIndexItem[]>([])
 	const [selectedSlugs, setSelectedSlugs] = useState<Set<string>>(new Set())
@@ -128,7 +126,7 @@ export default function BlogPage() {
 	}, [displayItems, displayMode, categoryList])
 
 	const selectedCount = selectedSlugs.size
-	const buttonText = isAuth ? '保存' : '导入密钥'
+	const buttonText = isAuth ? '保存' : '登录并保存'
 
 	const toggleEditMode = useCallback(() => {
 		if (editMode) {
@@ -277,27 +275,21 @@ export default function BlogPage() {
 		}
 	}, [items, editableItems, categoryList, categoriesFromServer])
 
-	const handleSaveClick = useCallback(() => {
+	const handleSaveClick = useCallback(async () => {
 		if (!isAuth) {
-			keyInputRef.current?.click()
+			const password = window.prompt('请输入文章后台密码')
+			if (!password) return
+			try {
+				await login(password)
+				toast.success('登录成功')
+				await handleSave()
+			} catch (error) {
+				toast.error(error instanceof Error ? error.message : '登录失败')
+			}
 			return
 		}
-		void handleSave()
-	}, [handleSave, isAuth])
-
-	const handlePrivateKeySelection = useCallback(
-		async (file: File) => {
-			try {
-				const pem = await readFileAsText(file)
-				setPrivateKey(pem)
-				toast.success('密钥导入成功，请再次点击保存')
-			} catch (error) {
-				console.error(error)
-				toast.error('读取密钥失败')
-			}
-		},
-		[setPrivateKey]
-	)
+		await handleSave()
+	}, [handleSave, isAuth, login])
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -315,18 +307,6 @@ export default function BlogPage() {
 
 	return (
 		<>
-			<input
-				ref={keyInputRef}
-				type='file'
-				accept='.pem'
-				className='hidden'
-				onChange={async e => {
-					const f = e.target.files?.[0]
-					if (f) await handlePrivateKeySelection(f)
-					if (e.currentTarget) e.currentTarget.value = ''
-				}}
-			/>
-
 			<div className='flex flex-col items-center justify-center gap-6 px-6 pt-24 max-sm:pt-24'>
 				{items.length > 0 && (
 					<motion.div

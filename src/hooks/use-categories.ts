@@ -22,7 +22,7 @@ const fetcher = async (url: string): Promise<CategoriesConfig> => {
 }
 
 export function useCategories() {
-	const { data, error, isLoading } = useSWR<CategoriesConfig>('/blogs/categories.json', fetcher, {
+	const { data, error, isLoading } = useSWR<CategoriesConfig>('/api/categories', fetcher, {
 		revalidateOnFocus: false,
 		revalidateOnReconnect: true
 	})
