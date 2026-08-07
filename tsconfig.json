@@ -30,9 +30,7 @@
 		"**/*.tsx",
 		".next/types/**/*.ts",
 		".next/dev/types/**/*.ts",
-		"**/*.mts",
-		"dist/types/**/*.ts",
-		"dist/dev/types/**/*.ts"
+		"**/*.mts"
 	],
 	"exclude": ["node_modules", "2025-blog-public", "dist", ".next/standalone"]
 }
