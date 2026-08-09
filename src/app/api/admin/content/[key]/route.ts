@@ -1,5 +1,5 @@
 import { revalidatePath, revalidateTag } from 'next/cache'
-import { assertAdminRequest, assertSameOrigin } from '@/lib/admin-auth'
+import { assertAdminMutationRequest } from '@/lib/admin-auth'
 import { upsertContentDocument } from '@/lib/content-repository'
 import { contentDocumentWriteSchema, isContentDocumentKey, parseContentDocument } from '@/lib/content-validation'
 import { routeErrorResponse } from '@/lib/route-errors'
@@ -20,8 +20,7 @@ const pathsByKey: Record<string, string[]> = {
 
 export async function PUT(request: Request, { params }: { params: Promise<{ key: string }> }): Promise<Response> {
 	try {
-		assertSameOrigin(request)
-		assertAdminRequest(request)
+		assertAdminMutationRequest(request)
 		const { key } = await params
 		if (!isContentDocumentKey(key)) return Response.json({ error: '配置不存在' }, { status: 404 })
 

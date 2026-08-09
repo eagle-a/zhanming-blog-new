@@ -71,10 +71,12 @@ pnpm migrate:content -- --apply
 
 ```powershell
 pnpm install
+pnpm db:migrate
+pnpm migrate:legacy:local
 pnpm dev
 ```
 
-本地地址：<http://localhost:2025>。没有 `DATABASE_URL` 时，开发环境只读回退到仓库中的旧文章和 JSON；写入功能需要 Neon、Blob 和本地管理员密钥。
+本地地址：<http://localhost:2025>。`migrate:legacy:local` 只允许连接 loopback PostgreSQL，把旧文章增量写入本地数据库，并继续使用 `public/blogs` 图片；它不会连接 Neon 或写 Vercel Blob。重复运行时不会覆盖已修改的同 slug 文章。
 
 提交前执行：
 
@@ -97,6 +99,24 @@ pnpm audit --prod --registry https://registry.npmjs.org
 4. Next.js 失效对应缓存，公开页面直接读取新内容。
 
 版本不一致时服务端返回 `409`，防止两个编辑会话互相覆盖。此时刷新页面后重新应用修改，不要强行覆盖。
+
+### AI 投稿审批
+
+本地 AI 可以读取并生成 Markdown，但不能直接公开发布。管理员在 `/admin/review` 生成一张 30 分钟有效、只能成功使用一次的投稿码；CLI 把一篇文章送入 `pending` 队列，管理员预览、修改并批准后才写入正式文章表。
+
+```powershell
+pnpm agent:submit C:\path\to\article.md
+```
+
+投稿码通过 CLI 隐藏输入粘贴，不放进环境变量、命令行参数或 Git。数据库只保存投稿码哈希。详细操作与安全边界见 [`docs/AI_SUBMISSION_GUIDE.md`](docs/AI_SUBMISSION_GUIDE.md)。
+
+当前 AI 范围只有“文章投稿 → 后台审批 → 批准发布”。数据库中少量早期 Agent/报告枚举是遗留结构，不代表对应功能已上线。
+
+## 文档导航
+
+- [项目整体说明](docs/PROJECT_OVERVIEW.md)：当前架构、页面、数据、API、安全、迁移、部署和已知限制；
+- [本地 AI 一次性投稿指南](docs/AI_SUBMISSION_GUIDE.md)：当前可用的文章投稿操作；
+- [Vercel CMS 迁移与回滚](docs/vercel-cms-migration.md)：数据库、Blob、上线和回滚流程。
 
 ## 部署
 

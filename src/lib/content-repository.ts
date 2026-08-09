@@ -44,7 +44,7 @@ export function getFallbackContentDocument<T>(key: ContentDocumentKey): ContentD
 	return { key, data: fallbacks[key] as T, version: 0, updatedAt: null }
 }
 
-export async function getContentDocument<T>(key: ContentDocumentKey): Promise<ContentDocumentRecord<T>> {
+async function getContentDocument<T>(key: ContentDocumentKey): Promise<ContentDocumentRecord<T>> {
 	const [row] = await getDb().select().from(contentDocuments).where(eq(contentDocuments.key, key)).limit(1)
 	if (!row) return getFallbackContentDocument<T>(key)
 	return {

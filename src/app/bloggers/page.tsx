@@ -112,6 +112,7 @@ export default function Page() {
 
 	return (
 		<>
+			<h1 className='sr-only'>友链</h1>
 			<GridView bloggers={bloggers} isEditMode={isEditMode} onUpdate={handleUpdate} onDelete={handleDelete} />
 
 			<motion.div initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} className='absolute top-4 right-6 flex gap-3 max-sm:hidden'>

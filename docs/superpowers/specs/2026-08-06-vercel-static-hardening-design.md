@@ -1,5 +1,7 @@
 # Vercel Static Deployment Hardening Design
 
+> **历史文档，禁止按此实施。** 这是 2026-08-06 的静态导出方案，已经被 Neon 运行时 CMS 架构取代。当前事实和文档入口以仓库根目录 [README.md](../../../README.md) 为准。
+
 ## Goal
 
 把项目收敛为唯一的 Vercel 静态导出部署路径，修复当前类型错误、错误站点 URL、危险默认配置、内容渲染风险和工程检查缺口，同时保留现有博客内容与未跟踪资料。

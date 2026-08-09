@@ -12,25 +12,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 		process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://zhanmingblog.cc.cd')
 	)
 
-	console.log(`[Sitemap] Generating for: ${baseUrl}`)
-
 	const posts: BlogIndexItem[] = allowDevelopmentLegacyFallback() ? readLegacyPosts(false) : await getCachedPublishedPosts()
 
 	const postEntries: MetadataRoute.Sitemap = posts.map(post => ({
 		url: `${baseUrl}/blog/${assertValidSlug(post.slug)}`,
-		lastModified: post.date ? new Date(post.date) : new Date(),
+		lastModified: new Date(post.updatedAt || post.date),
 		changeFrequency: 'weekly',
 		priority: 0.8
 	}))
 
-	const staticEntries: MetadataRoute.Sitemap = [
-		{
-			url: baseUrl,
-			lastModified: new Date(),
-			changeFrequency: 'daily',
-			priority: 1
-		}
+	const staticRoutes = [
+		'',
+		'/about',
+		'/blog',
+		'/bloggers',
+		'/clock',
+		'/comments',
+		'/image-toolbox',
+		'/juya-ai-daily',
+		'/live2d',
+		'/pictures',
+		'/projects',
+		'/share',
+		'/snippets',
+		'/svgs'
 	]
+	const staticEntries: MetadataRoute.Sitemap = staticRoutes.map(route => ({
+		url: `${baseUrl}${route}`,
+		changeFrequency: route === '' || route === '/blog' ? 'daily' : 'monthly',
+		priority: route === '' ? 1 : route === '/blog' ? 0.9 : 0.6
+	}))
 
 	return [...staticEntries, ...postEntries]
 }

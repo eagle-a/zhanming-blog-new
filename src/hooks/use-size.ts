@@ -39,7 +39,7 @@ const computeSize = (): Omit<SizeState, 'recalc'> => {
 	return initState
 }
 
-export const useSizeStore = create<SizeState>(set => ({
+const useSizeStore = create<SizeState>(set => ({
 	...initState,
 	recalc: () => {
 		set(computeSize())

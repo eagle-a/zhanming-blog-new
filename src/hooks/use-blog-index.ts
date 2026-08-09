@@ -16,10 +16,11 @@ const fetcher = async (url: string) => {
 	return Array.isArray(data) ? data : []
 }
 
-export function useBlogIndex() {
+export function useBlogIndex(initialItems: BlogIndexItem[] = []) {
 	const { isAuth } = useAdminSession()
 	const endpoint = isAuth ? '/api/posts?scope=all' : '/api/posts'
 	const { data, error, isLoading } = useSWR<BlogIndexItem[]>(endpoint, fetcher, {
+		fallbackData: initialItems,
 		revalidateOnFocus: false,
 		revalidateOnReconnect: true
 	})

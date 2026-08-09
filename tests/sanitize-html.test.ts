@@ -30,3 +30,21 @@ test('preserves code block metadata but strips unrelated data attributes', () =>
 	assert.match(output, /class="language-ts"/)
 	assert.doesNotMatch(output, /data-secret/)
 })
+
+test('falls back safely when a DOM implementation returns no body', () => {
+	const originalDomParser = globalThis.DOMParser
+	globalThis.DOMParser = class {
+		parseFromString() {
+			return { body: null }
+		}
+	} as unknown as typeof DOMParser
+
+	try {
+		const output = sanitizeHtml('<p>safe</p><script>alert(1)</script><img src="/images/a.png" onerror="alert(2)">')
+		assert.match(output, /<p>safe<\/p>/)
+		assert.match(output, /src="\/images\/a\.png"/)
+		assert.doesNotMatch(output, /script|onerror/i)
+	} finally {
+		globalThis.DOMParser = originalDomParser
+	}
+})

@@ -112,6 +112,7 @@ export default function Page() {
 
 	return (
 		<>
+			<h1 className='sr-only'>项目</h1>
 			<div className='flex flex-col items-center justify-center px-6 pt-32 pb-12'>
 				<div className='grid w-full max-w-[1200px] grid-cols-2 gap-6 max-md:grid-cols-1'>
 					{projects.map((project, index) => (

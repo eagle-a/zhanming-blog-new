@@ -3,14 +3,17 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { del } from '@vercel/blob'
 import { upload } from '@vercel/blob/client'
-import { eq, sql } from 'drizzle-orm'
+import { and, eq, gt, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/neon-serverless'
 import * as schema from '../src/db/schema.ts'
 import { mediaProxyUrl } from '../src/lib/media-url.ts'
+import { assertIsolatedCmsTestEnvironment } from './lib/script-safety.ts'
 
 const baseUrl = process.env.CMS_TEST_BASE_URL || 'http://localhost:2025'
 const password = process.env.CMS_TEST_PASSWORD
-const databaseUrl = process.env.DATABASE_URL
+assertIsolatedCmsTestEnvironment(process.env)
+const databaseUrl = process.env.CMS_TEST_DATABASE_URL!
+const blobToken = process.env.CMS_TEST_BLOB_READ_WRITE_TOKEN!
 const slug = `codex-smoke-test-${Date.now()}`
 
 if (!password) throw new Error('CMS_TEST_PASSWORD is required')
@@ -23,7 +26,9 @@ let contentBlobUrl: string | undefined
 let contentBlobPathname: string | undefined
 let cookie: string | undefined
 let originalSnippets: string[] | undefined
+let originalSnippetsVersion: number | undefined
 let snippetsRestored = false
+let testCategoryExisted = false
 let failure: unknown
 const contentMarker = `codex-content-smoke-${Date.now()}`
 
@@ -34,6 +39,8 @@ async function requestJson(url: string, init?: RequestInit): Promise<{ response:
 }
 
 try {
+	const [existingTestCategory] = await db.select({ id: schema.categories.id }).from(schema.categories).where(eq(schema.categories.name, '测试')).limit(1)
+	testCategoryExisted = Boolean(existingTestCategory)
 	const login = await requestJson(`${baseUrl}/api/admin/session`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json', Origin: baseUrl },
@@ -50,6 +57,7 @@ try {
 	}
 	const snippetsBefore = contentBefore.body.data as string[]
 	originalSnippets = snippetsBefore
+	originalSnippetsVersion = contentBefore.body.version
 	const contentUpdated = await requestJson(`${baseUrl}/api/admin/content/snippets`, {
 		method: 'PUT',
 		headers: { 'Content-Type': 'application/json', Cookie: cookie, Origin: baseUrl },
@@ -182,30 +190,32 @@ try {
 } catch (error) {
 	failure = error
 } finally {
-	if (originalSnippets && !snippetsRestored) {
+	if (originalSnippets && originalSnippetsVersion !== undefined) {
+		const originalVersion = originalSnippetsVersion
 		await db.transaction(async tx => {
 			await tx.execute(sql`select pg_advisory_xact_lock(hashtext('snippets'))`)
 			const [current] = await tx.select().from(schema.contentDocuments).where(eq(schema.contentDocuments.key, 'snippets')).for('update').limit(1)
-			if (!current || !Array.isArray(current.data) || !current.data.includes(contentMarker)) return
-			const nextVersion = current.version + 1
+			if (!current) return
+			const changedOnlyBySmoke =
+				(Array.isArray(current.data) && current.data.includes(contentMarker)) ||
+				(snippetsRestored && current.version <= originalVersion + 2)
+			if (!changedOnlyBySmoke) throw new Error('Smoke cleanup refused: snippets changed concurrently')
 			await tx
 				.update(schema.contentDocuments)
-				.set({ data: originalSnippets, version: nextVersion, updatedAt: new Date() })
+				.set({ data: originalSnippets, version: originalVersion, updatedAt: new Date() })
 				.where(eq(schema.contentDocuments.key, 'snippets'))
-			await tx.insert(schema.contentDocumentRevisions).values({
-				documentKey: 'snippets',
-				version: nextVersion,
-				data: originalSnippets,
-				createdBy: 'cms-smoke-cleanup'
-			})
+			await tx
+				.delete(schema.contentDocumentRevisions)
+				.where(and(eq(schema.contentDocumentRevisions.documentKey, 'snippets'), gt(schema.contentDocumentRevisions.version, originalVersion)))
 		})
 	}
 	await db.delete(schema.posts).where(eq(schema.posts.slug, slug))
 	await db.delete(schema.tags).where(eq(schema.tags.name, 'cms-smoke'))
+	if (!testCategoryExisted) await db.delete(schema.categories).where(eq(schema.categories.name, '测试'))
 	if (blobPathname) await db.delete(schema.media).where(eq(schema.media.pathname, blobPathname))
 	if (contentBlobPathname) await db.delete(schema.media).where(eq(schema.media.pathname, contentBlobPathname))
-	if (blobUrl) await del(blobUrl, { token: process.env.BLOB_READ_WRITE_TOKEN })
-	if (contentBlobUrl) await del(contentBlobUrl, { token: process.env.BLOB_READ_WRITE_TOKEN })
+	if (blobUrl) await del(blobUrl, { token: blobToken })
+	if (contentBlobUrl) await del(contentBlobUrl, { token: blobToken })
 	await db.$client.end()
 }
 

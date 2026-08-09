@@ -142,10 +142,11 @@ const FloatingImage = ({
 	const [dragOffset, setDragOffset] = useState(() => loadSavedOffset(url))
 
 	useEffect(() => {
-		setTimeout(() => {
+		const timer = window.setTimeout(() => {
 			setShow(true)
 		}, 200 * index)
-	}, [])
+		return () => window.clearTimeout(timer)
+	}, [index])
 
 	const [originalSize, setOriginalSize] = useState<OriginalSize | null>(null)
 
@@ -293,6 +294,9 @@ const FloatingImage = ({
 				)}>
 				<motion.img
 					src={url}
+					alt={description || ''}
+					loading='lazy'
+					decoding='async'
 					onLoad={event => {
 						const img = event.currentTarget
 						setOriginalSize({ width: img.naturalWidth, height: img.naturalHeight })
@@ -395,9 +399,10 @@ export const RandomLayout = ({ pictures, isEditMode = false, onDeleteSingle, onD
 	const [show, setShow] = useState(false)
 
 	useEffect(() => {
-		setTimeout(() => {
+		const timer = window.setTimeout(() => {
 			setShow(true)
 		}, 1000)
+		return () => window.clearTimeout(timer)
 	}, [])
 
 	const urls = useMemo(() => buildUrlList(pictures), [pictures])

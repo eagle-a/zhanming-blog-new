@@ -1,5 +1,7 @@
 # Vercel Static Hardening Implementation Plan
 
+> **历史文档，禁止继续执行。** 该计划基于已经废弃的 `output: 'export'` 架构，现项目使用 Vercel + Neon PostgreSQL + Private Blob 的运行时 CMS。当前实施状态见 [AI_WORKFLOW_IMPLEMENTATION_STATUS.md](../../AI_WORKFLOW_IMPLEMENTATION_STATUS.md)。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 修复项目在 Vercel 静态部署下的配置、类型、安全和工程质量问题，同时保留现有内容。
@@ -82,7 +84,7 @@
 - Modify: `src/app/write/stores/write-store.ts`
 - Modify: `src/app/write/services/push-blog.ts`
 - Modify: `src/app/write/services/delete-blog.ts`
-- Modify: `src/app/blog/services/batch-delete-blogs.ts`
+- Delete: `src/app/blog/services/batch-delete-blogs.ts` (completed in the 2026-08-09 dead-code cleanup)
 - Modify: `src/app/blog/services/save-blog-edits.ts`
 - Test: `tests/config-validation.test.ts`
 
@@ -98,7 +100,7 @@
 - Modify: `package.json`
 - Delete: `package-lock.json`
 - Modify: `.gitignore`
-- Modify: `GIT_CLEANUP_GUIDE.md`
+- Delete: `GIT_CLEANUP_GUIDE.md` (completed in the 2026-08-09 dead-file cleanup)
 
 - [ ] **Step 1: Add reproducible validation commands and remove the second lockfile.**
 - [ ] **Step 2: Remove live-looking historical secret material from current documentation without rewriting Git history.**

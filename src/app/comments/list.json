@@ -1,5 +1,0 @@
-{
-	"title": "关于本站",
-	"description": "一个部署在 Vercel 的现代化博客系统",
-	"content": "📦文章与站点配置存储在 Neon PostgreSQL，上传媒体存储在私有 Vercel Blob\n\n🚀内容更新不需要重新构建或提交 GitHub\n\n✏️管理员可通过站内界面编辑，系统保留版本号与修订历史\n\n## 技术栈\n\n- Next.js\n- React\n- TypeScript\n- Tailwind CSS\n- Motion\n- Neon PostgreSQL\n- Vercel Blob"
-}

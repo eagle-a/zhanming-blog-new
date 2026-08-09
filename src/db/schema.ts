@@ -2,6 +2,8 @@ import { sql } from 'drizzle-orm'
 import { bigint, bigserial, check, index, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 
 export const postStatus = pgEnum('post_status', ['draft', 'published', 'archived'])
+export const submissionType = pgEnum('submission_type', ['post', 'work_report', 'advisor_reply'])
+export const submissionStatus = pgEnum('submission_status', ['staging', 'pending', 'approved', 'rejected'])
 
 export const posts = pgTable(
 	'posts',
@@ -72,6 +74,131 @@ export const categories = pgTable('categories', {
 	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 	updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 })
+
+export const adminLoginAttempts = pgTable(
+	'admin_login_attempts',
+	{
+		keyHash: text('key_hash').primaryKey(),
+		attemptCount: bigint('attempt_count', { mode: 'number' }).notNull().default(0),
+		windowStartedAt: timestamp('window_started_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+		blockedUntil: timestamp('blocked_until', { withTimezone: true, mode: 'date' }),
+		updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
+	},
+	table => [
+		index('admin_login_attempts_updated_at_idx').on(table.updatedAt),
+		check('admin_login_attempts_count_nonnegative', sql`${table.attemptCount} >= 0`)
+	]
+)
+
+export const agentApiKeys = pgTable(
+	'agent_api_keys',
+	{
+		id: bigserial('id', { mode: 'number' }).primaryKey(),
+		name: text('name').notNull(),
+		authType: text('auth_type').notNull().default('bearer'),
+		tokenPrefix: text('token_prefix'),
+		tokenHash: text('token_hash'),
+		publicKeyPem: text('public_key_pem'),
+		keyFingerprint: text('key_fingerprint'),
+		scopes: jsonb('scopes').$type<string[]>().notNull(),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+		expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }),
+		revokedAt: timestamp('revoked_at', { withTimezone: true, mode: 'date' }),
+		lastUsedAt: timestamp('last_used_at', { withTimezone: true, mode: 'date' })
+	},
+	table => [
+		uniqueIndex('agent_api_keys_token_prefix_unique').on(table.tokenPrefix),
+		uniqueIndex('agent_api_keys_token_hash_unique').on(table.tokenHash),
+		uniqueIndex('agent_api_keys_fingerprint_unique').on(table.keyFingerprint),
+		check('agent_api_keys_auth_type_valid', sql`${table.authType} IN ('bearer', 'signature')`),
+		check(
+			'agent_api_keys_auth_material_valid',
+			sql`(${table.authType} = 'bearer' AND ${table.tokenPrefix} IS NOT NULL AND ${table.tokenHash} IS NOT NULL AND ${table.publicKeyPem} IS NULL AND ${table.keyFingerprint} IS NULL) OR (${table.authType} = 'signature' AND ${table.tokenPrefix} IS NULL AND ${table.tokenHash} IS NULL AND ${table.publicKeyPem} IS NOT NULL AND ${table.keyFingerprint} IS NOT NULL)`
+		)
+	]
+)
+
+export const agentRequestNonces = pgTable(
+	'agent_request_nonces',
+	{
+		agentKeyId: bigint('agent_key_id', { mode: 'number' })
+			.notNull()
+			.references(() => agentApiKeys.id, { onDelete: 'cascade' }),
+		nonce: text('nonce').notNull(),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
+	},
+	table => [primaryKey({ columns: [table.agentKeyId, table.nonce] }), index('agent_request_nonces_created_at_idx').on(table.createdAt)]
+)
+
+export const submissionTickets = pgTable(
+	'submission_tickets',
+	{
+		id: bigserial('id', { mode: 'number' }).primaryKey(),
+		label: text('label').notNull(),
+		tokenHash: text('token_hash').notNull(),
+		scope: text('scope').notNull().default('posts:submit'),
+		createdBy: text('created_by').notNull().default('admin'),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+		expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
+		usedAt: timestamp('used_at', { withTimezone: true, mode: 'date' }),
+		revokedAt: timestamp('revoked_at', { withTimezone: true, mode: 'date' })
+	},
+	table => [
+		uniqueIndex('submission_tickets_token_hash_unique').on(table.tokenHash),
+		index('submission_tickets_created_at_idx').on(table.createdAt),
+		index('submission_tickets_active_expires_idx')
+			.on(table.expiresAt)
+			.where(sql`${table.usedAt} IS NULL AND ${table.revokedAt} IS NULL`),
+		check('submission_tickets_scope_valid', sql`${table.scope} = 'posts:submit'`),
+		check('submission_tickets_expiry_after_creation', sql`${table.expiresAt} > ${table.createdAt}`)
+	]
+)
+
+export const contentSubmissions = pgTable(
+	'content_submissions',
+	{
+		id: text('id').primaryKey(),
+		agentKeyId: bigint('agent_key_id', { mode: 'number' })
+			.references(() => agentApiKeys.id, { onDelete: 'restrict' }),
+		submissionTicketId: bigint('submission_ticket_id', { mode: 'number' }).references(() => submissionTickets.id, { onDelete: 'restrict' }),
+		idempotencyKey: text('idempotency_key').notNull(),
+		type: submissionType('type').notNull(),
+		status: submissionStatus('status').notNull().default('pending'),
+		contentHash: text('content_hash').notNull(),
+		payload: jsonb('payload').notNull(),
+		validationResult: jsonb('validation_result').notNull(),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+		updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+		reviewedAt: timestamp('reviewed_at', { withTimezone: true, mode: 'date' }),
+		reviewedBy: text('reviewed_by'),
+		rejectionReason: text('rejection_reason')
+	},
+	table => [
+		uniqueIndex('content_submissions_agent_idempotency_unique').on(table.agentKeyId, table.idempotencyKey),
+		uniqueIndex('content_submissions_ticket_unique').on(table.submissionTicketId),
+		index('content_submissions_status_created_idx').on(table.status, table.createdAt),
+		index('content_submissions_agent_created_idx').on(table.agentKeyId, table.createdAt),
+		check(
+			'content_submissions_single_submitter',
+			sql`(${table.agentKeyId} IS NOT NULL) <> (${table.submissionTicketId} IS NOT NULL)`
+		)
+	]
+)
+
+export const auditEvents = pgTable(
+	'audit_events',
+	{
+		id: bigserial('id', { mode: 'number' }).primaryKey(),
+		actorType: text('actor_type').notNull(),
+		actorId: text('actor_id').notNull(),
+		action: text('action').notNull(),
+		targetType: text('target_type').notNull(),
+		targetId: text('target_id').notNull(),
+		metadata: jsonb('metadata').notNull().default({}),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
+	},
+	table => [index('audit_events_target_created_idx').on(table.targetType, table.targetId, table.createdAt)]
+)
 
 export const media = pgTable(
 	'media',

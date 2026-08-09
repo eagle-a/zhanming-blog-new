@@ -1,5 +1,5 @@
 import { revalidateTag } from 'next/cache'
-import { assertAdminRequest, assertSameOrigin } from '@/lib/admin-auth'
+import { assertAdminMutationRequest } from '@/lib/admin-auth'
 import { postInputSchema } from '@/lib/post-validation'
 import { upsertPost } from '@/lib/posts-repository'
 import { routeErrorResponse } from '@/lib/route-errors'
@@ -9,8 +9,7 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request): Promise<Response> {
 	try {
-		assertSameOrigin(request)
-		assertAdminRequest(request)
+		assertAdminMutationRequest(request)
 		const input = postInputSchema.parse(await request.json())
 		const post = await upsertPost(input)
 		revalidateTag('posts', { expire: 0 })

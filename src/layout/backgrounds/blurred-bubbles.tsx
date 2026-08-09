@@ -147,8 +147,6 @@ export default function BlurredBubblesBackground({
 				})
 			}
 		}
-		// console.log('[bg] tries:', tries)
-		// console.log('[bg] bubbles count:', bubbles.length)
 
 		// --- Animation loop ---
 		const FRAME_INTERVAL = 1000 / effectiveFps
@@ -284,7 +282,6 @@ export default function BlurredBubblesBackground({
 				if (t - fpsStart >= 1000) {
 					// Log measured fps vs target
 					// eslint-disable-next-line no-console
-					console.log('[blurred-bubbles] fps=', fpsCounter, 'target=', effectiveFps)
 					fpsCounter = 0
 					fpsStart = t
 				}

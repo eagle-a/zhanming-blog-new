@@ -1,393 +1,195 @@
 'use client'
 
-import { motion } from 'motion/react'
-import { Rss, ExternalLink, Github, Globe, BookOpen, AlertCircle, Calendar, ChevronRight, Loader2 } from 'lucide-react'
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { marked } from 'marked'
-import parse from 'html-react-parser'
+import { useEffect, useMemo, useState } from 'react'
+import useSWR from 'swr'
+import parse, { domToReact, Element, type DOMNode, type HTMLReactParserOptions } from 'html-react-parser'
+import { AlertCircle, Clock3, ExternalLink, RefreshCw, Rss } from 'lucide-react'
+import { motion, useReducedMotion } from 'motion/react'
+import { MarkdownImage } from '@/components/markdown-image'
 import { sanitizeHtml } from '@/lib/sanitize-html'
+import type { JuyaAIFeed, JuyaAIIssue } from '@/lib/juya-ai-feed'
 
-const RSS_URL = 'https://imjuya.github.io/juya-ai-daily/rss.xml'
-
-// 文章数据类型
-interface Article {
-  id: number
-  date: string
-  title: string
-  link: string
-  summary: string
+async function fetchFeed(url: string): Promise<JuyaAIFeed> {
+	const response = await fetch(url, { credentials: 'same-origin' })
+	const body = (await response.json()) as JuyaAIFeed & { error?: string }
+	if (!response.ok) throw new Error(body.error || 'AI 日报加载失败')
+	return body
 }
 
-// RSS 数据类型
-interface RSSItem {
-  title: string
-  link: string
-  pubDate: string
-  description: string
+const contentParserOptions: HTMLReactParserOptions = {
+	replace(domNode: DOMNode) {
+		if (!(domNode instanceof Element)) return
+		if (domNode.name === 'img') {
+			return <MarkdownImage src={domNode.attribs.src || ''} alt={domNode.attribs.alt || ''} title={domNode.attribs.title || ''} />
+		}
+		if (domNode.name === 'a') {
+			const href = domNode.attribs.href || ''
+			return (
+				<a href={href} target='_blank' rel='noopener noreferrer'>
+					{domToReact(domNode.children as DOMNode[], contentParserOptions)}
+				</a>
+			)
+		}
+	}
 }
 
-interface RSSChannel {
-  title: string
-  link: string
-  description: string
-  items: RSSItem[]
+function formatUpdatedAt(value: string): string {
+	return new Intl.DateTimeFormat('zh-CN', {
+		timeZone: 'Asia/Shanghai',
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit',
+		hour12: false
+	}).format(new Date(value))
 }
 
-// 缓存相关
-const CACHE_KEY = 'juya-ai-daily-cache'
-const CACHE_DURATION = 5 * 60 * 1000 // 5分钟缓存
-
-// 获取缓存数据
-function getCachedData(): Article[] | null {
-  try {
-    const cached = localStorage.getItem(CACHE_KEY)
-    if (!cached) return null
-    
-    const { data, timestamp } = JSON.parse(cached)
-    const now = Date.now()
-    
-    if (now - timestamp > CACHE_DURATION) {
-      localStorage.removeItem(CACHE_KEY)
-      return null
-    }
-    
-    return data
-  } catch {
-    return null
-  }
+function LoadingState() {
+	return (
+		<div className='grid gap-6 lg:grid-cols-[210px_minmax(0,1fr)]'>
+			<div className='card relative! h-72 animate-pulse' />
+			<div className='card relative! min-h-[720px] animate-pulse p-6'>
+				<div className='mb-6 h-7 w-52 rounded-lg bg-black/5' />
+				<div className='mb-8 h-48 rounded-2xl bg-black/5' />
+				<div className='space-y-3'>
+					<div className='h-4 w-full rounded bg-black/5' />
+					<div className='h-4 w-11/12 rounded bg-black/5' />
+					<div className='h-4 w-4/5 rounded bg-black/5' />
+				</div>
+			</div>
+		</div>
+	)
 }
 
-// 设置缓存数据
-function setCachedData(data: Article[]): void {
-  try {
-    const cacheData = {
-      data,
-      timestamp: Date.now()
-    }
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData))
-  } catch {
-    // 忽略缓存错误
-  }
-}
-
-// 解析 RSS 数据的函数
-async function fetchRSSData(): Promise<Article[]> {
-  // 先检查缓存
-  const cachedData = getCachedData()
-  if (cachedData) {
-    return cachedData
-  }
-
-  try {
-    const response = await fetch(RSS_URL)
-    const xmlText = await response.text()
-    
-    const parser = new DOMParser()
-    const xmlDoc = parser.parseFromString(xmlText, 'text/xml')
-    
-    const channelEl = xmlDoc.querySelector('channel')
-    if (!channelEl) {
-      throw new Error('Invalid RSS format')
-    }
-
-    const items: RSSItem[] = []
-    const itemElements = channelEl.querySelectorAll('item')
-    
-    itemElements.forEach((item) => {
-      const title = item.querySelector('title')?.textContent || ''
-      const link = item.querySelector('link')?.textContent || ''
-      const pubDate = item.querySelector('pubDate')?.textContent || ''
-      const description = item.querySelector('description')?.textContent || ''
-      
-      items.push({ title, link, pubDate, description })
-    })
-
-    // 转换为 Article 格式并只取前10条
-    const articles = items.slice(0, 10).map((item, index) => {
-      // 从标题中提取日期
-      const dateMatch = item.title.match(/(\d{4}-\d{2}-\d{2})/)
-      const date = dateMatch ? dateMatch[1] : new Date(item.pubDate).toISOString().split('T')[0]
-      
-      // 从链接中提取 issue ID
-      const idMatch = item.link.match(/\/issues\/(\d+)/)
-      const id = idMatch ? parseInt(idMatch[1]) : index + 1
-      
-      return {
-        id,
-        date,
-        title: item.title,
-        link: item.link,
-        summary: item.description.replace(/<[^>]*>/g, '') // 移除 HTML 标签
-      }
-    })
-    
-    // 设置缓存
-    setCachedData(articles)
-    
-    return articles
-  } catch (error) {
-    console.error('Failed to fetch RSS data:', error)
-    return []
-  }
+function IssueContent({ issue }: { issue: JuyaAIIssue }) {
+	const content = useMemo(() => parse(sanitizeHtml(issue.contentHtml), contentParserOptions), [issue.contentHtml])
+	return (
+		<motion.article
+			key={issue.id}
+			initial={{ opacity: 0, y: 12 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ duration: 0.25 }}
+			className='card relative! w-full max-w-full min-w-0 overflow-hidden p-5 sm:p-7'>
+			<div className='mb-7 flex min-w-0 flex-col gap-3 border-b pb-5 sm:flex-row sm:items-center sm:justify-between'>
+				<div className='min-w-0'>
+					<p className='text-secondary mb-1 text-sm'>橘鸦 AI 早报</p>
+					<h2 className='text-2xl font-bold break-words sm:text-3xl'>AI 早报 {issue.title}</h2>
+				</div>
+				<a
+					href={issue.link}
+					target='_blank'
+					rel='noopener noreferrer'
+					className='brand-btn inline-flex shrink-0 items-center justify-center gap-2 px-4 text-sm'>
+					查看原文
+					<ExternalLink className='h-4 w-4' />
+				</a>
+			</div>
+			<div className='ai-daily-article'>{content}</div>
+		</motion.article>
+	)
 }
 
 export default function JuyaAIDailyPage() {
-  const [articles, setArticles] = useState<Article[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [expandedArticle, setExpandedArticle] = useState<number | null>(null)
+	const reduceMotion = useReducedMotion()
+	const { data, error, isLoading, isValidating, mutate } = useSWR<JuyaAIFeed>('/api/ai-daily', fetchFeed, {
+		revalidateOnFocus: false,
+		dedupingInterval: 60_000,
+		keepPreviousData: true
+	})
+	const [selectedId, setSelectedId] = useState('')
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true)
-        const data = await fetchRSSData()
-        setArticles(data)
-        if (data.length === 0) {
-          setError('暂无数据，请稍后重试')
-        }
-      } catch (err) {
-        console.error('Failed to load RSS data:', err)
-        setError('加载失败，请稍后重试')
-      } finally {
-        setLoading(false)
-      }
-    }
+	useEffect(() => {
+		if (!data?.issues.length) return
+		if (!data.issues.some(issue => issue.id === selectedId)) setSelectedId(data.issues[0].id)
+	}, [data, selectedId])
 
-    loadData()
-  }, [])
+	const selectedIssue = data?.issues.find(issue => issue.id === selectedId) || data?.issues[0]
 
-  return (
-    <div className='flex flex-col items-center px-6 pt-32 pb-12 max-sm:px-0 min-h-screen'>
-      <div className='w-full max-w-[900px]'>
-        {/* 标题区域 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className='mb-8 text-center'
-        >
-          <div className='mb-4 inline-flex items-center justify-center rounded-full bg-brand/10 p-4'>
-            <Rss className='h-8 w-8 text-brand' />
-          </div>
-          <h1 className='mb-4 text-4xl font-bold'>AI早报</h1>
-          <p className='text-secondary text-lg'>
-            每天精选AI领域最新资讯，助你紧跟AI发展前沿
-          </p>
-        </motion.div>
+	return (
+		<main className='min-h-screen overflow-x-clip px-4 pt-28 pb-14 sm:px-6'>
+			<div className='mx-auto w-full max-w-[1120px]'>
+				<motion.header initial={reduceMotion ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className='mb-8 text-center'>
+					<h1 className='text-4xl font-bold tracking-tight sm:text-5xl'>AI 日报</h1>
+					<p className='text-secondary mt-3 text-base sm:text-lg'>同步橘鸦 AI 早报，阅读最近 10 期内容</p>
+				</motion.header>
 
-        {/* 上线公告 */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          className='relative mb-8 rounded-[40px] border bg-card p-6 backdrop-blur-sm'
-          style={{
-            boxShadow: '0 40px 50px -32px rgba(0, 0, 0, 0.05), inset 0 0 20px rgba(255, 255, 255, 0.25)'
-          }}
-        >
-          <div className='flex items-start gap-4'>
-            <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-500/10'>
-              <span className='h-3 w-3 rounded-full bg-green-500'></span>
-            </div>
-            <div>
-              <h2 className='mb-2 text-xl font-semibold'>正式上线</h2>
-              <p className='text-secondary leading-relaxed'>
-                今天，AI早报文字版正式上线 RSS 订阅。同时，早报视频版卡片画面的生成工具也开源了。
-              </p>
-            </div>
-          </div>
-        </motion.div>
+				<div className='mb-7 flex flex-wrap items-center justify-center gap-2 sm:gap-3'>
+					{data?.updatedAt ? (
+						<span className='text-secondary inline-flex items-center gap-2 px-2 text-sm'>
+							<Clock3 className='h-4 w-4' />
+							最后更新 {formatUpdatedAt(data.updatedAt)}
+						</span>
+					) : null}
+					<a
+						href={data?.homeUrl || 'https://daily.juya.uk/'}
+						target='_blank'
+						rel='noopener noreferrer'
+						className='bg-card inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm'>
+						<ExternalLink className='h-4 w-4' />
+						官网
+					</a>
+					<a
+						href={data?.rssUrl || 'https://daily.juya.uk/rss.xml'}
+						target='_blank'
+						rel='noopener noreferrer'
+						className='bg-card inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm'>
+						<Rss className='h-4 w-4' />
+						RSS
+					</a>
+					<button
+						type='button'
+						onClick={() => void mutate()}
+						disabled={isValidating}
+						className='bg-card inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm disabled:cursor-wait disabled:opacity-60'>
+						<RefreshCw className={`h-4 w-4 ${isValidating ? 'animate-spin' : ''}`} />
+						重新加载
+					</button>
+				</div>
 
-        {/* 文章列表 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className='mb-8'
-        >
-          <div className='mb-6 flex items-center justify-between'>
-            <h2 className='text-2xl font-bold flex items-center gap-2'>
-              <Calendar className='h-6 w-6 text-brand' />
-              最新早报
-            </h2>
-            <Link
-              href='/juya-ai-daily/preview'
-              className='text-sm text-brand hover:underline'
-            >
-              查看全部 →
-            </Link>
-          </div>
+				{error ? (
+					<div className='card relative! mx-auto max-w-xl p-8 text-center'>
+						<AlertCircle className='mx-auto mb-3 h-8 w-8 text-red-500' />
+						<h2 className='mb-2 text-lg font-semibold'>AI 日报暂时无法加载</h2>
+						<p className='text-secondary mb-5 text-sm'>{error instanceof Error ? error.message : '请稍后重试'}</p>
+						<button type='button' onClick={() => void mutate()} className='brand-btn px-5'>
+							重试
+						</button>
+					</div>
+				) : isLoading || !data || !selectedIssue ? (
+					<LoadingState />
+				) : (
+					<div className='grid min-w-0 items-start gap-5 lg:grid-cols-[210px_minmax(0,1fr)]'>
+						<aside className='card relative! min-w-0 p-3 lg:sticky lg:top-24'>
+							<h2 className='px-3 pt-2 pb-3 text-base font-semibold'>最近 {data.issues.length} 期</h2>
+							<nav aria-label='AI 日报期数' className='flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible'>
+								{data.issues.map(issue => {
+									const active = issue.id === selectedIssue.id
+									return (
+										<button
+											key={issue.id}
+											type='button'
+											onClick={() => setSelectedId(issue.id)}
+											aria-current={active ? 'page' : undefined}
+											className={`shrink-0 rounded-xl border px-4 py-3 text-left text-sm transition-colors lg:w-full ${active ? 'border-brand bg-brand/10 text-brand font-medium' : 'hover:border-border border-transparent hover:bg-white/40'}`}>
+											{issue.title}
+										</button>
+									)
+								})}
+							</nav>
+						</aside>
+						<IssueContent issue={selectedIssue} />
+					</div>
+				)}
 
-          {/* 加载状态 */}
-          {loading && (
-            <div className='flex items-center justify-center py-12'>
-              <Loader2 className='h-8 w-8 animate-spin text-brand' />
-              <span className='ml-2 text-secondary'>正在加载最新早报...</span>
-            </div>
-          )}
-
-          {/* 错误状态 */}
-          {error && !loading && (
-            <div className='rounded-xl bg-red-500/10 p-6 text-center'>
-              <AlertCircle className='mx-auto h-8 w-8 text-red-500 mb-2' />
-              <p className='text-red-700'>{error}</p>
-            </div>
-          )}
-
-          {/* 文章列表 */}
-          {!loading && !error && articles.length > 0 && (
-            <div className='space-y-4'>
-              {articles.map((article, index) => (
-              <motion.article
-                key={article.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index }}
-                className='relative overflow-hidden rounded-[40px] border bg-card p-0 backdrop-blur-sm'
-                style={{
-                  boxShadow: '0 40px 50px -32px rgba(0, 0, 0, 0.05), inset 0 0 20px rgba(255, 255, 255, 0.25)'
-                }}
-              >
-                <div className='p-6'>
-                  <div className='mb-3 flex items-center gap-3 text-sm text-secondary'>
-                    <span className='flex items-center gap-1'>
-                      <Calendar className='h-4 w-4' />
-                      {article.date}
-                    </span>
-                    <span className='rounded-full bg-brand/10 px-2 py-0.5 text-xs text-brand'>
-                      Issue #{article.id}
-                    </span>
-                  </div>
-                  
-                  <h3 className='mb-3 text-lg font-semibold'>
-                    <a
-                      href={article.link}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='hover:text-brand transition-colors'
-                    >
-                      {article.title}
-                    </a>
-                  </h3>
-                  
-                  <div className='text-secondary text-sm leading-relaxed prose prose-sm max-w-none'>
-                    {parse(sanitizeHtml(marked.parse(article.summary, { async: false }) as string))}
-                  </div>
-                  
-                  <div className='mt-4 flex items-center justify-between'>
-                    <a
-                      href={article.link}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='inline-flex items-center gap-1 text-sm text-brand hover:underline'
-                    >
-                      阅读全文
-                      <ChevronRight className='h-4 w-4' />
-                    </a>
-                  </div>
-                </div>
-              </motion.article>
-            ))}
-            </div>
-          )}
-        </motion.div>
-
-        {/* 相关链接 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className='relative mb-8 rounded-[40px] border bg-card p-6 backdrop-blur-sm'
-          style={{
-            boxShadow: '0 40px 50px -32px rgba(0, 0, 0, 0.05), inset 0 0 20px rgba(255, 255, 255, 0.25)'
-          }}
-        >
-          <h2 className='mb-4 text-xl font-semibold flex items-center gap-2'>
-            <ExternalLink className='h-5 w-5 text-brand' />
-            相关链接
-          </h2>
-          <div className='grid gap-4 sm:grid-cols-2'>
-            <a
-              href='https://imjuya.github.io/juya-ai-daily'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='flex items-center gap-3 rounded-xl border bg-white/60 p-4 backdrop-blur-sm transition-all hover:bg-white/80 dark:bg-gray-800/60 dark:hover:bg-gray-800/80'
-            >
-              <Globe className='h-5 w-5 text-brand' />
-              <div>
-                <div className='font-medium'>GitHub Pages</div>
-                <div className='text-sm text-secondary'>在线浏览早报</div>
-              </div>
-            </a>
-            <a
-              href='https://github.com/imjuya/juya-ai-daily/tree/master/BACKUP'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='flex items-center gap-3 rounded-xl border bg-white/60 p-4 backdrop-blur-sm transition-all hover:bg-white/80 dark:bg-gray-800/60 dark:hover:bg-gray-800/80'
-            >
-              <BookOpen className='h-5 w-5 text-brand' />
-              <div>
-                <div className='font-medium'>文字版存档</div>
-                <div className='text-sm text-secondary'>GitHub BACKUP</div>
-              </div>
-            </a>
-            <a
-              href='https://github.com/imjuya/juya-ai-daily'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='flex items-center gap-3 rounded-xl border bg-white/60 p-4 backdrop-blur-sm transition-all hover:bg-white/80 dark:bg-gray-800/60 dark:hover:bg-gray-800/80'
-            >
-              <Github className='h-5 w-5 text-brand' />
-              <div>
-                <div className='font-medium'>开源仓库</div>
-                <div className='text-sm text-secondary'>查看源码 & 工具</div>
-              </div>
-            </a>
-            <a
-              href={RSS_URL}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='flex items-center gap-3 rounded-xl border bg-white/60 p-4 backdrop-blur-sm transition-all hover:bg-white/80 dark:bg-gray-800/60 dark:hover:bg-gray-800/80'
-            >
-              <Rss className='h-5 w-5 text-brand' />
-              <div>
-                <div className='font-medium'>RSS 源</div>
-                <div className='text-sm text-secondary'>查看原始数据</div>
-              </div>
-            </a>
-          </div>
-        </motion.div>
-
-        {/* 注意事项 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className='rounded-xl bg-yellow-500/10 p-6'
-        >
-          <h3 className='mb-3 flex items-center gap-2 font-medium text-yellow-700'>
-            <AlertCircle className='h-5 w-5' />
-            注意事项
-          </h3>
-          <ul className='list-inside list-disc space-y-2 text-sm text-secondary'>
-            <li>RSS 订阅会自动更新每日早报内容</li>
-            <li>建议使用 RSS 阅读器订阅，如 Feedly、Inoreader 等</li>
-            <li>视频版卡片生成工具已开源，可在 GitHub 仓库查看</li>
-            <li>文字版存档位于 BACKUP 目录下</li>
-          </ul>
-        </motion.div>
-
-        {/* 页脚提示 */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className='mt-12 text-center text-sm text-secondary'
-        >
-          <p>AI早报 - 让AI资讯触手可及</p>
-        </motion.div>
-      </div>
-    </div>
-  )
+				<footer className='text-secondary mt-8 text-center text-sm'>
+					内容同步自
+					<a href='https://daily.juya.uk/' target='_blank' rel='noopener noreferrer' className='text-brand mx-1 hover:underline'>
+						橘鸦 AI 早报
+					</a>
+					，版权归原作者及原始来源所有。
+				</footer>
+			</div>
+		</main>
+	)
 }

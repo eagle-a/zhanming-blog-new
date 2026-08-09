@@ -21,8 +21,9 @@ const fetcher = async (url: string): Promise<CategoriesConfig> => {
 	return { categories: [] }
 }
 
-export function useCategories() {
+export function useCategories(initialCategories: string[] = []) {
 	const { data, error, isLoading } = useSWR<CategoriesConfig>('/api/categories', fetcher, {
+		fallbackData: { categories: initialCategories },
 		revalidateOnFocus: false,
 		revalidateOnReconnect: true
 	})

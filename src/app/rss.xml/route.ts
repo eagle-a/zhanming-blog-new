@@ -114,17 +114,22 @@ export const runtime = 'nodejs'
 export async function GET(): Promise<Response> {
 	const blogs = allowDevelopmentLegacyFallback() ? readLegacyPosts(false) : await getCachedPublishedPosts()
 	let siteContent = getFallbackContentDocument<SiteContent>('site').data
-	try {
-		siteContent = (await getCachedContentDocument<SiteContent>('site')).data
-	} catch (error) {
-		console.error('RSS site configuration unavailable, using bundled backup:', error)
+	if (!allowDevelopmentLegacyFallback()) {
+		try {
+			siteContent = (await getCachedContentDocument<SiteContent>('site')).data
+		} catch (error) {
+			console.error('RSS site configuration unavailable, using bundled backup:', error)
+		}
 	}
 	const title = siteContent.meta?.title || 'Blog'
 	const description = siteContent.meta?.description || 'Latest updates from Blog'
 	const username = siteContent.meta?.username || 'author'
 
-	// 获取最新的文章发布日期作为频道发布日期
-	const latestDate = blogs.length > 0 ? new Date(blogs[0].date).toUTCString() : new Date().toUTCString()
+	const latestTimestamp = blogs.reduce((latest, blog) => {
+		const value = Date.parse(blog.updatedAt || blog.date)
+		return Number.isFinite(value) ? Math.max(latest, value) : latest
+	}, 0)
+	const latestDate = new Date(latestTimestamp).toUTCString()
 
 	const items = (await Promise.all(blogs.filter(item => item?.slug).map(serializeItem))).join('')
 
@@ -140,7 +145,7 @@ export async function GET(): Promise<Response> {
 		<managingEditor>${escapeXml(username)}</managingEditor>
 		<webMaster>${escapeXml(username)}</webMaster>
 		<pubDate>${latestDate}</pubDate>
-		<lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+		<lastBuildDate>${latestDate}</lastBuildDate>
 		<generator>Next.js RSS Generator</generator>
 		<docs>https://www.rssboard.org/rss-specification</docs>
 		<ttl>60</ttl>

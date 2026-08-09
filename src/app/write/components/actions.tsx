@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation'
 import { useWriteStore } from '../stores/write-store'
 import { usePreviewStore } from '../stores/preview-store'
 import { usePublish } from '../hooks/use-publish'
+import { parseMarkdownImport } from '@/lib/markdown-import'
 
 export function WriteActions() {
-	const { loading, mode, form, loadBlogForEdit, originalSlug, updateForm } = useWriteStore()
+	const { loading, mode, form, originalSlug, updateForm } = useWriteStore()
 	const { openPreview } = usePreviewStore()
 	const { isAuth, login, onPublish, onDelete } = usePublish()
 	const [saving, setSaving] = useState(false)
@@ -67,10 +68,13 @@ export function WriteActions() {
 
 		try {
 			const text = await file.text()
-			updateForm({ md: text })
-			toast.success('已导入 Markdown 文件')
+			const imported = parseMarkdownImport(text, file.name)
+			const updates = mode === 'edit' ? { ...imported.form, slug: form.slug } : imported.form
+			updateForm(updates)
+			const detail = imported.importedFields.length > 0 ? `，已识别${imported.importedFields.join('、')}` : ''
+			toast.success(`已导入 Markdown 正文${detail}`)
 		} catch (error) {
-			toast.error('导入失败，请重试')
+			toast.error(error instanceof Error ? error.message : '导入失败，请重试')
 		} finally {
 			if (e.currentTarget) e.currentTarget.value = ''
 		}

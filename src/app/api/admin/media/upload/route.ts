@@ -1,5 +1,5 @@
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
-import { assertAdminRequest, assertSameOrigin } from '@/lib/admin-auth'
+import { assertAdminMutationRequest, assertWritableEnvironment } from '@/lib/admin-auth'
 import { mediaPayloadSchema } from '@/lib/post-validation'
 import { contentMediaPayloadSchema } from '@/lib/content-validation'
 import { recordMedia } from '@/lib/posts-repository'
@@ -19,10 +19,10 @@ function parseMediaPayload(value: string | null | undefined) {
 
 export async function POST(request: Request): Promise<Response> {
 	try {
+		assertWritableEnvironment()
 		const body = (await request.json()) as HandleUploadBody
 		if (body.type === 'blob.generate-client-token') {
-			assertSameOrigin(request)
-			assertAdminRequest(request)
+			assertAdminMutationRequest(request)
 		}
 
 		const result = await handleUpload({

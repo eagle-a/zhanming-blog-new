@@ -212,6 +212,7 @@ export default function Page() {
 
 	return (
 		<>
+			<h1 className='sr-only'>图片墙</h1>
 			<RandomLayout pictures={pictures} isEditMode={isEditMode} onDeleteSingle={handleDeleteSingleImage} onDeleteGroup={handleDeleteGroup} />
 
 			{pictures.length === 0 && (

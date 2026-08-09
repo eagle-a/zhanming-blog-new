@@ -7,37 +7,24 @@ export interface HSVA {
 	a: number
 }
 
-export interface HSL {
+interface HSL {
 	h: number
 	s: number
 	l: number
 }
 
-export interface RGB {
+interface RGB {
 	r: number
 	g: number
 	b: number
 }
 
-export interface RGBA extends RGB {
+interface RGBA extends RGB {
 	a: number
 }
 
-// Convert 6-digit hex to RGB (no alpha)
-export function hexToRgb(hex: string): RGB {
-	const cleaned = hex.replace('#', '')
-	const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(cleaned)
-	return result
-		? {
-				r: parseInt(result[1], 16),
-				g: parseInt(result[2], 16),
-				b: parseInt(result[3], 16)
-			}
-		: { r: 0, g: 0, b: 0 }
-}
-
 // Convert hex (6 or 8 digits) to RGBA
-export function hexToRgba(hex: string): RGBA {
+function hexToRgba(hex: string): RGBA {
 	const cleaned = hex.replace('#', '')
 
 	if (cleaned.length === 6) {
@@ -62,12 +49,12 @@ export function hexToRgba(hex: string): RGBA {
 }
 
 // Convert RGB to hex
-export function rgbToHex(r: number, g: number, b: number): string {
+function rgbToHex(r: number, g: number, b: number): string {
 	return '#' + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0')).join('')
 }
 
 // Convert RGB to HSL
-export function rgbToHsl(r: number, g: number, b: number): HSL {
+function rgbToHsl(r: number, g: number, b: number): HSL {
 	r /= 255
 	g /= 255
 	b /= 255
@@ -103,7 +90,7 @@ export function rgbToHsl(r: number, g: number, b: number): HSL {
 }
 
 // Convert HSL to RGB
-export function hslToRgb(h: number, s: number, l: number): RGB {
+function hslToRgb(h: number, s: number, l: number): RGB {
 	h /= 360
 	let r, g, b
 
@@ -135,7 +122,7 @@ export function hslToRgb(h: number, s: number, l: number): RGB {
 }
 
 // Convert HSL to HSV
-export function hslToHsv(h: number, s: number, l: number): HSVA {
+function hslToHsv(h: number, s: number, l: number): HSVA {
 	const v = l + s * Math.min(l, 1 - l)
 	const s2 = v === 0 ? 0 : 2 * (1 - l / v)
 

@@ -134,6 +134,7 @@ export default function ClockPage() {
 
 	return (
 		<div className='flex flex-col items-center px-6 pt-32 pb-12'>
+			<h1 className='sr-only'>时钟与计时器</h1>
 			<motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className='w-full max-w-[600px] space-y-8'>
 				{/* Mode Selector */}
 				<div className='card relative flex gap-4 rounded-xl p-2'>

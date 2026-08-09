@@ -1,6 +1,8 @@
 import 'server-only'
 
-import { createHmac, scryptSync, timingSafeEqual } from 'node:crypto'
+import { createHmac, scrypt, timingSafeEqual } from 'node:crypto'
+import { evaluateWriteEnvironment } from '@/lib/write-environment-policy'
+import { isSameOriginRequest } from '@/lib/same-origin-policy'
 
 export const ADMIN_SESSION_COOKIE = 'blog_admin_session'
 export const ADMIN_SESSION_MAX_AGE = 60 * 60 * 12
@@ -46,7 +48,16 @@ export function verifyAdminSessionToken(token?: string | null, now = Date.now())
 	}
 }
 
-export function verifyAdminPassword(password: string): boolean {
+function deriveScrypt(password: string, salt: Buffer, length: number, options: { N: number; r: number; p: number }): Promise<Buffer> {
+	return new Promise((resolve, reject) => {
+		scrypt(password, salt, length, options, (error, derivedKey) => {
+			if (error) reject(error)
+			else resolve(derivedKey)
+		})
+	})
+}
+
+export async function verifyAdminPassword(password: string): Promise<boolean> {
 	const encodedHash = process.env.BLOG_ADMIN_PASSWORD_HASH?.trim()
 	if (!encodedHash) throw new Error('BLOG_ADMIN_PASSWORD_HASH is not configured')
 
@@ -61,11 +72,11 @@ export function verifyAdminPassword(password: string): boolean {
 	if (N !== 16384 || r !== 8 || p !== 1) throw new Error('BLOG_ADMIN_PASSWORD_HASH uses unsupported scrypt parameters')
 
 	const expected = Buffer.from(hashRaw, 'base64url')
-	const actual = scryptSync(password, Buffer.from(saltRaw, 'base64url'), expected.length, { N, r, p })
+	const actual = await deriveScrypt(password, Buffer.from(saltRaw, 'base64url'), expected.length, { N, r, p })
 	return actual.length === expected.length && timingSafeEqual(actual, expected)
 }
 
-export function getCookieValue(request: Request, name: string): string | null {
+function getCookieValue(request: Request, name: string): string | null {
 	const cookies = request.headers.get('cookie')
 	if (!cookies) return null
 	for (const item of cookies.split(';')) {
@@ -85,12 +96,19 @@ export function assertAdminRequest(request: Request): void {
 }
 
 export function assertSameOrigin(request: Request): void {
-	const origin = request.headers.get('origin')
-	if (!origin) return
+	if (!isSameOriginRequest(request)) throw new Response('Invalid or missing origin', { status: 403 })
+}
 
-	const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host')
-	const forwardedProto = request.headers.get('x-forwarded-proto') || new URL(request.url).protocol.replace(':', '')
-	if (!forwardedHost || origin !== `${forwardedProto}://${forwardedHost}`) {
-		throw new Response('Invalid origin', { status: 403 })
+export function assertWritableEnvironment(): void {
+	const decision = evaluateWriteEnvironment(process.env)
+	if (!decision.allowed) {
+		console.error('Write environment rejected:', decision.reason)
+		throw new Response('Writes are disabled for this environment', { status: 503 })
 	}
+}
+
+export function assertAdminMutationRequest(request: Request): void {
+	assertSameOrigin(request)
+	assertAdminRequest(request)
+	assertWritableEnvironment()
 }

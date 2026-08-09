@@ -1,5 +1,6 @@
 import { NextConfig } from 'next'
 const nextConfig: NextConfig = {
+	allowedDevOrigins: ['127.0.0.1'],
 	images: {
 		unoptimized: true,
 		remotePatterns: [
@@ -16,9 +17,6 @@ const nextConfig: NextConfig = {
 	reactStrictMode: true,
 	reactCompiler: true,
 	pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
-	experimental: {
-		scrollRestoration: false
-	},
 	turbopack: {
 		root: __dirname,
 		rules: {

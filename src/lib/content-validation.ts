@@ -215,7 +215,7 @@ const cardStylesSchema = z
 	})
 	.strict()
 
-export const contentDocumentSchemas = {
+const contentDocumentSchemas = {
 	site: siteContentSchema,
 	'card-styles': cardStylesSchema,
 	about: aboutSchema,

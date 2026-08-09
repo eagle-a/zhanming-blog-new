@@ -110,7 +110,10 @@ export function sanitizeHtml(html: string): string {
 	if (typeof DOMParser === 'undefined') return sanitizeWithoutDom(html)
 
 	const document = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html')
-	for (const element of Array.from(document.body.querySelectorAll('*'))) {
+	const body = document.body
+	if (!body) return sanitizeWithoutDom(html)
+
+	for (const element of Array.from(body.querySelectorAll('*'))) {
 		const tag = element.tagName.toLowerCase()
 		if (!ALLOWED_TAGS.has(tag)) {
 			element.remove()
@@ -125,5 +128,5 @@ export function sanitizeHtml(html: string): string {
 		if (tag === 'a' && element.getAttribute('target') === '_blank') element.setAttribute('rel', 'noopener noreferrer')
 	}
 
-	return document.body.innerHTML
+	return body.innerHTML
 }

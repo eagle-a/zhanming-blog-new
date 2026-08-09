@@ -1,5 +1,5 @@
 import { revalidateTag } from 'next/cache'
-import { assertAdminRequest, assertSameOrigin } from '@/lib/admin-auth'
+import { assertAdminMutationRequest } from '@/lib/admin-auth'
 import { assertValidSlug } from '@/lib/config-validation'
 import { postInputSchema } from '@/lib/post-validation'
 import { softDeletePost, upsertPost } from '@/lib/posts-repository'
@@ -10,8 +10,7 @@ export const dynamic = 'force-dynamic'
 
 export async function PATCH(request: Request, context: { params: Promise<{ slug: string }> }): Promise<Response> {
 	try {
-		assertSameOrigin(request)
-		assertAdminRequest(request)
+		assertAdminMutationRequest(request)
 		const { slug: rawSlug } = await context.params
 		const slug = assertValidSlug(rawSlug)
 		const input = postInputSchema.parse(await request.json())
@@ -28,8 +27,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ slug:
 
 export async function DELETE(request: Request, context: { params: Promise<{ slug: string }> }): Promise<Response> {
 	try {
-		assertSameOrigin(request)
-		assertAdminRequest(request)
+		assertAdminMutationRequest(request)
 		const { slug: rawSlug } = await context.params
 		const slug = assertValidSlug(rawSlug)
 		const deleted = await softDeletePost(slug)

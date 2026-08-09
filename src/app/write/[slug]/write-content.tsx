@@ -31,6 +31,7 @@ export default function WriteContent() {
 		<WritePreview form={form} coverPreviewUrl={coverPreviewUrl} onClose={closePreview} slug={slug} />
 	) : (
 		<>
+			<h1 className='sr-only'>编辑文章</h1>
 			<div className='flex h-full justify-center gap-6 px-6 pt-24 pb-12'>
 				<WriteEditor />
 				<WriteSidebar />

@@ -1,5 +1,5 @@
 import { revalidatePath, revalidateTag } from 'next/cache'
-import { assertAdminRequest, assertSameOrigin } from '@/lib/admin-auth'
+import { assertAdminMutationRequest } from '@/lib/admin-auth'
 import { upsertContentDocuments } from '@/lib/content-repository'
 import { contentDocumentBatchWriteSchema, isContentDocumentKey, parseContentDocument } from '@/lib/content-validation'
 import { routeErrorResponse } from '@/lib/route-errors'
@@ -9,8 +9,7 @@ export const dynamic = 'force-dynamic'
 
 export async function PUT(request: Request): Promise<Response> {
 	try {
-		assertSameOrigin(request)
-		assertAdminRequest(request)
+		assertAdminMutationRequest(request)
 		const body = contentDocumentBatchWriteSchema.parse(await request.json())
 		const unknownKey = body.items.find(item => !isContentDocumentKey(item.key))?.key
 		if (unknownKey) return Response.json({ error: `未知配置: ${unknownKey}` }, { status: 400 })

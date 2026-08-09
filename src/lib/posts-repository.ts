@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, asc, desc, eq, inArray, isNull, lte, notInArray } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, isNotNull, isNull, lte, notInArray, sql } from 'drizzle-orm'
 import { unstable_cache } from 'next/cache'
 import { getDb } from '@/db/client'
 import { categories, media, postRevisions, posts, postTags, tags, type PostRow } from '@/db/schema'
@@ -34,6 +34,9 @@ export class PostConflictError extends Error {
 	}
 }
 
+type Database = ReturnType<typeof getDb>
+export type DatabaseTransaction = Parameters<Parameters<Database['transaction']>[0]>[0]
+
 function normalizeTags(values: string[]): string[] {
 	return Array.from(new Set(values.map(value => value.trim()).filter(Boolean))).slice(0, 30)
 }
@@ -53,6 +56,7 @@ function toIndexItem(row: PostRow, tagNames: string[]): BlogIndexItem {
 		title: row.title,
 		tags: tagNames,
 		date: iso(row.publishedAt || row.createdAt),
+		updatedAt: iso(row.updatedAt),
 		summary: row.summary,
 		cover: row.coverUrl || undefined,
 		hidden: row.status !== 'published',
@@ -92,9 +96,7 @@ async function tagsByPostIds(postIds: number[]): Promise<Map<number, string[]>> 
 
 export async function listPosts(includeDrafts = false): Promise<BlogIndexItem[]> {
 	const now = new Date()
-	const condition = includeDrafts
-		? isNull(posts.deletedAt)
-		: and(eq(posts.status, 'published'), isNull(posts.deletedAt), lte(posts.publishedAt, now))
+	const condition = includeDrafts ? isNull(posts.deletedAt) : and(eq(posts.status, 'published'), isNull(posts.deletedAt), lte(posts.publishedAt, now))
 
 	const rows = await getDb().select().from(posts).where(condition).orderBy(desc(posts.publishedAt), desc(posts.id))
 	const tagMap = await tagsByPostIds(rows.map(row => row.id))
@@ -115,7 +117,7 @@ export async function getPost(slug: string, includeDrafts = false): Promise<Post
 	return toPostRecord(row, tagMap.get(row.id) || [])
 }
 
-export async function listCategories(): Promise<string[]> {
+async function listCategories(): Promise<string[]> {
 	const rows = await getDb().select({ name: categories.name }).from(categories).orderBy(asc(categories.sortOrder), asc(categories.name))
 	return rows.map(row => row.name)
 }
@@ -142,84 +144,101 @@ function metadataSnapshot(input: {
 	}
 }
 
-export async function upsertPost(input: PostWriteInput): Promise<PostRecord> {
-	const db = getDb()
+export async function upsertPostInTransaction(
+	tx: DatabaseTransaction,
+	input: PostWriteInput,
+	createdBy = 'admin',
+	mode: 'upsert' | 'create-only' = 'upsert'
+): Promise<void> {
 	const tagNames = normalizeTags(input.tags)
 	const category = normalizeCategory(input.category)
 	const publishedAt = new Date(input.publishedAt)
 
-	await db.transaction(async tx => {
-		const [current] = await tx.select().from(posts).where(eq(posts.slug, input.slug)).for('update').limit(1)
+	// PostgreSQL row locks cannot lock a slug that does not exist yet. A
+	// transaction-scoped advisory lock closes the insert-vs-insert race and
+	// makes create-only approval deterministic instead of occasionally 500ing.
+	await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`post-slug:${input.slug}`}))`)
+	const [current] = await tx.select().from(posts).where(eq(posts.slug, input.slug)).for('update').limit(1)
 
-		if (current && input.expectedVersion !== undefined && current.version !== input.expectedVersion) {
-			throw new PostConflictError()
-		}
+	if (current && mode === 'create-only') {
+		throw new PostConflictError('该 slug 已被正式文章或历史文章占用；AI 投稿不能覆盖或复活现有内容，请修改 slug')
+	}
 
-		const nextVersion = current ? current.version + 1 : 1
-		let postId: number
+	if (current && input.expectedVersion !== undefined && current.version !== input.expectedVersion) {
+		throw new PostConflictError()
+	}
 
-		if (current) {
-			const [updated] = await tx
-				.update(posts)
-				.set({
-					title: input.title,
-					summary: input.summary,
-					contentMd: input.contentMd,
-					coverUrl: input.coverUrl || null,
-					category,
-					status: input.status,
-					publishedAt,
-					updatedAt: new Date(),
-					version: nextVersion,
-					deletedAt: null
-				})
-				.where(eq(posts.id, current.id))
-				.returning({ id: posts.id })
-			postId = updated.id
-		} else {
-			const [created] = await tx
-				.insert(posts)
-				.values({
-					slug: input.slug,
-					title: input.title,
-					summary: input.summary,
-					contentMd: input.contentMd,
-					coverUrl: input.coverUrl || null,
-					category,
-					status: input.status,
-					publishedAt,
-					version: nextVersion
-				})
-				.returning({ id: posts.id })
-			postId = created.id
-		}
+	const nextVersion = current ? current.version + 1 : 1
+	let postId: number
 
-		await tx.insert(postRevisions).values({
-			postId,
-			version: nextVersion,
-			contentMd: input.contentMd,
-			metadataSnapshot: metadataSnapshot({ ...input, category, tags: tagNames, publishedAt })
-		})
+	if (current) {
+		const [updated] = await tx
+			.update(posts)
+			.set({
+				title: input.title,
+				summary: input.summary,
+				contentMd: input.contentMd,
+				coverUrl: input.coverUrl || null,
+				category,
+				status: input.status,
+				publishedAt,
+				updatedAt: new Date(),
+				version: nextVersion,
+				deletedAt: null
+			})
+			.where(eq(posts.id, current.id))
+			.returning({ id: posts.id })
+		postId = updated.id
+	} else {
+		const [created] = await tx
+			.insert(posts)
+			.values({
+				slug: input.slug,
+				title: input.title,
+				summary: input.summary,
+				contentMd: input.contentMd,
+				coverUrl: input.coverUrl || null,
+				category,
+				status: input.status,
+				publishedAt,
+				version: nextVersion
+			})
+			.returning({ id: posts.id })
+		postId = created.id
+	}
 
-		await tx.delete(postTags).where(eq(postTags.postId, postId))
-		if (tagNames.length > 0) {
-			await tx.insert(tags).values(tagNames.map(name => ({ name }))).onConflictDoNothing()
-			const tagRows = await tx.select({ id: tags.id }).from(tags).where(inArray(tags.name, tagNames))
-			await tx.insert(postTags).values(tagRows.map(tag => ({ postId, tagId: tag.id }))).onConflictDoNothing()
-		}
-
-		if (category) {
-			const [lastCategory] = await tx
-				.select({ nextSortOrder: categories.sortOrder })
-				.from(categories)
-				.orderBy(desc(categories.sortOrder))
-				.limit(1)
-			await tx
-				.insert(categories)
-				.values({ name: category, sortOrder: (lastCategory?.nextSortOrder ?? -1) + 1 })
-				.onConflictDoNothing()
-		}
+	await tx.insert(postRevisions).values({
+		postId,
+		version: nextVersion,
+		contentMd: input.contentMd,
+		metadataSnapshot: metadataSnapshot({ ...input, category, tags: tagNames, publishedAt }),
+		createdBy
 	})
+
+	await tx.delete(postTags).where(eq(postTags.postId, postId))
+	if (tagNames.length > 0) {
+		await tx
+			.insert(tags)
+			.values(tagNames.map(name => ({ name })))
+			.onConflictDoNothing()
+		const tagRows = await tx.select({ id: tags.id }).from(tags).where(inArray(tags.name, tagNames))
+		await tx
+			.insert(postTags)
+			.values(tagRows.map(tag => ({ postId, tagId: tag.id })))
+			.onConflictDoNothing()
+	}
+
+	if (category) {
+		const [lastCategory] = await tx.select({ nextSortOrder: categories.sortOrder }).from(categories).orderBy(desc(categories.sortOrder)).limit(1)
+		await tx
+			.insert(categories)
+			.values({ name: category, sortOrder: (lastCategory?.nextSortOrder ?? -1) + 1 })
+			.onConflictDoNothing()
+	}
+}
+
+export async function upsertPost(input: PostWriteInput): Promise<PostRecord> {
+	await getDb().transaction(tx => upsertPostInTransaction(tx, input))
 
 	const result = await getPost(input.slug, true)
 	if (!result) throw new Error('文章保存后无法读取')
@@ -229,19 +248,17 @@ export async function upsertPost(input: PostWriteInput): Promise<PostRecord> {
 export async function softDeletePost(slug: string): Promise<boolean> {
 	const db = getDb()
 	return db.transaction(async tx => {
-		const [current] = await tx.select().from(posts).where(and(eq(posts.slug, slug), isNull(posts.deletedAt))).for('update').limit(1)
+		const [current] = await tx
+			.select()
+			.from(posts)
+			.where(and(eq(posts.slug, slug), isNull(posts.deletedAt)))
+			.for('update')
+			.limit(1)
 		if (!current) return false
 
-		const tagRows = await tx
-			.select({ name: tags.name })
-			.from(postTags)
-			.innerJoin(tags, eq(postTags.tagId, tags.id))
-			.where(eq(postTags.postId, current.id))
+		const tagRows = await tx.select({ name: tags.name }).from(postTags).innerJoin(tags, eq(postTags.tagId, tags.id)).where(eq(postTags.postId, current.id))
 		const nextVersion = current.version + 1
-		await tx
-			.update(posts)
-			.set({ status: 'archived', deletedAt: new Date(), updatedAt: new Date(), version: nextVersion })
-			.where(eq(posts.id, current.id))
+		await tx.update(posts).set({ status: 'archived', deletedAt: new Date(), updatedAt: new Date(), version: nextVersion }).where(eq(posts.id, current.id))
 		await tx.insert(postRevisions).values({
 			postId: current.id,
 			version: nextVersion,
@@ -263,43 +280,70 @@ export async function applyBatchPostEdits(input: {
 
 	await db.transaction(async tx => {
 		for (const slug of removed) {
-			const [row] = await tx.select().from(posts).where(and(eq(posts.slug, slug), isNull(posts.deletedAt))).for('update').limit(1)
+			const [row] = await tx
+				.select()
+				.from(posts)
+				.where(and(eq(posts.slug, slug), isNull(posts.deletedAt)))
+				.for('update')
+				.limit(1)
 			if (!row) continue
+			const tagRows = await tx.select({ name: tags.name }).from(postTags).innerJoin(tags, eq(postTags.tagId, tags.id)).where(eq(postTags.postId, row.id))
 			const nextVersion = row.version + 1
-			await tx
-				.update(posts)
-				.set({ status: 'archived', deletedAt: new Date(), updatedAt: new Date(), version: nextVersion })
-				.where(eq(posts.id, row.id))
+			await tx.update(posts).set({ status: 'archived', deletedAt: new Date(), updatedAt: new Date(), version: nextVersion }).where(eq(posts.id, row.id))
 			await tx.insert(postRevisions).values({
 				postId: row.id,
 				version: nextVersion,
 				contentMd: row.contentMd,
-				metadataSnapshot: metadataSnapshot({ ...row, tags: [], status: 'archived' })
+				metadataSnapshot: metadataSnapshot({ ...row, tags: tagRows.map(tag => tag.name), status: 'archived' })
 			})
 		}
 
 		for (const assignment of input.assignments) {
 			if (removed.has(assignment.slug)) continue
 			const category = normalizeCategory(assignment.category)
-			const [row] = await tx.select().from(posts).where(and(eq(posts.slug, assignment.slug), isNull(posts.deletedAt))).for('update').limit(1)
+			const [row] = await tx
+				.select()
+				.from(posts)
+				.where(and(eq(posts.slug, assignment.slug), isNull(posts.deletedAt)))
+				.for('update')
+				.limit(1)
 			if (!row || row.category === category) continue
+			const tagRows = await tx.select({ name: tags.name }).from(postTags).innerJoin(tags, eq(postTags.tagId, tags.id)).where(eq(postTags.postId, row.id))
 			const nextVersion = row.version + 1
 			await tx.update(posts).set({ category, updatedAt: new Date(), version: nextVersion }).where(eq(posts.id, row.id))
 			await tx.insert(postRevisions).values({
 				postId: row.id,
 				version: nextVersion,
 				contentMd: row.contentMd,
-				metadataSnapshot: metadataSnapshot({ ...row, category, tags: [], status: row.status })
+				metadataSnapshot: metadataSnapshot({ ...row, category, tags: tagRows.map(tag => tag.name), status: row.status })
 			})
 		}
 
-		await tx.delete(categories)
-		if (categoryNames.length > 0) {
-			await tx.insert(categories).values(categoryNames.map((name, sortOrder) => ({ name, sortOrder })))
-			await tx.update(posts).set({ category: null, updatedAt: new Date() }).where(notInArray(posts.category, categoryNames))
-		} else {
-			await tx.update(posts).set({ category: null, updatedAt: new Date() })
+		const invalidCategoryCondition =
+			categoryNames.length > 0
+				? and(isNull(posts.deletedAt), isNotNull(posts.category), notInArray(posts.category, categoryNames))
+				: and(isNull(posts.deletedAt), isNotNull(posts.category))
+		const uncategorizedRows = await tx.select().from(posts).where(invalidCategoryCondition).for('update')
+		for (const row of uncategorizedRows) {
+			const tagRows = await tx.select({ name: tags.name }).from(postTags).innerJoin(tags, eq(postTags.tagId, tags.id)).where(eq(postTags.postId, row.id))
+			const nextVersion = row.version + 1
+			await tx.update(posts).set({ category: null, updatedAt: new Date(), version: nextVersion }).where(eq(posts.id, row.id))
+			await tx.insert(postRevisions).values({
+				postId: row.id,
+				version: nextVersion,
+				contentMd: row.contentMd,
+				metadataSnapshot: metadataSnapshot({ ...row, category: null, tags: tagRows.map(tag => tag.name), status: row.status })
+			})
 		}
+
+		for (const [sortOrder, name] of categoryNames.entries()) {
+			await tx
+				.insert(categories)
+				.values({ name, sortOrder, updatedAt: new Date() })
+				.onConflictDoUpdate({ target: categories.name, set: { sortOrder, updatedAt: new Date() } })
+		}
+		if (categoryNames.length > 0) await tx.delete(categories).where(notInArray(categories.name, categoryNames))
+		else await tx.delete(categories)
 	})
 }
 

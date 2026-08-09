@@ -1,7 +1,14 @@
-import type { BlogConfig } from '@/app/blog/types'
 import { assertValidSlug } from '@/lib/config-validation'
 
-export type { BlogConfig } from '@/app/blog/types'
+type BlogConfig = {
+	title?: string
+	tags?: string[]
+	date?: string
+	summary?: string
+	cover?: string
+	hidden?: boolean
+	category?: string
+}
 
 export type BlogStats = {
 	wordCount: number
@@ -17,7 +24,7 @@ export type LoadedBlog = {
 	version?: number
 }
 
-function calculateStats(text: string): BlogStats {
+export function calculateBlogStats(text: string): BlogStats {
 	// 粗略清理 markdown 语法符号
 	const cleanText = text
 		.replace(/```[\s\S]*?```/g, '') // 代码块
@@ -66,7 +73,7 @@ export async function loadBlog(slug: string): Promise<LoadedBlog> {
 		category: post.category
 	}
 
-	const stats = calculateStats(markdown)
+	const stats = calculateBlogStats(markdown)
 
 	return {
 		slug: safeSlug,
