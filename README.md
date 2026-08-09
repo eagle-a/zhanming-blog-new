@@ -16,7 +16,7 @@
 | 文章与配置图片                               | Private Vercel Blob | SHA-256 文件名、同源只读代理 |
 | `public/` 旧内容                             | Git 仓库            | 只读备份和本地无数据库回退   |
 
-删除页面中的图片引用不会立即删除 Blob 对象，避免历史修订或旧链接失效。需要清理 Blob 时必须先做引用审计。
+删除页面中的图片引用不会立即删除 Blob 对象。媒体清理必须经过引用审计、孤儿标记、宽限期、删除前归档和可恢复清单，不能直接批量删除。
 
 ## 必需环境变量
 
@@ -110,7 +110,17 @@ pnpm agent:submit C:\path\to\article.md
 
 投稿码通过 CLI 隐藏输入粘贴，不放进环境变量、命令行参数或 Git。数据库只保存投稿码哈希。详细操作与安全边界见 [`docs/AI_SUBMISSION_GUIDE.md`](docs/AI_SUBMISSION_GUIDE.md)。
 
-当前 AI 范围只有“文章投稿 → 后台审批 → 批准发布”。数据库中少量早期 Agent/报告枚举是遗留结构，不代表对应功能已上线。
+当前 AI 范围只有“文章投稿 → 后台审批 → 批准发布”。早期 Agent key、nonce 和报告枚举已由带数据保护检查的迁移清理。
+
+## 备份、恢复与媒体维护
+
+```powershell
+pnpm backup:cms -- --output=C:\Backups\blog --include-blobs --archive-blobs
+pnpm media:reconcile -- --include-blobs
+pnpm media:maintain -- --action=plan
+```
+
+备份和任何媒体写操作必须使用仓库外目录。恢复只允许空目标库，媒体删除必须先生成候选清单和恢复归档；完整命令及环境保护见 [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md)。
 
 ## 文档导航
 

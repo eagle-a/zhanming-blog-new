@@ -1,0 +1,1 @@
+ALTER TABLE "media" ALTER COLUMN "committed_at" DROP NOT NULL;

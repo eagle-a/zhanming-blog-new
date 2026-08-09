@@ -9,11 +9,13 @@ export type PushProjectsParams = {
 }
 
 export async function pushProjects({ projects, imageItems, expectedVersion }: PushProjectsParams) {
-	let updated = [...projects]
-	for (const [url, item] of imageItems || []) {
-		if (item.type !== 'file') continue
-		const image = await uploadContentImage('projects', item.file)
-		updated = updated.map(project => (project.url === url ? { ...project, image } : project))
-	}
+	const uploaded = await Promise.all(
+		Array.from(imageItems || [], async ([url, item]) => (item.type === 'file' ? ([url, await uploadContentImage('projects', item.file)] as const) : null))
+	)
+	const imageByUrl = new Map(uploaded.filter((item): item is readonly [string, string] => item !== null))
+	const updated = projects.map(project => {
+		const image = imageByUrl.get(project.url)
+		return image ? { ...project, image } : project
+	})
 	return saveContentDocument('projects', updated, expectedVersion)
 }

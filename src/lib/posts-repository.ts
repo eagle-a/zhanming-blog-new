@@ -3,8 +3,9 @@ import 'server-only'
 import { and, asc, desc, eq, inArray, isNotNull, isNull, lte, notInArray, sql } from 'drizzle-orm'
 import { unstable_cache } from 'next/cache'
 import { getDb } from '@/db/client'
-import { categories, media, postRevisions, posts, postTags, tags, type PostRow } from '@/db/schema'
+import { categories, postRevisions, posts, postTags, tags, type PostRow } from '@/db/schema'
 import type { BlogIndexItem } from '@/app/blog/types'
+import { lockMediaReferenceMutation, markMediaReferencesCommitted, type DatabaseTransaction } from '@/lib/media-lifecycle'
 
 export type PostRecord = BlogIndexItem & {
 	contentMd: string
@@ -33,9 +34,6 @@ export class PostConflictError extends Error {
 		this.name = 'PostConflictError'
 	}
 }
-
-type Database = ReturnType<typeof getDb>
-export type DatabaseTransaction = Parameters<Parameters<Database['transaction']>[0]>[0]
 
 function normalizeTags(values: string[]): string[] {
 	return Array.from(new Set(values.map(value => value.trim()).filter(Boolean))).slice(0, 30)
@@ -150,6 +148,7 @@ export async function upsertPostInTransaction(
 	createdBy = 'admin',
 	mode: 'upsert' | 'create-only' = 'upsert'
 ): Promise<void> {
+	await lockMediaReferenceMutation(tx)
 	const tagNames = normalizeTags(input.tags)
 	const category = normalizeCategory(input.category)
 	const publishedAt = new Date(input.publishedAt)
@@ -235,6 +234,8 @@ export async function upsertPostInTransaction(
 			.values({ name: category, sortOrder: (lastCategory?.nextSortOrder ?? -1) + 1 })
 			.onConflictDoNothing()
 	}
+
+	await markMediaReferencesCommitted(tx, input.coverUrl, input.contentMd)
 }
 
 export async function upsertPost(input: PostWriteInput): Promise<PostRecord> {
@@ -345,16 +346,6 @@ export async function applyBatchPostEdits(input: {
 		if (categoryNames.length > 0) await tx.delete(categories).where(notInArray(categories.name, categoryNames))
 		else await tx.delete(categories)
 	})
-}
-
-export async function recordMedia(input: { blobUrl: string; pathname: string; sha256: string; mimeType: string; size: number }): Promise<void> {
-	await getDb()
-		.insert(media)
-		.values(input)
-		.onConflictDoUpdate({
-			target: media.pathname,
-			set: { blobUrl: input.blobUrl, sha256: input.sha256, mimeType: input.mimeType, size: input.size }
-		})
 }
 
 export const getCachedPublishedPosts = unstable_cache(() => listPosts(false), ['published-posts'], {

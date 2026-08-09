@@ -18,9 +18,9 @@ export function useMarkdownRender(markdown: string): MarkdownRenderResult {
 
 	useEffect(() => {
 		let cancelled = false
+		setLoading(true)
 
 		async function render() {
-			setLoading(true)
 			try {
 				const { html, toc } = await renderMarkdown(markdown)
 				if (!cancelled) {
@@ -94,10 +94,13 @@ export function useMarkdownRender(markdown: string): MarkdownRenderResult {
 			}
 		}
 
-		render()
+		// Markdown rendering includes syntax highlighting and can be expensive while typing.
+		// Wait briefly for the input to settle so the editor does not start one render per keystroke.
+		const timer = window.setTimeout(() => void render(), 120)
 
 		return () => {
 			cancelled = true
+			window.clearTimeout(timer)
 		}
 	}, [markdown])
 

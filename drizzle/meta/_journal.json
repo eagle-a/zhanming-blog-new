@@ -50,6 +50,34 @@
       "when": 1786165372279,
       "tag": "0006_mighty_longshot",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786240868329,
+      "tag": "0007_curly_la_nuit",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786240945310,
+      "tag": "0008_plain_hercules",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786242117518,
+      "tag": "0009_fixed_firebird",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786242647210,
+      "tag": "0010_breezy_captain_cross",
+      "breakpoints": true
     }
   ]
 }

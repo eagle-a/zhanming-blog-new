@@ -79,11 +79,11 @@ docs/          项目操作和架构文档
 
 ### 4.2 管理入口
 
-| 路由                      | 作用                                        | 权限事实                                            |
-| ------------------------- | ------------------------------------------- | --------------------------------------------------- |
+| 路由                      | 作用                                        | 权限事实                                                    |
+| ------------------------- | ------------------------------------------- | ----------------------------------------------------------- |
 | `/write`、`/write/[slug]` | 文章编辑器和预览                            | Server Component 先验证管理员 Cookie，未登录只显示登录 gate |
-| `/admin/review`           | AI 文章审批、编辑、批准、拒绝、投稿票据管理 | 登录页外壳可访问；审批数据和操作 API 要求管理员会话 |
-| `/api/admin/*`            | 配置、文章、媒体、审批和票据写接口          | Cookie 会话 + 对写操作做同源校验                    |
+| `/admin/review`           | AI 文章审批、编辑、批准、拒绝、投稿票据管理 | 登录页外壳可访问；审批数据和操作 API 要求管理员会话         |
+| `/api/admin/*`            | 配置、文章、媒体、审批和票据写接口          | Cookie 会话 + 对写操作做同源校验                            |
 
 没有独立的用户注册、普通用户账号或 Agent 常驻服务。
 
@@ -99,13 +99,13 @@ docs/          项目操作和架构文档
 | `categories`                 | 分类顺序和更新时间                                                                                      |
 | `content_documents`          | `site`、`card-styles`、`about`、`bloggers`、`projects`、`shares`、`pictures`、`snippets` 八类运行时配置 |
 | `content_document_revisions` | 配置版本历史                                                                                            |
-| `media`                      | Blob URL、pathname、SHA-256、MIME 和大小登记                                                            |
+| `media`                      | Blob URL、pathname、SHA-256、MIME、大小和可恢复生命周期状态登记                                         |
 | `content_submissions`        | AI 投稿及审批状态、内容哈希、校验结果和拒绝原因                                                         |
 | `submission_tickets`         | 一次性文章投稿票据，只保存哈希和生命周期状态                                                            |
 | `audit_events`               | 投稿票据、投稿、审批、拒绝、编辑等审计记录                                                              |
 | `admin_login_attempts`       | 管理员登录限速状态                                                                                      |
 
-Schema 中还保留 `agent_api_keys`、`agent_request_nonces` 以及未启用的 submission 枚举值。这些是早期方案留下的兼容结构，当前没有对应路由。清理它们需要单独的数据库迁移，不在本轮文档整理范围内。
+旧的 `agent_api_keys`、`agent_request_nonces` 和 `work_report`/`advisor_reply` submission 枚举已由 `drizzle/0009_fixed_firebird.sql` 清理；迁移前会拒绝仍存在的旧 Agent 数据、非 post 投稿和重复幂等键，避免静默丢数据。
 
 ### 5.2 文章状态
 
@@ -128,6 +128,8 @@ archived   软删除或归档，公开读取过滤
 - Blob 设为 Private，公开页面不直接暴露 Blob Token；
 - `/api/media/[...pathname]` 校验固定 pathname 规则后服务端读取；
 - `media` 表登记对象信息并按 pathname 去重；
+- 上传完成回调先登记为 `pending`；文章或运行时配置事务成功写入并确认引用后，才标记为 `committed`；
+- `pending_at`、`committed_at`、`last_seen_at`、`orphaned_at` 和 `deleted_at` 支持可审计的两阶段生命周期；删除前必须先归档并生成恢复清单；
 - 删除引用不会自动删除 Blob，避免旧修订和历史链接失效。
 
 仓库中的 `public/` 图片仍是旧内容和本地回退资产，不会被迁移脚本删除。
@@ -194,8 +196,8 @@ pnpm agent:submit C:\path\to\article.md
 - Zod 对文章、配置、上传元数据和拒绝原因做严格 schema 校验；
 - Markdown 渲染前清理危险 HTML、脚本、事件属性和不安全 URL；
 - RSS HTML 经过允许列表清洗后才交给 React 解析；
-- `vercel.json` 设置 CSP、Referrer-Policy、X-Content-Type-Options、X-Frame-Options 和 Permissions-Policy；
-- 生产 CSP 已移除 `unsafe-eval` 和失效的 AI 日报旧域名；因 Next.js 静态/ISR 页面和现有第三方组件仍需要内联样式/脚本，`unsafe-inline` 暂时保留；
+- `src/proxy.ts` 按路由生成 CSP；`vercel.json` 设置 Referrer-Policy、X-Content-Type-Options、X-Frame-Options 和 Permissions-Policy；
+- 生产 CSP 已移除 `unsafe-eval` 和失效的 AI 日报旧域名；开发环境按 Next 16.3 要求临时允许 `unsafe-eval`；公开静态/ISR 页面仍保留兼容内联策略，后台脚本策略改用每请求 nonce；
 - 审计事件不保存密码、Token、完整请求头或本地敏感文件。
 
 ## 8. 缓存和发布语义
@@ -290,24 +292,36 @@ Knip 对配置文件里以字符串形式声明的 `@svgr/webpack` 会给出误�
 
 ### 备份与媒体对账
 
-只读导出必须写到仓库外的新目录，默认不读取 Blob 清单：
+备份必须写到仓库外的新目录，默认只导出 CMS 数据；需要做恢复演练时，同时归档 Blob 字节：
 
 ```powershell
 pnpm backup:cms -- --output=C:\Backups\zhanming-blog-2026-08-09
-pnpm backup:cms -- --output=C:\Backups\zhanming-blog-2026-08-09-with-blobs --include-blobs
+pnpm backup:cms -- --output=C:\Backups\zhanming-blog-2026-08-09-with-blobs --include-blobs --archive-blobs
 ```
 
-导出包含文章、修订、标签、分类、配置文档、配置修订、媒体登记、待审批内容和审计事件；明确排除密码、登录尝试、Agent key、nonce、一次性票据哈希和连接串。`manifest.json` 保存数据文件 SHA-256。目录必须不存在且位于仓库外，脚本不会覆盖旧备份。
+导出包含文章、修订、标签、分类、配置文档、配置修订、媒体登记、待审批内容、审计事件和不含哈希的票据元数据；明确排除密码、登录尝试、票据哈希和连接串。`--archive-blobs` 会逐个下载私有 Blob、校验大小和 SHA-256 后写入 `blobs/`。
+
+恢复演练只能写入明确的空目标库，且脚本拒绝 production：
+
+```powershell
+$env:RESTORE_DATABASE_URL='目标 Neon 分支或本机空库连接串'
+$env:RESTORE_BLOB_READ_WRITE_TOKEN='目标 Blob Store Token'
+$env:RESTORE_ALLOW_NON_LOOPBACK='1'
+pnpm backup:restore -- --backup=C:\Backups\zhanming-blog-2026-08-09-with-blobs --target-environment=restore-drill --confirm-environment=restore-drill
+```
+
+恢复后的一次性投稿票据全部撤销，不能再次授权投稿。2026-08-09 已在两个独立本地 PostgreSQL 18 空库之间完成数据库备份/恢复演练，并验证逐表行数、票据哈希重置、强制撤销和序列续写。生产恢复与 Blob 字节异地恢复仍必须由管理员在独立 Neon 分支和独立 Blob Store 上执行并记录 RPO/RTO。
 
 媒体对账只生成报告，不修复、不上传、不删除：
 
 ```powershell
 pnpm media:reconcile
 pnpm media:reconcile -- --include-blobs
+pnpm media:maintain -- --action=plan
 pnpm assets:audit
 ```
 
-前两条分别对比当前内容、全部修订、审批内容、`media` 表和可选 Blob Store；`assets:audit` 列出 `public/` 中大于 1 MiB 的文件。任何 Blob 清理都必须等四方对账、宽限期和可恢复清单完成后再单独设计。
+`media:maintain --action=plan` 列出历史索引回填候选、超过宽限期的孤儿候选和已删除但可恢复的行。写操作按 `backfill → mark → delete` 分阶段，删除前会重新核验引用、宽限期和 ETag，并强制写出 Blob 恢复归档；中断状态 `deleting` 也可由 `recover` 判断对象是否仍存在并恢复。内容写入、上传 pathname 预留和 GC 共用 PostgreSQL 事务级 advisory lock，防止最终引用检查后又被并发引用。上传完成回调重新读取 Blob 并核验实际 SHA-256、大小和 MIME，不信任客户端自报元数据。所有媒体维护写操作拒绝 `BLOG_RESOURCE_ENV=production`，生产执行必须由管理员在已确认的资源上运行。
 
 ## 12. 当前数据核对
 
@@ -327,24 +341,22 @@ pnpm assets:audit
 ### 已修复
 
 - `/blog` 首次加载的 hydration mismatch：根因是 Zustand 持久化的已读文章状态在客户端首次渲染时多出 `[已阅读]`；现在等客户端挂载后再显示；
-- 根布局原生 inline `<script>` 的 React 警告：已改成 Next.js `Script`，使用 `beforeInteractive`。
-- `/write` 与 `/write/[slug]` 已增加服务端会话 gate；未登录用户不会拿到编辑器 UI；
+- 根布局平台检测改为零渲染客户端初始化组件，避免严格 CSP 页面出现 nonce 属性 hydration mismatch 或 React 脚本警告；
+- `/admin/review`、`/write` 与 `/write/[slug]` 已增加服务端会话 gate；未登录用户不会拿到后台 UI；
 - 管理写请求现在必须有严格同源 Origin，并通过部署环境/资源环境一致性检查；
-- CSP 已移除 `unsafe-eval` 和失效域名；补齐 `metadataBase`、canonical、`robots.txt`、静态页 sitemap 与文章 `updatedAt`；
+- 生产 CSP 已移除 `unsafe-eval` 和失效域名；开发环境仅为 React 调试启用 `unsafe-eval`；后台使用 nonce，Preview 自动启用 strict Report-Only；补齐 `metadataBase`、canonical、`robots.txt`、静态页 sitemap 与文章 `updatedAt`；
 - RSS `lastBuildDate` 现在只随最新文章更新时间变化；
-- 已加入 GitHub Actions、只读 CMS 导出、媒体四方对账和大资产审计命令；
+- 已加入 GitHub Actions、带 Blob 字节归档的 CMS 备份/恢复演练、媒体四方对账和可恢复 GC；
 - `RuntimeConfigHydrator` 改为浏览器绘制前同步配置，避免先显示 Git 回退配置再闪变。
 
 浏览器扩展若给 DOM 批量注入 `draggable="true"`，仍可能制造另一类 hydration 报警；这不是项目属性，需关闭扩展或使用无扩展浏览器复现。
 
 ### 仍存在的技术债
 
-- `agent_api_keys`、`agent_request_nonces` 和未启用 submission 枚举是旧方案遗留，增加了 schema 认知负担；若要删除，必须先确认所有数据库环境并写迁移；
-- CSP 仍包含 `unsafe-inline`；改成 nonce 会迫使当前静态/ISR 页面动态化，必须在 Preview 做 Report-Only 观测后单独决策；
+- 公开静态/ISR 页面为了 Next.js hydration 仍保留兼容 `unsafe-inline`；后台已使用 nonce，Preview 的 strict Report-Only 结果决定公开页是否值得牺牲 ISR 全量动态化；
 - `mylike.zhanmingblog.workers.dev` 仍被点赞组件实际调用，它是外部服务依赖，不代表 Cloudflare 部署分支，不能为了“去 Cloudflare”盲删；
-- 公开静态资源中存在多张数 MB 图片和音频，构建体积与首屏流量仍偏大；
-- 只读备份工具已经存在，但自动异地调度、恢复工具和独立 Neon/Blob 恢复演练仍需要人工选择目标资源后完成；
-- 媒体对账已经可执行，但历史缺失 `media` 行尚未自动回填；在核验 SHA-256、MIME、大小前禁止自动修复或 GC；
+- 图片墙原图和高码率音乐已归档到仓库外并压缩；剩余大文件主要是仍在使用的音乐与明确禁止处理的硬件资料；
+- 备份、恢复、媒体回填和可恢复 GC 工具已经存在，本地 PostgreSQL 数据库恢复已实测；异地调度和真实独立 Neon/Blob 恢复演练仍需要管理员选择目标资源后执行；
 - 旧迁移表和审计数据没有自动清理策略，长期运行需要定期归档/保留政策。
 
 ## 14. 当前部署决策
@@ -357,13 +369,13 @@ Cloudflare 分支、OpenNext、Worker 配置和 Windows 高权限 Agent broker �
 
 当前系统已经能稳定承担“个人博客 + 运行时 CMS + 人工审批的 AI 文章投稿”。它还不是完整的无头 CMS，也不是自动写作平台：AI 只能提交，管理员必须审核；数据库和 Blob 是线上内容源；旧 `public/` 内容是备份和回退，不是线上主数据。
 
-接下来最有价值的工作按优先级是：
+代码侧高优先级收尾已经完成；剩下的是必须由资源所有者执行的生产操作：
 
 1. 在 Vercel Dashboard 真正隔离 Production/Preview/Development 的 Neon 与 Blob，并设置对应 `BLOG_RESOURCE_ENV`；
-2. 把只读备份存到独立故障域，并在空白 Neon 分支与独立 Blob Store 做一次恢复演练；
-3. 根据媒体对账报告核验并回填历史索引，仍不得直接 GC；
-4. 保留原图的前提下生成响应式衍生图，优先处理图片墙的 13.67 MiB 大图；
-5. 制定修订、审计和遗留 Agent schema 的保留/迁移方案。
+2. 用 `backup:cms --archive-blobs` 把备份存到独立故障域，并用 `backup:restore` 在空白 Neon 分支与独立 Blob Store 做一次恢复演练；
+3. 先在 Preview 运行 `media:maintain --action=plan/backfill`，核对结果后再决定是否在生产人工执行；
+4. 查看 Preview 的 `/api/csp-report` 日志，确认公开页面 strict CSP 违规来源，再决定是否接受全量动态渲染；
+5. 为修订和审计数据确定保留期限；旧 Agent schema 已有带保护条件的迁移，不再属于设计债务。
 
 ## 16. 本轮清理状态（2026-08-09）
 
@@ -380,3 +392,10 @@ Cloudflare 分支、OpenNext、Worker 配置和 Windows 高权限 Agent broker �
 Knip 复扫后仅报告 `@svgr/webpack`。这是配置文件中以 loader 字符串使用的依赖，必须保留；其余死文件和可安全删除的死依赖已清空。`public/blogs/hardware-kb/`、旧文章 Markdown、图片、音频和数据库遗留表均被明确保留。
 
 清理不是发布动作。当前工作区仍有此前升级改造的未提交变更；完成本地门禁后，仍需由用户决定如何拆分提交和推送。
+
+## 17. 运行时性能优化（2026-08-09）
+
+- 独立图片上传统一使用 `Promise.all` 并行执行，减少首页配置、文章编辑和各内容管理页的保存等待时间；数据库写入仍在所有上传成功后进行。
+- Markdown 代码块高亮并行化，并对编辑器/审批预览增加短防抖，避免输入时重复启动高成本渲染。
+- 根布局使用 React `cache()` 去重 metadata 与布局之间的运行时配置读取。
+- 审批队列自动刷新不会覆盖当前正在编辑的草稿。

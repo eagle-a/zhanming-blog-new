@@ -9,11 +9,13 @@ export type PushBloggersParams = {
 }
 
 export async function pushBloggers({ bloggers, avatarItems, expectedVersion }: PushBloggersParams) {
-	let updated = [...bloggers]
-	for (const [url, item] of avatarItems || []) {
-		if (item.type !== 'file') continue
-		const avatar = await uploadContentImage('bloggers', item.file)
-		updated = updated.map(blogger => (blogger.url === url ? { ...blogger, avatar } : blogger))
-	}
+	const uploaded = await Promise.all(
+		Array.from(avatarItems || [], async ([url, item]) => (item.type === 'file' ? ([url, await uploadContentImage('bloggers', item.file)] as const) : null))
+	)
+	const avatarByUrl = new Map(uploaded.filter((item): item is readonly [string, string] => item !== null))
+	const updated = bloggers.map(blogger => {
+		const avatar = avatarByUrl.get(blogger.url)
+		return avatar ? { ...blogger, avatar } : blogger
+	})
 	return saveContentDocument('bloggers', updated, expectedVersion)
 }

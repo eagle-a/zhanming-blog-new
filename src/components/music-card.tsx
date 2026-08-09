@@ -73,7 +73,7 @@ export default function MusicCard() {
 
 		const handleEnded = () => {
 			// 歌曲结束自动播放下一首
-			setCurrentIndex((prev) => {
+			setCurrentIndex(prev => {
 				const newIndex = (prev + 1) % MUSIC_LIST.length
 				currentIndexRef.current = newIndex
 				return newIndex
@@ -147,7 +147,7 @@ export default function MusicCard() {
 
 	// 上一首
 	const handlePrev = useCallback(() => {
-		setCurrentIndex((prev) => {
+		setCurrentIndex(prev => {
 			const newIndex = prev === 0 ? MUSIC_LIST.length - 1 : prev - 1
 			currentIndexRef.current = newIndex
 			return newIndex
@@ -156,7 +156,7 @@ export default function MusicCard() {
 
 	// 下一首
 	const handleNext = useCallback(() => {
-		setCurrentIndex((prev) => {
+		setCurrentIndex(prev => {
 			const newIndex = (prev + 1) % MUSIC_LIST.length
 			currentIndexRef.current = newIndex
 			return newIndex
@@ -190,8 +190,8 @@ export default function MusicCard() {
 
 				<MusicSVG className='h-8 w-8 shrink-0' />
 
-				<div className='flex-1 min-w-0'>
-					<div className='text-secondary text-sm truncate' title={currentMusic.name}>
+				<div className='min-w-0 flex-1'>
+					<div className='text-secondary truncate text-sm' title={currentMusic.name}>
 						{currentMusic.name}
 					</div>
 
@@ -205,23 +205,22 @@ export default function MusicCard() {
 					<button
 						onClick={handlePrev}
 						className='flex h-7 w-7 items-center justify-center rounded-full bg-white/80 transition-opacity hover:opacity-80'
-						title='上一首'
-					>
+						title='上一首'>
 						<ChevronLeft className='text-brand h-4 w-4' />
 					</button>
 
 					<button
 						onClick={togglePlayPause}
-						className='flex h-10 w-10 items-center justify-center rounded-full bg-white transition-opacity hover:opacity-80'
-					>
+						aria-label={isPlaying ? '暂停' : '播放'}
+						title={isPlaying ? '暂停' : '播放'}
+						className='flex h-10 w-10 items-center justify-center rounded-full bg-white transition-opacity hover:opacity-80'>
 						{isPlaying ? <Pause className='text-brand h-4 w-4' /> : <PlaySVG className='text-brand ml-1 h-4 w-4' />}
 					</button>
 
 					<button
 						onClick={handleNext}
 						className='flex h-7 w-7 items-center justify-center rounded-full bg-white/80 transition-opacity hover:opacity-80'
-						title='下一首'
-					>
+						title='下一首'>
 						<ChevronRight className='text-brand h-4 w-4' />
 					</button>
 				</div>

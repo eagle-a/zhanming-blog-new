@@ -1,10 +1,11 @@
 import 'server-only'
 
 import { createHash, randomUUID } from 'node:crypto'
-import { and, desc, eq, gt, isNull, sql } from 'drizzle-orm'
+import { and, desc, eq, gt, isNull } from 'drizzle-orm'
 import { getDb } from '@/db/client'
-import { agentApiKeys, auditEvents, contentSubmissions, submissionTickets } from '@/db/schema'
+import { auditEvents, contentSubmissions, submissionTickets } from '@/db/schema'
 import { agentPostSubmissionSchema, scanAgentSubmission, type AgentPostSubmission } from '@/lib/agent-submission-validation'
+import { lockMediaReferenceMutation, type DatabaseTransaction } from '@/lib/media-lifecycle'
 import { upsertPostInTransaction } from '@/lib/posts-repository'
 import { hashSubmissionTicket } from '@/lib/submission-ticket'
 
@@ -36,6 +37,7 @@ export async function createPostSubmissionWithTicket(ticket: string, input: Agen
 	const ticketHash = hashSubmissionTicket(ticket)
 
 	return db.transaction(async tx => {
+		await lockMediaReferenceMutation(tx as DatabaseTransaction)
 		const [consumedTicket] = await tx
 			.update(submissionTickets)
 			.set({ usedAt: now })
@@ -54,7 +56,6 @@ export async function createPostSubmissionWithTicket(ticket: string, input: Agen
 		const id = randomUUID()
 		await tx.insert(contentSubmissions).values({
 			id,
-			agentKeyId: null,
 			submissionTicketId: consumedTicket.id,
 			idempotencyKey,
 			type: 'post',
@@ -87,10 +88,9 @@ export async function listContentSubmissions(status?: 'pending' | 'approved' | '
 			updatedAt: contentSubmissions.updatedAt,
 			reviewedAt: contentSubmissions.reviewedAt,
 			rejectionReason: contentSubmissions.rejectionReason,
-			agentName: sql<string>`coalesce(${agentApiKeys.name}, ${submissionTickets.label})`
+			agentName: submissionTickets.label
 		})
 		.from(contentSubmissions)
-		.leftJoin(agentApiKeys, eq(contentSubmissions.agentKeyId, agentApiKeys.id))
 		.leftJoin(submissionTickets, eq(contentSubmissions.submissionTicketId, submissionTickets.id))
 		.where(status ? eq(contentSubmissions.status, status) : undefined)
 		.orderBy(desc(contentSubmissions.createdAt))
@@ -108,10 +108,9 @@ export async function getContentSubmission(id: string) {
 			updatedAt: contentSubmissions.updatedAt,
 			reviewedAt: contentSubmissions.reviewedAt,
 			rejectionReason: contentSubmissions.rejectionReason,
-			agentName: sql<string>`coalesce(${agentApiKeys.name}, ${submissionTickets.label})`
+			agentName: submissionTickets.label
 		})
 		.from(contentSubmissions)
-		.leftJoin(agentApiKeys, eq(contentSubmissions.agentKeyId, agentApiKeys.id))
 		.leftJoin(submissionTickets, eq(contentSubmissions.submissionTicketId, submissionTickets.id))
 		.where(eq(contentSubmissions.id, id))
 		.limit(1)
@@ -123,6 +122,7 @@ export async function updatePendingPostSubmission(id: string, input: AgentPostSu
 	const validation = scanAgentSubmission(searchableText(payload))
 	if (!validation.accepted) throw Response.json({ error: '投稿包含疑似密钥，已拒绝', findings: validation.findings }, { status: 422 })
 	await getDb().transaction(async tx => {
+		await lockMediaReferenceMutation(tx as DatabaseTransaction)
 		const [updated] = await tx
 			.update(contentSubmissions)
 			.set({ payload, contentHash: contentHash(payload), validationResult: validation.findings, updatedAt: new Date() })
@@ -145,6 +145,7 @@ export async function approvePostSubmission(id: string) {
 	const db = getDb()
 	let slug = ''
 	await db.transaction(async tx => {
+		await lockMediaReferenceMutation(tx as DatabaseTransaction)
 		const [submission] = await tx.select().from(contentSubmissions).where(eq(contentSubmissions.id, id)).for('update').limit(1)
 		if (!submission || submission.type !== 'post' || submission.status !== 'pending') throw new SubmissionConflictError('投稿不存在或已经处理')
 		const payload = agentPostSubmissionSchema.parse(submission.payload)

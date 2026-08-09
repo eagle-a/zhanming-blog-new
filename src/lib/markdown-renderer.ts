@@ -215,33 +215,29 @@ export async function renderMarkdown(markdown: string): Promise<MarkdownRenderRe
 	}
 	extractHeadings(tokens)
 
-	// Pre-process code blocks with Shiki
-	for (const token of tokens) {
-		if (token.type === 'code') {
-			const codeToken = token as Tokens.Code
+	// Highlight independent code blocks in parallel; long technical articles can contain many.
+	const codeTokens = tokens.filter((token): token is Tokens.Code => token.type === 'code')
+	await Promise.all(
+		codeTokens.map(async (codeToken, index) => {
 			const originalCode = codeToken.text
-			const key = `__SHIKI_CODE_${codeBlockMap.size}__`
+			const key = `__SHIKI_CODE_${index}__`
+			let html = ''
 
 			if (shiki) {
 				try {
-					const html = await shiki.codeToHtml(originalCode, {
+					html = await shiki.codeToHtml(originalCode, {
 						lang: codeToken.lang || 'text',
 						theme: 'one-light'
 					})
-					codeBlockMap.set(key, { html, original: originalCode })
-					codeToken.text = key
 				} catch {
 					// Keep original if highlighting fails
-					codeBlockMap.set(key, { html: '', original: originalCode })
-					codeToken.text = key
 				}
-			} else {
-				// Fallback when shiki is not available
-				codeBlockMap.set(key, { html: '', original: originalCode })
-				codeToken.text = key
 			}
-		}
-	}
+
+			codeBlockMap.set(key, { html, original: originalCode })
+			codeToken.text = key
+		})
+	)
 	const html = sanitizeHtml((parser.parser(tokens) as string) || '')
 
 	return { html, toc }

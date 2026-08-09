@@ -27,7 +27,7 @@ export function useBlogIndex(initialItems: BlogIndexItem[] = []) {
 
 	return {
 		items: data || [],
-		loading: isLoading,
+		loading: isLoading && !(data?.length || initialItems.length),
 		error
 	}
 }

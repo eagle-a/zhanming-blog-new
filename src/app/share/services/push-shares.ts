@@ -12,11 +12,13 @@ export async function pushShares({ shares, logoItems, expectedVersion }: PushSha
 	const missing = shares.filter(share => share.logo.startsWith('blob:') && !logoItems?.has(share.url))
 	if (missing.length > 0) throw new Error(`图标未上传完成：${missing.map(share => share.name).join('、')}`)
 
-	let updated = [...shares]
-	for (const [url, item] of logoItems || []) {
-		if (item.type !== 'file') continue
-		const logo = await uploadContentImage('shares', item.file)
-		updated = updated.map(share => (share.url === url ? { ...share, logo } : share))
-	}
+	const uploaded = await Promise.all(
+		Array.from(logoItems || [], async ([url, item]) => (item.type === 'file' ? ([url, await uploadContentImage('shares', item.file)] as const) : null))
+	)
+	const logoByUrl = new Map(uploaded.filter((item): item is readonly [string, string] => item !== null))
+	const updated = shares.map(share => {
+		const logo = logoByUrl.get(share.url)
+		return logo ? { ...share, logo } : share
+	})
 	return saveContentDocument('shares', updated, expectedVersion)
 }

@@ -8,7 +8,7 @@ import type { AgentPostSubmission, SubmissionFinding } from '@/lib/agent-submiss
 
 type Submission = {
 	id: string
-	type: 'post' | 'work_report' | 'advisor_reply'
+	type: 'post'
 	status: 'staging' | 'pending' | 'approved' | 'rejected'
 	payload: AgentPostSubmission
 	validationResult: SubmissionFinding[]
@@ -94,7 +94,7 @@ export default function ReviewClient() {
 
 	useEffect(() => {
 		setDraft(selected?.payload || null)
-	}, [selected])
+	}, [selectedId])
 
 	const submitLogin = async (event: React.FormEvent) => {
 		event.preventDefault()

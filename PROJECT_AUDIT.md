@@ -10,30 +10,30 @@
 
 原始章节记录的是 2026-08-08 当时的事实，不能继续照单重做。当前状态以此表和 `docs/PROJECT_OVERVIEW.md` 为准。
 
-| 原问题 | 状态 | 2026-08-09 结果 |
-| --- | --- | --- |
-| P0-1 文章 SSR/SEO/404 | 已修复 | 列表和正文服务端取数，正文服务端渲染，metadata 与真实 404 已实现 |
-| P0-2 独立备份/恢复 | 部分修复 | 已有仓库外只读 JSON 导出、SHA-256 manifest 和可选 Blob 清单；异地调度与独立资源恢复演练仍是人工项 |
-| P0-3 媒体索引可信度 | 部分修复 | 已有当前内容、全部修订、审批内容、media、Blob 四方只读对账；未核验前不自动回填或删除 |
-| P0-4 混合脏工作区 | 未解决 | 仍不应整体提交；`public/blogs/hardware-kb/` 保持未触碰、未提交 |
-| P1-1 管理员登录限速 | 已修复 | 失败窗口、阻断期、数据库记录和自动测试已实现 |
-| P1-2 Blob/数据库非原子与 GC | 未解决 | 保留历史对象优先；需要基于对账结果设计 pending/宽限期/可恢复 GC |
-| P1-3 迁移半状态与分类清空 | 已修复 | 迁移先规划校验，分类改为安全 upsert，环境确认与本地 loopback 约束已加入 |
-| P1-4 smoke 污染 | 部分修复 | 脚本拒绝生产和共享默认凭据；仍不应在生产执行写入 smoke |
-| P1-5 环境资源隔离 | 部分修复 | 代码强制 `BLOG_RESOURCE_ENV` 与 Vercel 环境一致；Dashboard 中资源是否真正独立仍需人工核验 |
-| P1-6 CI 缺失 | 已修复 | GitHub Actions 执行 frozen install、test、typecheck、增量格式检查、Drizzle check 和 build |
-| P2-1 客户端 Markdown 过重 | 已修复（文章链路） | 公开文章 Markdown 已移到服务端；其他强交互页面保留 Client Component |
-| P2-2 图片带宽/CLS | 部分修复 | 图片墙和内容图补 lazy/async，新增大资产清单；响应式衍生图尚未建立，原图未删除 |
-| P2-3 CSP `unsafe-eval` | 部分修复 | 已移除 `unsafe-eval` 和失效域名；`unsafe-inline` 因当前 Next 静态/ISR 与第三方依赖暂留 |
-| P2-4 可访问性语义 | 已修复 | `lang=zh-CN`、允许缩放、核心页面 H1 和密码表单 username 已补齐 |
-| P2-5 SEO 配置 | 已修复 | metadataBase、canonical、robots、静态页 sitemap 和文章更新时间已补齐 |
-| P2-6 修订可用性/保留 | 部分修复 | 分类批量修改的标签快照已修；只读备份覆盖修订，但 UI 恢复和保留策略尚未实现 |
+| 原问题                      | 状态               | 2026-08-09 结果                                                                                       |
+| --------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------- |
+| P0-1 文章 SSR/SEO/404       | 已修复             | 列表和正文服务端取数，正文服务端渲染，metadata 与真实 404 已实现                                      |
+| P0-2 独立备份/恢复          | 本地数据库演练通过 | 备份/恢复脚本已用两套空白 PostgreSQL 实测；Blob 异地恢复与生产资源演练仍需管理员在隔离资源执行        |
+| P0-3 媒体索引可信度         | 已具备安全回填工具 | 回填逐对象核验 Blob 字节 SHA-256、MIME 和大小；生产回填仍需管理员显式执行                             |
+| P0-4 混合脏工作区           | 未解决             | 仍不应整体提交；`public/blogs/hardware-kb/` 保持未触碰、未提交                                        |
+| P1-1 管理员登录限速         | 已修复             | 失败窗口、阻断期、数据库记录和自动测试已实现                                                          |
+| P1-2 Blob/数据库非原子与 GC | 已具备两阶段流程   | pending/committed/orphaned/deleted 生命周期、标记清单、宽限期、ETag 校验、删除前归档和 recover 已实现 |
+| P1-3 迁移半状态与分类清空   | 已修复             | 迁移先规划校验，分类改为安全 upsert，环境确认与本地 loopback 约束已加入                               |
+| P1-4 smoke 污染             | 部分修复           | 脚本拒绝生产和共享默认凭据；仍不应在生产执行写入 smoke                                                |
+| P1-5 环境资源隔离           | 部分修复           | 代码强制 `BLOG_RESOURCE_ENV` 与 Vercel 环境一致；Dashboard 中资源是否真正独立仍需人工核验             |
+| P1-6 CI 缺失                | 已修复             | GitHub Actions 执行 frozen install、test、typecheck、增量格式检查、Drizzle check 和 build             |
+| P2-1 客户端 Markdown 过重   | 已修复（文章链路） | 公开文章 Markdown 已移到服务端；其他强交互页面保留 Client Component                                   |
+| P2-2 图片带宽/CLS           | 部分修复           | 图片墙原件已归档并改为 WebP，音乐已降码率；响应式图片衍生尺寸尚未建立                                 |
+| P2-3 CSP `unsafe-eval`      | 已分层收敛         | 后台/编辑页使用 nonce CSP；公开页保留 ISR 兼容策略，Preview 自动启用 strict Report-Only               |
+| P2-4 可访问性语义           | 已修复             | `lang=zh-CN`、允许缩放、核心页面 H1 和密码表单 username 已补齐                                        |
+| P2-5 SEO 配置               | 已修复             | metadataBase、canonical、robots、静态页 sitemap 和文章更新时间已补齐                                  |
+| P2-6 修订可用性/保留        | 部分修复           | 分类批量修改的标签快照已修；只读备份覆盖修订，但 UI 恢复和保留策略尚未实现                            |
 
-## 1. 结论
+## 1. 2026-08-08 原始结论（历史）
 
 项目已经从“每次改文章都重新构建”的静态博客，升级成了可在运行时写 Neon PostgreSQL、把图片写入 Private Vercel Blob 的轻量 CMS。数据库事务、乐观锁、修订表、输入校验、同源校验、私有 Blob 代理、缓存失效和迁移 dry-run 都已经存在，方向正确。
 
-但项目还没有达到“可以长期放心维护”的状态。最严重的问题不是页面样式，而是下面五件事：
+以下五项是 2026-08-08 的原始判断，当前状态已经由第 0 节取代，保留它们只为说明修复依据：
 
 1. **博客核心内容没有服务端渲染。** 文章列表和文章正文的原始 HTML 都只有“加载中”，文章标题、正文、description、Open Graph 和真实 404 都依赖浏览器 JavaScript。对博客而言，这是架构级 SEO 和首屏性能缺陷。
 2. **生产内容没有真正备份。** 修订历史和当前数据放在同一个 Neon 数据库；数据库整体损坏或误删时会一起丢。仓库里的旧文件只能恢复迁移前内容，不能恢复迁移后的最新文章和配置。
@@ -45,22 +45,22 @@
 
 ## 2. 审计范围与方法
 
-| 领域 | 已执行 | 结果 |
-| --- | --- | --- |
-| Git 与资产 | 状态、diff、行尾、大文件、仓库对象检查 | 已完成 |
-| Next.js 架构 | 路由、Server/Client 边界、缓存、metadata、RSS、sitemap | 已完成 |
-| 安全 | 管理员认证、CSRF、上传、XSS 清洗、CSP、密钥与输入边界 | 单人审计完成；不是官方 Deep Scan |
-| 数据 | Schema、迁移、事务、修订、Blob/数据库引用盘点 | 已完成只读检查 |
-| 性能 | 客户端边界、图片、Markdown 渲染、生产构建产物 | 已完成静态与运行时抽查 |
-| 质量 | 测试、类型检查、构建、依赖审计、Drizzle 检查 | 已完成 |
-| UI | 内置浏览器桌面 1280 px、移动 390×844、控制台和溢出抽查 | 已完成公开页抽查 |
-| 管理写入 | 登录、发布、删除、上传的本地端到端验证 | 未执行；本地缺少管理员密钥，且现有脚本会写当前数据库/Blob |
+| 领域         | 已执行                                                 | 结果                                                      |
+| ------------ | ------------------------------------------------------ | --------------------------------------------------------- |
+| Git 与资产   | 状态、diff、行尾、大文件、仓库对象检查                 | 已完成                                                    |
+| Next.js 架构 | 路由、Server/Client 边界、缓存、metadata、RSS、sitemap | 已完成                                                    |
+| 安全         | 管理员认证、CSRF、上传、XSS 清洗、CSP、密钥与输入边界  | 单人审计完成；不是官方 Deep Scan                          |
+| 数据         | Schema、迁移、事务、修订、Blob/数据库引用盘点          | 已完成只读检查                                            |
+| 性能         | 客户端边界、图片、Markdown 渲染、生产构建产物          | 已完成静态与运行时抽查                                    |
+| 质量         | 测试、类型检查、构建、依赖审计、Drizzle 检查           | 已完成                                                    |
+| UI           | 内置浏览器桌面 1280 px、移动 390×844、控制台和溢出抽查 | 已完成公开页抽查                                          |
+| 管理写入     | 登录、发布、删除、上传的本地端到端验证                 | 未执行；本地缺少管理员密钥，且现有脚本会写当前数据库/Blob |
 
 正式 Codex Security Deep Scan 仍停在 preflight，原因是当前会话并发容量不足。本文不能替代那个多代理、多阶段扫描，也不会冒充其结果。
 
 ## 3. 已确认问题
 
-### P0：发布前必须处理
+### P0：发布前必须处理（原始发现，状态见第 0 节）
 
 #### P0-1 文章列表与正文没有服务端内容，SEO、分享预览和 404 语义失效
 
@@ -90,7 +90,7 @@
 证据：
 
 - `posts` 与 `post_revisions`、`content_documents` 与 `content_document_revisions` 位于同一数据库（`src/db/schema.ts`）。
-- 仓库没有定时导出、异地备份、恢复演练脚本或检查结果。
+- 当时仓库缺少定时导出、异地备份、恢复演练脚本或检查结果；当前实现见第 12、13 节。
 - `docs/vercel-cms-migration.md:100-105` 只描述“从修订历史恢复”，但没有列出或恢复修订的 API、管理页面或 CLI 命令。
 - `README.md:17` 把 `public/` 称为旧内容备份；它只能覆盖迁移时的旧快照，不能覆盖之后在后台新增和修改的内容。
 
@@ -147,7 +147,7 @@
 - 明确排除或单独处理 `public/blogs/hardware-kb/`，不能顺手删除、移动或提交。
 - 在干净 clone/工作树上重跑最终门禁，再决定推送。
 
-### P1：高优先级
+### P1：高优先级（原始发现，状态见第 0 节）
 
 #### P1-1 管理员登录缺少限速、锁定和安全审计
 
@@ -270,7 +270,7 @@
 - 增加 Playwright 公开页 E2E；管理写入 E2E 只连隔离测试资源。
 - 合并/生产部署必须依赖这些检查通过。
 
-### P2：应纳入下一轮重构
+### P2：应纳入下一轮重构（原始发现，状态见第 0 节）
 
 #### P2-1 前端客户端化和 Markdown 渲染过重
 
@@ -397,7 +397,7 @@
 - 本地桌面/移动抽查未见横向溢出、坏图或控制台 error/warn；关于页当前 5 张图片均可加载，AI 日报可显示最近 10 期。
 - 生产构建、类型检查、依赖审计和 24 个测试当前全部通过。
 
-## 5. 优先级路线图
+## 5. 原始优先级路线图（历史）
 
 ### 阶段 A：冻结发布面（现在）
 
@@ -431,24 +431,24 @@
 2. 资产对账后把不再服务的旧大文件移出 Vercel 部署包，但保留可恢复归档。
 3. 用 Vercel Speed Insights 的真实生产数据设 LCP/INP/CLS 目标，不能只凭本机观感。
 
-## 6. 验证结果
+## 6. 2026-08-08 原始验证结果（历史）
 
-| 检查 | 结果 |
-| --- | --- |
-| `pnpm test` | 24/24 通过 |
-| `pnpm typecheck` | 通过 |
-| `pnpm build` | 通过；18 个静态页面生成成功 |
-| `pnpm audit --prod --registry=https://registry.npmjs.org` | 未发现已知生产依赖漏洞 |
-| `pnpm exec drizzle-kit check` | 迁移快照一致 |
-| `git diff --check` | 无 whitespace error；存在 LF→CRLF 提示 |
-| 桌面浏览器 | 首页、文章列表、文章、关于、项目、图片、AI 日报可打开；无横向溢出/坏图/控制台 error/warn |
-| 移动 390×844 | 首页、文章列表、文章、关于、AI 日报无横向溢出/坏图 |
-| 服务器 HTML | `/blog` 和文章详情都没有文章标题/正文/H1，只含加载态 |
-| 数据库只读盘点 | 11 posts、11 post revisions、8 content docs、16 content revisions、28 media rows |
-| Blob/引用盘点 | 45 个合法当前引用；17 个已引用且可读 Blob 未进入 `media` 表 |
-| 管理写入 E2E | 未运行；现有 `.env.local` 缺少管理员密钥，且 smoke 会污染当前数据库/Blob |
+| 检查                                                      | 结果                                                                                     |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `pnpm test`                                               | 24/24 通过                                                                               |
+| `pnpm typecheck`                                          | 通过                                                                                     |
+| `pnpm build`                                              | 通过；18 个静态页面生成成功                                                              |
+| `pnpm audit --prod --registry=https://registry.npmjs.org` | 未发现已知生产依赖漏洞                                                                   |
+| `pnpm exec drizzle-kit check`                             | 迁移快照一致                                                                             |
+| `git diff --check`                                        | 无 whitespace error；存在 LF→CRLF 提示                                                   |
+| 桌面浏览器                                                | 首页、文章列表、文章、关于、项目、图片、AI 日报可打开；无横向溢出/坏图/控制台 error/warn |
+| 移动 390×844                                              | 首页、文章列表、文章、关于、AI 日报无横向溢出/坏图                                       |
+| 服务器 HTML                                               | `/blog` 和文章详情都没有文章标题/正文/H1，只含加载态                                     |
+| 数据库只读盘点                                            | 11 posts、11 post revisions、8 content docs、16 content revisions、28 media rows         |
+| Blob/引用盘点                                             | 45 个合法当前引用；17 个已引用且可读 Blob 未进入 `media` 表                              |
+| 管理写入 E2E                                              | 未运行；现有 `.env.local` 缺少管理员密钥，且 smoke 会污染当前数据库/Blob                 |
 
-## 7. 限制与未验证项
+## 7. 2026-08-08 原始限制与未验证项（历史）
 
 - 没有执行生产部署、Preview 部署或 Vercel 环境变量修改。
 - 没有写入 Neon、上传/删除 Blob，也没有运行 `cms:smoke`。
@@ -457,7 +457,7 @@
 - 没有进行真实公网 Core Web Vitals、负载测试、故障注入、PITR 恢复演练或 Blob 全量 API 清单核对。
 - 官方文档搜索服务在本次审计中返回 503，因此没有把 Neon 各套餐的具体恢复保留天数写入报告；必须在你的实际项目/套餐中核实。
 
-## 8. 下一步决策
+## 8. 2026-08-08 原始下一步决策（历史）
 
 不要同时开十条战线。下一步应只做一件事：**先完成阶段 B 的数据安全改造和对账，然后再做文章 SSR。** 如果先美化页面或直接推送，得到的是“看起来更完整、实际上更难恢复”的系统。
 
@@ -479,8 +479,43 @@
 - `@svgr/webpack` 虽被 Knip 标记为未使用，但 `next.config.ts` 的 Turbopack 和 webpack 两条 SVG loader 配置都直接依赖它，不能删除。
 - `public/blogs/hardware-kb/`、`public/` 图片/音频和各页面 `list.json` 是用户内容、回退数据或迁移输入，不是死文件；本轮未修改、未删除。
 - `.next/`、`.vercel/`、`node_modules/` 是本地运行/项目关联目录，不纳入源码清理。
-- `agent_api_keys`、`agent_request_nonces` 等旧 schema 结构仍保留，因为删除数据库表需要独立迁移、备份和环境核对，不能靠文件清理顺手破坏数据。
+- 当时暂时保留了 `agent_api_keys`、`agent_request_nonces`；现已通过独立且带保护条件的 `0009` 迁移清理，不是靠文件清理直接破坏数据。
 
 ### 清理后的门禁
 
 Knip 复扫后仅剩 `@svgr/webpack` 这一项可解释的配置型误报；没有未使用文件，也没有可安全删除的未使用项目依赖。最终仍须串行执行测试、类型检查、格式检查、Drizzle 检查、构建、生产依赖审计和 `git diff --check`。本轮不提交、不推送、不部署。
+
+## 10. 2026-08-09 运行时性能与后台体验优化
+
+- 文章、首页配置、博客作者、项目、分享和图片墙的独立 Blob 上传改为并行，仍然坚持“全部上传成功后才写 Neon”。
+- Markdown 代码块高亮改为并行处理，长技术文章不再按代码块串行等待。
+- 编辑器和审批预览的 Markdown 渲染增加 120 ms 防抖，避免每个按键都启动 Shiki/KaTeX 渲染。
+- 根布局的运行时站点配置使用 React `cache()` 做请求内去重，metadata 和布局不会重复读取同一份配置。
+- 审批后台轮询不再覆盖正在编辑的投稿草稿，只在切换投稿时同步编辑内容。
+
+## 11. 2026-08-09 媒体生命周期第一阶段
+
+- `media` 增加 `state`、`pending_at`、`committed_at`、`last_seen_at` 和 `orphaned_at`，并通过 `drizzle/0007_curly_la_nuit.sql`、`drizzle/0008_plain_hercules.sql` 迁移；既有行默认视为 `committed`，不会删除任何旧对象。
+- Vercel Blob `onUploadCompleted` 只登记 `pending`。文章保存、文章批准和运行时配置保存都在同一数据库事务中，把实际引用且已存在索引行标记为 `committed`，并更新 `last_seen_at`。
+- 重复 pathname 上传不会把已提交对象降级为 `pending`；未完成保存的上传会保留为 `pending`，交给对账脚本人工复核。
+- `scripts/reconcile-media.ts` 统一使用同一套媒体引用提取逻辑，报告超过 24 小时且未被内容引用的 pending 候选，以及“仍被引用但仍 pending”的异常；脚本明确只读，永不自动删除、回填或上传。
+- 本节记录的是第一阶段当时的状态；第 12 节已经补齐逐对象核验回填和可恢复两阶段 GC，不能再把这句话当成当前缺口。
+
+## 12. 2026-08-09 高优先级收尾
+
+- 备份格式升级为 v2：可选归档私有 Blob 字节；恢复脚本校验 manifest、只允许空目标库，恢复的一次性票据统一撤销。
+- `media:maintain` 提供 plan/backfill/mark/delete/recover。回填要求内容 SHA-256 与 pathname 摘要一致；GC 先标记 `orphaned`，经过宽限期后重新检查引用和 ETag，先归档再删除，归档可恢复。内容写入、上传预留与 GC 共用事务级 advisory lock，关闭最终引用检查到删除之间的竞态。
+- CSP 改为 Next 16 `proxy.ts` 分层策略：公开页面保留兼容头，Preview 同时发送 strict Report-Only；`/admin` 和 `/write` 使用每请求 nonce，原生内联平台检测改为零渲染客户端初始化组件。
+- 图片墙 9 张原图已在 `C:\Users\zm\Desktop\zhanming-blog-picture-originals-20260809` 保留并替换为 WebP，从 39,060,854 字节降到 2,596,864 字节。
+- 高码率音乐原件已在 `C:\Users\zm\Desktop\zhanming-blog-music-originals-20260809` 保留；3 首高码率 MP3 转为 128 kbps，未使用的 `christmas.m4a` 和 `search_links.txt` 移出部署包。`public/blogs/hardware-kb/` 未触碰。
+- 旧 `agent_api_keys`、`agent_request_nonces`、非 post submission 枚举和 Agent 外键由 `drizzle/0009_fixed_firebird.sql` 清理，迁移前有旧数据、投稿类型和幂等键保护检查。
+
+## 13. 2026-08-09 本地恢复与浏览器验收
+
+- 在两个独立的本地 PostgreSQL 18 空库之间执行了真实 `backup:cms` → `backup:restore` 演练；文章、修订、标签、分类、内容文档、媒体、待审批投稿、审计事件和票据元数据共 11 组数据逐表恢复成功。
+- 备份 manifest SHA-256 校验通过；目标库非空保护生效路径保留；恢复后所有投稿票据均已撤销，票据哈希与源库不同，自增序列可以继续插入。
+- 本地演练没有连接任何生产 Neon 或 Blob，也没有伪装成生产灾备演练。完整 Blob 字节异地恢复仍必须在管理员创建的隔离 Blob Store 上执行。
+- `ffprobe` 已验证 5 首部署中的 MP3 均可解码；内置浏览器实际播放 `close-to-you` 后进度前进，图片墙 9 张 WebP 均完成解码。
+- 本地 CSP 已按 Next 16.3 文档仅在 development 加入 `unsafe-eval`；生产仍不包含该项。后台脚本策略为每请求 nonce 且不含 `unsafe-inline`；公开静态/ISR 页面保留兼容内联策略。
+- 根布局的 Windows 平台检测改为零渲染客户端初始化组件，消除了后台 nonce 属性 hydration mismatch 和 React 脚本警告；音乐播放按钮补齐动态可访问名称。
+- Blob 上传令牌签发前会把已存在的孤儿/已删除 pathname 预留为 `pending`；上传回调重新读取私有 Blob 并验证实际 SHA-256、大小和 MIME，浏览器自报元数据不再直接进入可信索引。

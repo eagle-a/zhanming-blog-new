@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm'
 import { bigint, bigserial, check, index, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 
 export const postStatus = pgEnum('post_status', ['draft', 'published', 'archived'])
-export const submissionType = pgEnum('submission_type', ['post', 'work_report', 'advisor_reply'])
+export const submissionType = pgEnum('submission_type', ['post'])
 export const submissionStatus = pgEnum('submission_status', ['staging', 'pending', 'approved', 'rejected'])
 
 export const posts = pgTable(
@@ -84,50 +84,7 @@ export const adminLoginAttempts = pgTable(
 		blockedUntil: timestamp('blocked_until', { withTimezone: true, mode: 'date' }),
 		updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 	},
-	table => [
-		index('admin_login_attempts_updated_at_idx').on(table.updatedAt),
-		check('admin_login_attempts_count_nonnegative', sql`${table.attemptCount} >= 0`)
-	]
-)
-
-export const agentApiKeys = pgTable(
-	'agent_api_keys',
-	{
-		id: bigserial('id', { mode: 'number' }).primaryKey(),
-		name: text('name').notNull(),
-		authType: text('auth_type').notNull().default('bearer'),
-		tokenPrefix: text('token_prefix'),
-		tokenHash: text('token_hash'),
-		publicKeyPem: text('public_key_pem'),
-		keyFingerprint: text('key_fingerprint'),
-		scopes: jsonb('scopes').$type<string[]>().notNull(),
-		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-		expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }),
-		revokedAt: timestamp('revoked_at', { withTimezone: true, mode: 'date' }),
-		lastUsedAt: timestamp('last_used_at', { withTimezone: true, mode: 'date' })
-	},
-	table => [
-		uniqueIndex('agent_api_keys_token_prefix_unique').on(table.tokenPrefix),
-		uniqueIndex('agent_api_keys_token_hash_unique').on(table.tokenHash),
-		uniqueIndex('agent_api_keys_fingerprint_unique').on(table.keyFingerprint),
-		check('agent_api_keys_auth_type_valid', sql`${table.authType} IN ('bearer', 'signature')`),
-		check(
-			'agent_api_keys_auth_material_valid',
-			sql`(${table.authType} = 'bearer' AND ${table.tokenPrefix} IS NOT NULL AND ${table.tokenHash} IS NOT NULL AND ${table.publicKeyPem} IS NULL AND ${table.keyFingerprint} IS NULL) OR (${table.authType} = 'signature' AND ${table.tokenPrefix} IS NULL AND ${table.tokenHash} IS NULL AND ${table.publicKeyPem} IS NOT NULL AND ${table.keyFingerprint} IS NOT NULL)`
-		)
-	]
-)
-
-export const agentRequestNonces = pgTable(
-	'agent_request_nonces',
-	{
-		agentKeyId: bigint('agent_key_id', { mode: 'number' })
-			.notNull()
-			.references(() => agentApiKeys.id, { onDelete: 'cascade' }),
-		nonce: text('nonce').notNull(),
-		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
-	},
-	table => [primaryKey({ columns: [table.agentKeyId, table.nonce] }), index('agent_request_nonces_created_at_idx').on(table.createdAt)]
+	table => [index('admin_login_attempts_updated_at_idx').on(table.updatedAt), check('admin_login_attempts_count_nonnegative', sql`${table.attemptCount} >= 0`)]
 )
 
 export const submissionTickets = pgTable(
@@ -158,8 +115,6 @@ export const contentSubmissions = pgTable(
 	'content_submissions',
 	{
 		id: text('id').primaryKey(),
-		agentKeyId: bigint('agent_key_id', { mode: 'number' })
-			.references(() => agentApiKeys.id, { onDelete: 'restrict' }),
 		submissionTicketId: bigint('submission_ticket_id', { mode: 'number' }).references(() => submissionTickets.id, { onDelete: 'restrict' }),
 		idempotencyKey: text('idempotency_key').notNull(),
 		type: submissionType('type').notNull(),
@@ -174,14 +129,10 @@ export const contentSubmissions = pgTable(
 		rejectionReason: text('rejection_reason')
 	},
 	table => [
-		uniqueIndex('content_submissions_agent_idempotency_unique').on(table.agentKeyId, table.idempotencyKey),
+		uniqueIndex('content_submissions_idempotency_unique').on(table.idempotencyKey),
 		uniqueIndex('content_submissions_ticket_unique').on(table.submissionTicketId),
 		index('content_submissions_status_created_idx').on(table.status, table.createdAt),
-		index('content_submissions_agent_created_idx').on(table.agentKeyId, table.createdAt),
-		check(
-			'content_submissions_single_submitter',
-			sql`(${table.agentKeyId} IS NOT NULL) <> (${table.submissionTicketId} IS NOT NULL)`
-		)
+		index('content_submissions_ticket_created_idx').on(table.submissionTicketId, table.createdAt)
 	]
 )
 
@@ -209,12 +160,20 @@ export const media = pgTable(
 		sha256: text('sha256').notNull(),
 		mimeType: text('mime_type').notNull(),
 		size: bigint('size', { mode: 'number' }).notNull(),
+		state: text('state').notNull().default('committed'),
+		pendingAt: timestamp('pending_at', { withTimezone: true, mode: 'date' }),
+		committedAt: timestamp('committed_at', { withTimezone: true, mode: 'date' }).defaultNow(),
+		lastSeenAt: timestamp('last_seen_at', { withTimezone: true, mode: 'date' }),
+		orphanedAt: timestamp('orphaned_at', { withTimezone: true, mode: 'date' }),
+		deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
 		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 	},
 	table => [
 		uniqueIndex('media_pathname_unique').on(table.pathname),
 		index('media_sha256_idx').on(table.sha256),
-		check('media_size_nonnegative', sql`${table.size} >= 0`)
+		index('media_state_pending_idx').on(table.state, table.pendingAt),
+		check('media_size_nonnegative', sql`${table.size} >= 0`),
+		check('media_state_valid', sql`${table.state} IN ('pending', 'committed', 'orphaned')`)
 	]
 )
 

@@ -9,17 +9,14 @@ export type PushPicturesParams = {
 }
 
 export async function pushPictures({ pictures, imageItems, expectedVersion }: PushPicturesParams) {
-	let updated = [...pictures]
-	for (const [key, item] of imageItems || []) {
-		if (item.type !== 'file') continue
-		const url = await uploadContentImage('pictures', item.file)
-		const [groupId, indexRaw] = key.split('::')
-		const imageIndex = Number(indexRaw) || 0
-		updated = updated.map(picture => {
-			if (picture.id !== groupId) return picture
-			const currentImages = picture.images?.length ? picture.images : picture.image ? [picture.image] : []
-			return { ...picture, image: undefined, images: currentImages.map((image, index) => (index === imageIndex ? url : image)) }
-		})
-	}
+	const uploaded = await Promise.all(
+		Array.from(imageItems || [], async ([key, item]) => (item.type === 'file' ? ([key, await uploadContentImage('pictures', item.file)] as const) : null))
+	)
+	const uploadedByKey = new Map(uploaded.filter((item): item is readonly [string, string] => item !== null))
+	const updated = pictures.map(picture => {
+		const currentImages = picture.images?.length ? picture.images : picture.image ? [picture.image] : []
+		const nextImages = currentImages.map((image, index) => uploadedByKey.get(`${picture.id}::${index}`) || image)
+		return nextImages.some((image, index) => image !== currentImages[index]) ? { ...picture, image: undefined, images: nextImages } : picture
+	})
 	return saveContentDocument('pictures', updated, expectedVersion)
 }

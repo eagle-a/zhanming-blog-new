@@ -1,8 +1,10 @@
+import { createHash } from 'node:crypto'
+import { get } from '@vercel/blob'
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
 import { assertAdminMutationRequest, assertWritableEnvironment } from '@/lib/admin-auth'
 import { mediaPayloadSchema } from '@/lib/post-validation'
 import { contentMediaPayloadSchema } from '@/lib/content-validation'
-import { recordMedia } from '@/lib/posts-repository'
+import { registerPendingMedia, reservePendingMediaUpload } from '@/lib/media-lifecycle'
 import { routeErrorResponse } from '@/lib/route-errors'
 
 export const runtime = 'nodejs'
@@ -39,6 +41,7 @@ export async function POST(request: Request): Promise<Response> {
 				if (!pathname.startsWith(expectedPrefix) || !validPath) {
 					throw new Error('Blob pathname is invalid')
 				}
+				await reservePendingMediaUpload(pathname)
 				return {
 					allowedContentTypes: [payload.value.mimeType],
 					maximumSizeInBytes: 25 * 1024 * 1024,
@@ -50,12 +53,19 @@ export async function POST(request: Request): Promise<Response> {
 			},
 			onUploadCompleted: async ({ blob, tokenPayload }) => {
 				const payload = parseMediaPayload(tokenPayload).value
-				await recordMedia({
+				const result = await get(blob.pathname, { access: 'private', useCache: false })
+				if (!result || result.statusCode !== 200) throw new Error('Uploaded Blob cannot be verified')
+				const bytes = Buffer.from(await new Response(result.stream).arrayBuffer())
+				const sha256 = createHash('sha256').update(bytes).digest('hex')
+				if (sha256 !== payload.sha256 || bytes.length !== payload.size || result.blob.contentType !== payload.mimeType) {
+					throw new Error('Uploaded Blob integrity verification failed')
+				}
+				await registerPendingMedia({
 					blobUrl: blob.url,
 					pathname: blob.pathname,
-					sha256: payload.sha256,
-					mimeType: payload.mimeType,
-					size: payload.size
+					sha256,
+					mimeType: result.blob.contentType,
+					size: bytes.length
 				})
 			}
 		})

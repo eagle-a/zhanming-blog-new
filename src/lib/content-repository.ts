@@ -5,6 +5,7 @@ import { unstable_cache } from 'next/cache'
 import { getDb } from '@/db/client'
 import { contentDocumentRevisions, contentDocuments } from '@/db/schema'
 import type { ContentDocumentKey } from '@/lib/content-validation'
+import { lockMediaReferenceMutation, markMediaReferencesCommitted, type DatabaseTransaction } from '@/lib/media-lifecycle'
 
 import aboutFallback from '@/app/about/list.json'
 import bloggersFallback from '@/app/bloggers/list.json'
@@ -69,6 +70,7 @@ export async function upsertContentDocument<T>(
 	createdBy = 'admin'
 ): Promise<ContentDocumentRecord<T>> {
 	await getDb().transaction(async tx => {
+		await lockMediaReferenceMutation(tx as DatabaseTransaction)
 		await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${key}))`)
 		const [current] = await tx.select().from(contentDocuments).where(eq(contentDocuments.key, key)).for('update').limit(1)
 		const currentVersion = current?.version ?? 0
@@ -81,6 +83,7 @@ export async function upsertContentDocument<T>(
 			await tx.insert(contentDocuments).values({ key, data, version: nextVersion })
 		}
 		await tx.insert(contentDocumentRevisions).values({ documentKey: key, version: nextVersion, data, createdBy })
+		await markMediaReferencesCommitted(tx as DatabaseTransaction, data)
 	})
 
 	return getContentDocument<T>(key)
@@ -95,6 +98,7 @@ export async function upsertContentDocuments(
 	const sorted = Array.from(unique.values()).sort((a, b) => a.key.localeCompare(b.key))
 
 	await getDb().transaction(async tx => {
+		await lockMediaReferenceMutation(tx as DatabaseTransaction)
 		for (const item of sorted) {
 			await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${item.key}))`)
 			const [current] = await tx.select().from(contentDocuments).where(eq(contentDocuments.key, item.key)).for('update').limit(1)
@@ -112,6 +116,7 @@ export async function upsertContentDocuments(
 				data: item.data,
 				createdBy
 			})
+			await markMediaReferencesCommitted(tx as DatabaseTransaction, item.data)
 		}
 	})
 

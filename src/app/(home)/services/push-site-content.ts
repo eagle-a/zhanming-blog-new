@@ -19,26 +19,29 @@ export async function pushSiteContent(
 ) {
 	let updatedSite = structuredClone(siteContent)
 
-	if (faviconItem?.type === 'file') updatedSite.faviconUrl = await uploadContentImage('site', faviconItem.file)
-	if (avatarItem?.type === 'file') updatedSite.avatarUrl = await uploadContentImage('site', avatarItem.file)
+	const [faviconUrl, avatarUrl] = await Promise.all([
+		faviconItem?.type === 'file' ? uploadContentImage('site', faviconItem.file) : Promise.resolve(null),
+		avatarItem?.type === 'file' ? uploadContentImage('site', avatarItem.file) : Promise.resolve(null)
+	])
+	if (faviconUrl) updatedSite.faviconUrl = faviconUrl
+	if (avatarUrl) updatedSite.avatarUrl = avatarUrl
 
-	for (const [id, item] of Object.entries(artImageUploads || {})) {
-		if (item.type !== 'file') continue
-		const url = await uploadContentImage('site', item.file)
-		updatedSite.artImages = updatedSite.artImages.map(image => (image.id === id ? { ...image, url } : image))
-	}
+	const uploadEntries = (entries: Array<[string, FileItem]>) =>
+		Promise.all(entries.map(async ([id, item]) => (item.type === 'file' ? ([id, await uploadContentImage('site', item.file)] as const) : null))).then(
+			results => results.filter((result): result is readonly [string, string] => result !== null)
+		)
 
-	for (const [id, item] of Object.entries(backgroundImageUploads || {})) {
-		if (item.type !== 'file') continue
-		const url = await uploadContentImage('site', item.file)
+	const [artUploads, backgroundUploads, socialUploads] = await Promise.all([
+		uploadEntries(Object.entries(artImageUploads || {})),
+		uploadEntries(Object.entries(backgroundImageUploads || {})),
+		uploadEntries(Object.entries(socialButtonImageUploads || {}))
+	])
+
+	for (const [id, url] of artUploads) updatedSite.artImages = updatedSite.artImages.map(image => (image.id === id ? { ...image, url } : image))
+	for (const [id, url] of backgroundUploads)
 		updatedSite.backgroundImages = updatedSite.backgroundImages.map(image => (image.id === id ? { ...image, url } : image))
-	}
-
-	for (const [id, item] of Object.entries(socialButtonImageUploads || {})) {
-		if (item.type !== 'file') continue
-		const value = await uploadContentImage('site', item.file)
+	for (const [id, value] of socialUploads)
 		updatedSite.socialButtons = updatedSite.socialButtons.map(button => (button.id === id ? { ...button, value } : button))
-	}
 
 	const documents = await saveContentDocuments([
 		{ key: 'site', data: updatedSite, expectedVersion: expectedVersions.site },
