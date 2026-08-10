@@ -86,9 +86,9 @@ CLI 只接受 HTTPS 站点 origin；仅 `localhost`、`127.0.0.1` 和 `::1` 可�
 
 ```json
 {
-  "submissionId": "...",
-  "status": "pending",
-  "reviewUrl": "https://你的域名/admin/review"
+	"submissionId": "...",
+	"status": "pending",
+	"reviewUrl": "https://你的域名/admin/review"
 }
 ```
 

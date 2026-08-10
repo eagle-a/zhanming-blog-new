@@ -100,7 +100,7 @@ git diff --check
 ## 回滚与恢复
 
 - 代码问题：在 Vercel 回滚部署，不回滚数据库迁移。
-- 内容误改：从 `content_document_revisions` 或 `post_revisions` 取上一版本，通过正常写入流程恢复为新版本。
+- 内容误改：管理员在 `/write/[slug]` 打开“修订历史”面板，选择历史版本恢复（会创建新版本，不覆盖当前）；也可从 `content_document_revisions` 或 `post_revisions` 取上一版本，通过正常写入流程恢复为新版本。
 - 数据库不可用：站点配置和开发文章有仓库只读回退；生产写入不可用，不能伪装成成功。
 - Blob 引用误删：先从修订历史恢复引用。不要直接批量删除 Blob。
 

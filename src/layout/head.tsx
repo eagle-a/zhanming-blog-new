@@ -11,7 +11,15 @@ export default function Head({ faviconUrl = '/favicon.png' }: { faviconUrl?: str
 			<link rel='preconnect' href='https://fonts.googleapis.cn' />
 			<link rel='preconnect' href='https://fonts.gstatic.cn' crossOrigin='anonymous' />
 
-			<link href='https://fonts.googleapis.cn/css2?family=Averia+Gruesa+Libre&display=swap' rel='stylesheet' />
+			<link
+				rel='preload'
+				as='style'
+				href='https://fonts.googleapis.cn/css2?family=Averia+Gruesa+Libre&display=swap'
+				{...{ onload: "this.onload=null;this.rel='stylesheet'" }}
+			/>
+			<noscript>
+				<link rel='stylesheet' href='https://fonts.googleapis.cn/css2?family=Averia+Gruesa+Libre&display=swap' />
+			</noscript>
 		</head>
 	)
 }

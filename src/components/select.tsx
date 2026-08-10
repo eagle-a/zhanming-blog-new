@@ -139,7 +139,7 @@ export function Select({ value, onChange, options, className, disabled }: Select
 									width: `${position.width}px`,
 									boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
 								}}>
-								<div className='scrollbar-none max-h-64 overflow-y-auto p-1.5'>
+								<div className='max-h-64 scrollbar-none overflow-y-auto p-1.5'>
 									{options.map(option => {
 										const isSelected = option.value === value
 										return (
@@ -150,7 +150,7 @@ export function Select({ value, onChange, options, className, disabled }: Select
 												className={cn(
 													'w-full rounded-lg px-3 py-2 text-left text-xs transition-all',
 													'active:scale-[0.98]',
-													isSelected ? 'bg-brand/10 text-brand font-medium' : 'hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
+													isSelected ? 'bg-brand/10 text-brand font-medium' : 'hover:bg-gray-100/50'
 												)}>
 												{option.label}
 											</button>

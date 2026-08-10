@@ -7,6 +7,17 @@ import { routeErrorResponse } from '@/lib/route-errors'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+const pathsByKey: Record<string, string[]> = {
+	site: ['/'],
+	'card-styles': ['/'],
+	about: ['/about'],
+	bloggers: ['/bloggers'],
+	projects: ['/projects'],
+	shares: ['/', '/share'],
+	pictures: ['/pictures'],
+	snippets: ['/snippets']
+}
+
 export async function PUT(request: Request): Promise<Response> {
 	try {
 		assertAdminMutationRequest(request)
@@ -21,8 +32,15 @@ export async function PUT(request: Request): Promise<Response> {
 			return { key: item.key, data: parseContentDocument(item.key, item.data), expectedVersion: item.expectedVersion }
 		})
 		const documents = await upsertContentDocuments(items)
-		for (const item of items) revalidateTag(`content:${item.key}`, { expire: 0 })
-		revalidatePath('/', 'layout')
+		const hasSiteKey = items.some(item => item.key === 'site')
+		for (const item of items) {
+			revalidateTag(`content:${item.key}`, { expire: 0 })
+			for (const path of pathsByKey[item.key] || []) revalidatePath(path)
+		}
+		if (hasSiteKey) {
+			revalidatePath('/', 'layout')
+			revalidatePath('/rss.xml')
+		}
 		return Response.json({ documents })
 	} catch (error) {
 		return routeErrorResponse(error)

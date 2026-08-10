@@ -73,12 +73,14 @@ export default function Live2DViewer() {
 		if (!container) return
 
 		let app: PixiAppInstance | null = null
+		let cancelled = false
 
 		const init = async () => {
 			try {
 				for (const script of LIVE2D_SCRIPTS) {
 					await loadScript(script.src, script.integrity)
 				}
+				if (cancelled) return
 
 				const PIXI = (window as unknown as { PIXI: unknown }).PIXI
 				if (!PIXI) {
@@ -112,6 +114,8 @@ export default function Live2DViewer() {
 				})
 
 				const model = await Live2DModel.from(MODEL_URL)
+				if (cancelled) return
+
 				app.stage.addChild(model)
 
 				model.anchor.set(0.5, 0.5)
@@ -121,6 +125,7 @@ export default function Live2DViewer() {
 
 				setStatus('ready')
 			} catch (err) {
+				if (cancelled) return
 				setErrorMsg(err instanceof Error ? err.message : String(err))
 				setStatus('error')
 			}
@@ -129,6 +134,7 @@ export default function Live2DViewer() {
 		init()
 
 		return () => {
+			cancelled = true
 			if (app !== null && typeof app === 'object' && 'destroy' in app && typeof app.destroy === 'function') {
 				app.destroy({ removeView: true })
 			}

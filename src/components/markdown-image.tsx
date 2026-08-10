@@ -14,7 +14,15 @@ export function MarkdownImage({ src, alt = '', title = '' }: MarkdownImageProps)
 
 	return (
 		<>
-			<img src={src} alt={alt} title={title} loading='lazy' decoding='async' onClick={() => setDisplay(true)} className='cursor-pointer transition-opacity hover:opacity-80' />
+			<img
+				src={src}
+				alt={alt}
+				title={title}
+				loading='lazy'
+				decoding='async'
+				onClick={() => setDisplay(true)}
+				className='cursor-pointer transition-opacity hover:opacity-80'
+			/>
 			<DialogModal open={display} onClose={() => setDisplay(false)} className='max-w-none bg-transparent p-0'>
 				<div className='flex flex-col items-center gap-3'>
 					<img src={src} alt={alt} className='max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl' />

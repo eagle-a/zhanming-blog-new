@@ -44,7 +44,7 @@ export function AdminLoginGate({ title = '文章编辑器' }: { title?: string }
 						value={password}
 						onChange={event => setPassword(event.target.value)}
 						required
-						className='w-full rounded-xl border bg-white/70 px-3 py-2 outline-none focus:border-brand'
+						className='focus:border-brand w-full rounded-xl border bg-white/70 px-3 py-2 outline-none'
 					/>
 				</label>
 				<button type='submit' disabled={busy} className='brand-btn w-full px-4 py-2 disabled:opacity-60'>

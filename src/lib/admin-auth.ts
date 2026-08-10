@@ -69,7 +69,7 @@ export async function verifyAdminPassword(password: string): Promise<boolean> {
 	const N = Number(nRaw)
 	const r = Number(rRaw)
 	const p = Number(pRaw)
-	if (N !== 16384 || r !== 8 || p !== 1) throw new Error('BLOG_ADMIN_PASSWORD_HASH uses unsupported scrypt parameters')
+	if (N < 16384 || r !== 8 || p !== 1) throw new Error('BLOG_ADMIN_PASSWORD_HASH uses unsupported scrypt parameters')
 
 	const expected = Buffer.from(hashRaw, 'base64url')
 	const actual = await deriveScrypt(password, Buffer.from(saltRaw, 'base64url'), expected.length, { N, r, p })

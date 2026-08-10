@@ -7,7 +7,7 @@ export type CategoriesConfig = {
 }
 
 const fetcher = async (url: string): Promise<CategoriesConfig> => {
-	const res = await fetch(url, { cache: 'no-store' })
+	const res = await fetch(url)
 	if (!res.ok) {
 		return { categories: [] }
 	}
@@ -25,7 +25,8 @@ export function useCategories(initialCategories: string[] = []) {
 	const { data, error, isLoading } = useSWR<CategoriesConfig>('/api/categories', fetcher, {
 		fallbackData: { categories: initialCategories },
 		revalidateOnFocus: false,
-		revalidateOnReconnect: true
+		revalidateOnReconnect: true,
+		revalidateIfStale: false
 	})
 
 	return {
@@ -34,4 +35,3 @@ export function useCategories(initialCategories: string[] = []) {
 		error
 	}
 }
-

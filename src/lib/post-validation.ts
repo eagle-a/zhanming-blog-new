@@ -12,7 +12,7 @@ const optionalUrl = z
 	.max(2048)
 	.refine(value => {
 		if (value === '') return true
-		if (value.startsWith('/') && !value.startsWith('//') && !/[\\\u0000-\u001f\u007f]/.test(value)) return true
+		if (value.startsWith('/') && !value.startsWith('//') && !value.includes('..') && !/[\\\u0000-\u001f\u007f]/.test(value)) return true
 		try {
 			const url = new URL(value)
 			return url.protocol === 'https:' && !url.username && !url.password

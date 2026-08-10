@@ -15,7 +15,7 @@ export function readLegacyPosts(includeDrafts = false): BlogIndexItem[] {
 
 export function readLegacyCategories(): string[] {
 	return Array.isArray((legacyCategories as { categories?: unknown }).categories)
-		? ((legacyCategories as { categories: unknown[] }).categories.filter((value): value is string => typeof value === 'string'))
+		? (legacyCategories as { categories: unknown[] }).categories.filter((value): value is string => typeof value === 'string')
 		: []
 }
 

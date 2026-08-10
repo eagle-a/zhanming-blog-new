@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import dayjs from 'dayjs'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import { motion } from 'motion/react'
@@ -18,9 +19,12 @@ import { useAdminSession } from '@/hooks/use-admin-session'
 import { useConfigStore } from '@/app/(home)/stores/config-store'
 import { cn } from '@/lib/utils'
 import { saveBlogEdits } from './services/save-blog-edits'
-import { Check } from 'lucide-react'
-import { BlogCoverHoverPreview, useBlogCoverHover } from './components/blog-cover-hover'
-import { CategoryModal } from './components/category-modal'
+import { Check, Search, X } from 'lucide-react'
+import { useBlogCoverHover } from './components/blog-cover-hover'
+import { useBlogSearch } from '@/hooks/use-search'
+
+const BlogCoverHoverPreview = dynamic(() => import('./components/blog-cover-hover').then(m => m.BlogCoverHoverPreview), { ssr: false })
+const CategoryModal = dynamic(() => import('./components/category-modal').then(m => m.CategoryModal), { ssr: false })
 
 type DisplayMode = 'day' | 'week' | 'month' | 'year' | 'category'
 
@@ -32,6 +36,7 @@ export default function BlogListClient({ initialItems, initialCategories }: { in
 	const { siteContent } = useConfigStore()
 	const hideEditButton = siteContent.hideEditButton ?? false
 	const enableCategories = siteContent.enableCategories ?? false
+	const search = useBlogSearch()
 
 	const [editMode, setEditMode] = useState(false)
 	const [editableItems, setEditableItems] = useState<BlogIndexItem[]>([])
@@ -272,9 +277,9 @@ export default function BlogListClient({ initialItems, initialCategories }: { in
 			setEditMode(false)
 			setSelectedSlugs(new Set())
 			setCategoryModalOpen(false)
-		} catch (error: any) {
+		} catch (error) {
 			console.error(error)
-			toast.error(error?.message || '保存失败')
+			toast.error(error instanceof Error ? error.message : '保存失败')
 		} finally {
 			setSaving(false)
 		}
@@ -314,7 +319,28 @@ export default function BlogListClient({ initialItems, initialCategories }: { in
 		<>
 			<h1 className='sr-only'>文章</h1>
 			<div className='flex flex-col items-center justify-center gap-6 px-6 pt-24 max-sm:pt-24'>
-				{items.length > 0 && (
+				{items.length > 0 && !editMode && (
+					<motion.div
+						initial={{ opacity: 0, scale: 0.6 }}
+						animate={{ opacity: 1, scale: 1 }}
+						className='card btn-rounded relative mx-auto flex w-full max-w-[840px] items-center gap-2 p-1.5'>
+						<Search className='text-secondary ml-2 h-4 w-4 shrink-0' />
+						<input
+							type='text'
+							value={search.query}
+							onChange={e => search.setQuery(e.target.value)}
+							placeholder='搜索文章标题、内容、标签…'
+							className='text-secondary min-w-0 flex-1 bg-transparent px-1 py-1 text-sm outline-none placeholder:text-gray-400'
+						/>
+						{search.query && (
+							<button onClick={() => search.setQuery('')} className='text-secondary hover:text-primary rounded-lg px-2 py-1 text-xs transition-colors'>
+								<X className='h-4 w-4' />
+							</button>
+						)}
+					</motion.div>
+				)}
+
+				{!search.isSearching && items.length > 0 && !editMode && (
 					<motion.div
 						initial={{ opacity: 0, scale: 0.6 }}
 						animate={{ opacity: 1, scale: 1 }}
@@ -341,114 +367,158 @@ export default function BlogListClient({ initialItems, initialCategories }: { in
 					</motion.div>
 				)}
 
-				{groupKeys.map((groupKey, index) => {
-					const group = groupedItems[groupKey]
-					if (!group) return null
-
-					return (
-						<motion.div
-							onMouseLeave={cancelCoverPreview}
-							key={groupKey}
-							initial={{ opacity: 0, scale: 0.95 }}
-							whileInView={{ opacity: 1, scale: 1 }}
-							transition={{ delay: INIT_DELAY / 2 }}
-							className='card relative w-full max-w-[840px] space-y-6'>
-							<div className='mb-3 flex items-center justify-between gap-3 text-base'>
-								<div className='flex items-center gap-3'>
-									<div className='font-medium'>{getGroupLabel(groupKey)}</div>
-									<div className='h-2 w-2 rounded-full bg-[#D9D9D9]'></div>
-									<div className='text-secondary text-sm'>{group.items.length} 篇文章</div>
-								</div>
-								{editMode &&
-									(() => {
-										const groupAllSelected = group.items.every(item => selectedSlugs.has(item.slug))
-										return (
-											<motion.button
-												whileHover={{ scale: 1.05 }}
-												whileTap={{ scale: 0.95 }}
-												onClick={() => handleSelectGroup(groupKey)}
-												className={cn(
-													'rounded-lg border px-3 py-1 text-xs transition-colors',
-													groupAllSelected
-														? 'border-brand/40 bg-brand/10 text-brand hover:bg-brand/20'
-														: 'text-secondary hover:border-brand/40 hover:text-brand border-transparent bg-white/60 hover:bg-white/80'
-												)}>
-												{groupAllSelected ? '取消全选' : '全选该分组'}
-											</motion.button>
-										)
-									})()}
-							</div>
-							<div>
-								{group.items.map(it => {
-									const hasRead = readStateReady && isRead(it.slug)
-									const isSelected = selectedSlugs.has(it.slug)
-									return (
-										<Link
-											onMouseEnter={() => onCoverLinkMouseEnter(it.cover)}
-											onMouseLeave={cancelCoverPreview}
-											href={`/blog/${it.slug}`}
-											key={it.slug}
-											onClick={event => handleItemClick(event, it.slug)}
-											className={cn(
-												'group flex min-h-10 items-center gap-3 py-3 transition-all',
-												editMode
-													? cn(
-															'rounded-lg border px-3',
-															isSelected ? 'border-brand/60 bg-brand/5' : 'hover:border-brand/40 border-transparent hover:bg-white/60'
-														)
-													: 'cursor-pointer'
-											)}>
-											{editMode && (
-												<span
-													className={cn(
-														'flex h-4 w-4 items-center justify-center rounded-full border text-[10px] font-semibold',
-														isSelected ? 'border-brand bg-brand text-white' : 'border-[#D9D9D9] text-transparent'
-													)}>
-													<Check />
-												</span>
-											)}
-											<span className='text-secondary w-[44px] shrink-0 text-sm font-medium'>{dayjs(it.date).format('MM-DD')}</span>
-
-											<div className='relative flex h-2 w-2 items-center justify-center'>
-												<div className='bg-secondary group-hover:bg-brand h-[5px] w-[5px] rounded-full transition-all group-hover:h-4'></div>
-												<ShortLineSVG className='absolute bottom-4' />
-											</div>
-											<div
-												className={cn(
-													'flex-1 truncate text-sm font-medium transition-all',
-													editMode ? null : 'group-hover:text-brand group-hover:translate-x-2'
-												)}>
-												{it.title || it.slug}
-												{hasRead && <span className='text-secondary ml-2 text-xs'>[已阅读]</span>}
-											</div>
-											<div className='flex flex-wrap items-center gap-2 max-sm:hidden'>
-												{(it.tags || []).map(t => (
-													<span key={t} className='text-secondary text-sm'>
-														#{t}
-													</span>
-												))}
+				{search.isSearching ? (
+					<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className='card w-full max-w-[840px] space-y-3 p-6'>
+						<div className='text-secondary flex items-center justify-between text-sm'>
+							<span>
+								搜索 “{search.query}” 的结果
+								{search.results.length > 0 && <span className='ml-2'>（{search.results.length} 篇）</span>}
+							</span>
+							<button onClick={() => search.setQuery('')} className='text-secondary hover:text-primary text-xs transition-colors'>
+								清除搜索
+							</button>
+						</div>
+						{search.loading ? (
+							<div className='text-secondary py-8 text-center text-sm'>搜索中...</div>
+						) : search.error ? (
+							<div className='py-8 text-center text-sm text-red-500'>{search.error}</div>
+						) : search.results.length === 0 ? (
+							<div className='text-secondary py-8 text-center text-sm'>未找到匹配的文章</div>
+						) : (
+							<ul className='divide-y'>
+								{search.results.map(result => (
+									<li key={result.slug}>
+										<Link href={`/blog/${result.slug}`} className='group flex items-start gap-3 py-3 transition-all hover:translate-x-1'>
+											<span className='text-secondary mt-0.5 w-[60px] shrink-0 text-xs'>{dayjs(result.date).format('YYYY-MM-DD')}</span>
+											<div className='min-w-0 flex-1'>
+												<div className='group-hover:text-brand truncate text-sm font-medium'>{result.title || result.slug}</div>
+												{result.snippet && <p className='text-secondary mt-1 line-clamp-2 text-xs'>{result.snippet}</p>}
+												{result.tags.length > 0 && (
+													<div className='text-secondary mt-1 flex flex-wrap gap-2 text-xs'>
+														{result.tags.map(t => (
+															<span key={t}>#{t}</span>
+														))}
+													</div>
+												)}
 											</div>
 										</Link>
-									)
-								})}
+									</li>
+								))}
+							</ul>
+						)}
+					</motion.div>
+				) : (
+					<>
+						{groupKeys.map((groupKey, index) => {
+							const group = groupedItems[groupKey]
+							if (!group) return null
+
+							return (
+								<motion.div
+									onMouseLeave={cancelCoverPreview}
+									key={groupKey}
+									initial={{ opacity: 0, scale: 0.95 }}
+									whileInView={{ opacity: 1, scale: 1 }}
+									transition={{ delay: INIT_DELAY / 2 }}
+									className='card relative w-full max-w-[840px] space-y-6'>
+									<div className='mb-3 flex items-center justify-between gap-3 text-base'>
+										<div className='flex items-center gap-3'>
+											<div className='font-medium'>{getGroupLabel(groupKey)}</div>
+											<div className='h-2 w-2 rounded-full bg-[#D9D9D9]'></div>
+											<div className='text-secondary text-sm'>{group.items.length} 篇文章</div>
+										</div>
+										{editMode &&
+											(() => {
+												const groupAllSelected = group.items.every(item => selectedSlugs.has(item.slug))
+												return (
+													<motion.button
+														whileHover={{ scale: 1.05 }}
+														whileTap={{ scale: 0.95 }}
+														onClick={() => handleSelectGroup(groupKey)}
+														className={cn(
+															'rounded-lg border px-3 py-1 text-xs transition-colors',
+															groupAllSelected
+																? 'border-brand/40 bg-brand/10 text-brand hover:bg-brand/20'
+																: 'text-secondary hover:border-brand/40 hover:text-brand border-transparent bg-white/60 hover:bg-white/80'
+														)}>
+														{groupAllSelected ? '取消全选' : '全选该分组'}
+													</motion.button>
+												)
+											})()}
+									</div>
+									<div>
+										{group.items.map(it => {
+											const hasRead = readStateReady && isRead(it.slug)
+											const isSelected = selectedSlugs.has(it.slug)
+											return (
+												<Link
+													onMouseEnter={() => onCoverLinkMouseEnter(it.cover)}
+													onMouseLeave={cancelCoverPreview}
+													href={`/blog/${it.slug}`}
+													key={it.slug}
+													onClick={event => handleItemClick(event, it.slug)}
+													className={cn(
+														'group flex min-h-10 items-center gap-3 py-3 transition-all',
+														editMode
+															? cn(
+																	'rounded-lg border px-3',
+																	isSelected ? 'border-brand/60 bg-brand/5' : 'hover:border-brand/40 border-transparent hover:bg-white/60'
+																)
+															: 'cursor-pointer'
+													)}>
+													{editMode && (
+														<span
+															className={cn(
+																'flex h-4 w-4 items-center justify-center rounded-full border text-[10px] font-semibold',
+																isSelected ? 'border-brand bg-brand text-white' : 'border-[#D9D9D9] text-transparent'
+															)}>
+															<Check />
+														</span>
+													)}
+													<span className='text-secondary w-[44px] shrink-0 text-sm font-medium'>{dayjs(it.date).format('MM-DD')}</span>
+
+													<div className='relative flex h-2 w-2 items-center justify-center'>
+														<div className='bg-secondary group-hover:bg-brand h-[5px] w-[5px] rounded-full transition-all group-hover:h-4'></div>
+														<ShortLineSVG className='absolute bottom-4' />
+													</div>
+													<div
+														className={cn(
+															'flex-1 truncate text-sm font-medium transition-all',
+															editMode ? null : 'group-hover:text-brand group-hover:translate-x-2'
+														)}>
+														{it.title || it.slug}
+														{hasRead && <span className='text-secondary ml-2 text-xs'>[已阅读]</span>}
+													</div>
+													<div className='flex flex-wrap items-center gap-2 max-sm:hidden'>
+														{(it.tags || []).map(t => (
+															<span key={t} className='text-secondary text-sm'>
+																#{t}
+															</span>
+														))}
+													</div>
+												</Link>
+											)
+										})}
+									</div>
+								</motion.div>
+							)
+						})}
+						{items.length > 0 && (
+							<div className='text-center'>
+								<motion.a
+									initial={{ opacity: 0, scale: 0.6 }}
+									animate={{ opacity: 1, scale: 1 }}
+									whileHover={{ scale: 1.05 }}
+									whileTap={{ scale: 0.95 }}
+									href='https://www.zhihu.com/people/23-86-80-47-84'
+									target='_blank'
+									className='card text-secondary static inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs'>
+									<ZhihuSVG className='h-4 w-4' />
+									更多
+								</motion.a>
 							</div>
-						</motion.div>
-					)
-				})}
-				{items.length > 0 && (
-					<div className='text-center'>
-						<motion.a
-							initial={{ opacity: 0, scale: 0.6 }}
-							animate={{ opacity: 1, scale: 1 }}
-							whileHover={{ scale: 1.05 }}
-							whileTap={{ scale: 0.95 }}
-							href='https://www.zhihu.com/people/23-86-80-47-84'
-							target='_blank'
-							className='card text-secondary static inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs'>
-							<ZhihuSVG className='h-4 w-4' />
-							更多
-						</motion.a>
-					</div>
+						)}
+					</>
 				)}
 			</div>
 

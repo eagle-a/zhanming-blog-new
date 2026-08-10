@@ -210,53 +210,53 @@ let repairedAboutDocuments = 0
 if (apply) {
 	try {
 		await db.transaction(async tx => {
-		for (const image of uniqueImages) {
-			const location = locations.get(image.pathname)
-			if (!location) throw new Error(`Blob location missing during database write: ${image.pathname}`)
-			await tx
-				.insert(schema.media)
-				.values({
-					blobUrl: location.url,
-					pathname: location.pathname,
-					sha256: image.sha256,
-					mimeType: image.mimeType,
-					size: image.body.byteLength
-				})
-				.onConflictDoUpdate({
-					target: schema.media.pathname,
-					set: { blobUrl: location.url, sha256: image.sha256, mimeType: image.mimeType, size: image.body.byteLength }
-				})
-		}
-
-		if (repairAbout && currentAbout) {
-			const data = migratedDocuments.get('about')
-			const nextVersion = currentAbout.version + 1
-			const [updated] = await tx
-				.update(schema.contentDocuments)
-				.set({ data, version: nextVersion, updatedAt: new Date() })
-				.where(and(eq(schema.contentDocuments.key, 'about'), eq(schema.contentDocuments.version, currentAbout.version)))
-				.returning({ key: schema.contentDocuments.key })
-			if (!updated) throw new Error('About repair conflict: the document changed during migration')
-			await tx.insert(schema.contentDocumentRevisions).values({
-				documentKey: 'about',
-				version: nextVersion,
-				data,
-				createdBy: 'about-content-repair'
-			})
-			repairedAboutDocuments++
-		} else {
-			for (const key of CONTENT_DOCUMENT_KEYS) {
-				const data = migratedDocuments.get(key)
-				const [inserted] = await tx
-					.insert(schema.contentDocuments)
-					.values({ key, data, version: 1 })
-					.onConflictDoNothing()
-					.returning({ key: schema.contentDocuments.key })
-				if (!inserted) continue
-				await tx.insert(schema.contentDocumentRevisions).values({ documentKey: key, version: 1, data, createdBy: 'legacy-content-migration' })
-				insertedDocuments++
+			for (const image of uniqueImages) {
+				const location = locations.get(image.pathname)
+				if (!location) throw new Error(`Blob location missing during database write: ${image.pathname}`)
+				await tx
+					.insert(schema.media)
+					.values({
+						blobUrl: location.url,
+						pathname: location.pathname,
+						sha256: image.sha256,
+						mimeType: image.mimeType,
+						size: image.body.byteLength
+					})
+					.onConflictDoUpdate({
+						target: schema.media.pathname,
+						set: { blobUrl: location.url, sha256: image.sha256, mimeType: image.mimeType, size: image.body.byteLength }
+					})
 			}
-		}
+
+			if (repairAbout && currentAbout) {
+				const data = migratedDocuments.get('about')
+				const nextVersion = currentAbout.version + 1
+				const [updated] = await tx
+					.update(schema.contentDocuments)
+					.set({ data, version: nextVersion, updatedAt: new Date() })
+					.where(and(eq(schema.contentDocuments.key, 'about'), eq(schema.contentDocuments.version, currentAbout.version)))
+					.returning({ key: schema.contentDocuments.key })
+				if (!updated) throw new Error('About repair conflict: the document changed during migration')
+				await tx.insert(schema.contentDocumentRevisions).values({
+					documentKey: 'about',
+					version: nextVersion,
+					data,
+					createdBy: 'about-content-repair'
+				})
+				repairedAboutDocuments++
+			} else {
+				for (const key of CONTENT_DOCUMENT_KEYS) {
+					const data = migratedDocuments.get(key)
+					const [inserted] = await tx
+						.insert(schema.contentDocuments)
+						.values({ key, data, version: 1 })
+						.onConflictDoNothing()
+						.returning({ key: schema.contentDocuments.key })
+					if (!inserted) continue
+					await tx.insert(schema.contentDocumentRevisions).values({ documentKey: key, version: 1, data, createdBy: 'legacy-content-migration' })
+					insertedDocuments++
+				}
+			}
 		})
 	} catch (error) {
 		const newlyUploaded = Array.from(locations.values()).filter(location => !location.existed)

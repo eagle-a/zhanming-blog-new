@@ -1,6 +1,6 @@
 # eagle-a 项目整体说明
 
-> 核对日期：2026-08-09
+> 核对日期：2026-08-10（修订历史 UI、文章搜索、阅读进度条、自定义 404 页面；暗色模式试点后已移除，见第 19 节）
 > 本文只描述当前仓库已经存在的功能、数据流和限制，不收录未实现的产品规划。
 
 ## 1. 项目定位
@@ -60,8 +60,8 @@ docs/          项目操作和架构文档
 | 路由             | 作用                                                                       | 数据来源                                          |
 | ---------------- | -------------------------------------------------------------------------- | ------------------------------------------------- |
 | `/`              | 可拖拽卡片式首页：头像、问候、插画、时钟、日历、社交按钮、分享、文章入口等 | 运行时站点配置和卡片样式，失败时回退 JSON         |
-| `/blog`          | 按日/周/月/年/分类浏览已发布文章，支持已读标记和管理员编辑入口             | PostgreSQL；本地无数据库开发时回退 `public/blogs` |
-| `/blog/[slug]`   | 文章详情、Markdown、代码复制、图片预览、阅读进度和 SEO metadata            | PostgreSQL；本地回退旧 Markdown                   |
+| `/blog`          | 按日/周/月/年/分类浏览已发布文章，支持已读标记、全文搜索和管理员编辑入口   | PostgreSQL；本地无数据库开发时回退 `public/blogs` |
+| `/blog/[slug]`   | 文章详情、Markdown、代码复制、图片预览、阅读进度条和 SEO metadata          | PostgreSQL；本地回退旧 Markdown                   |
 | `/about`         | 关于页和管理员编辑                                                         | `about` 内容文档 + 回退 JSON                      |
 | `/bloggers`      | 博主收藏                                                                   | `bloggers` 内容文档 + 回退 JSON                   |
 | `/projects`      | 项目展示                                                                   | `projects` 内容文档 + 回退 JSON                   |
@@ -166,6 +166,27 @@ pnpm agent:submit C:\path\to\article.md
 
 支持标准 frontmatter：`title`、`slug`、`summary`、`tags`、`category`、`date`；第一个与 title 相同的 H1 会被去重。投稿正文限制约 2 MB，slug 只允许安全字符，Markdown 会做敏感信息扫描和结构校验。
 
+### 6.3 修订历史
+
+编辑模式下，管理员可以在 `/write/[slug]` 打开“修订历史”面板：
+
+- 列表按版本号倒序展示该文章所有 `post_revisions` 记录，标记当前版本；
+- 选中版本后服务端返回该版本正文与元数据快照（标题、状态、分类、标签）；
+- 恢复操作在事务中执行 advisory lock + 行锁，将选中版本写入为新版本（不覆盖当前版本），同时刷新标签和分类；
+- 恢复后前端同步更新表单的标题、摘要、标签、分类、发布时间和正文，避免后续“更新”丢失元数据；
+- `GET /api/admin/posts/[slug]/revisions` 返回摘要列表；`GET /api/admin/posts/[slug]/revisions/[version]` 返回详情；`POST /api/admin/posts/[slug]/revisions/[version]` 触发恢复。
+
+### 6.4 文章搜索
+
+`/blog` 顶部搜索框输入关键词后：
+
+- 客户端 300ms 防抖，调用 `GET /api/search?q=<keyword>`；
+- 服务端使用 PostgreSQL `ILIKE` 在标题、摘要、正文和标签中匹配，返回最多 20 条结果（可通过 `limit` 调整，上限 50）；
+- 结果包含内容片段（snippet），方便快速判断相关性；
+- 文本搜索无结果时仍会查询标签匹配，多标签命中时使用 `DISTINCT` 去重；
+- 搜索状态下隐藏日/周/月/年分组切换，只展示扁平结果列表；
+- 本地开发无数据库时返回空结果，不报错。
+
 ## 7. 认证与安全边界
 
 ### 7.1 管理员会话
@@ -226,6 +247,22 @@ pnpm agent:submit C:\path\to\article.md
 ### Live2D 与图片工具
 
 Live2D 页面在客户端加载带 integrity 的外部 SDK；图片工具主要在浏览器本地处理文件。它们不参与文章 CMS 数据流。
+
+## 9.1 主题与阅读体验
+
+站点为单一亮色主题；曾试点的暗色模式因与彩色气泡背景视觉冲突已整体移除（见第 19 节），当前代码中不存在 `html.dark` 规则、主题切换组件或相关本地存储逻辑。
+
+### 阅读进度条
+
+- 文章详情页顶部 3px 品牌色进度条，基于 `[data-published-article] article` 元素位置计算；
+- 使用 `requestAnimationFrame` 节流 scroll 事件，避免高频更新；
+- 短文章（高度不足视口 30%）直接显示 100%。
+
+### 自定义 404 页面
+
+- 根级 `src/app/not-found.tsx` 处理全局未匹配路由；
+- `src/app/blog/[id]/not-found.tsx` 处理文章详情内的 `notFound()` 调用；
+- 两者不冲突，Next.js App Router 按路由段层级生效。
 
 ## 10. 数据迁移与本地运行
 
@@ -347,7 +384,11 @@ pnpm assets:audit
 - 生产 CSP 已移除 `unsafe-eval` 和失效域名；开发环境仅为 React 调试启用 `unsafe-eval`；后台使用 nonce，Preview 自动启用 strict Report-Only；补齐 `metadataBase`、canonical、`robots.txt`、静态页 sitemap 与文章 `updatedAt`；
 - RSS `lastBuildDate` 现在只随最新文章更新时间变化；
 - 已加入 GitHub Actions、带 Blob 字节归档的 CMS 备份/恢复演练、媒体四方对账和可恢复 GC；
-- `RuntimeConfigHydrator` 改为浏览器绘制前同步配置，避免先显示 Git 回退配置再闪变。
+- `RuntimeConfigHydrator` 改为浏览器绘制前同步配置，避免先显示 Git 回退配置再闪变；
+- 修订历史 UI 已完成：列表、详情、恢复流程，恢复时同步更新所有元数据（标题、摘要、标签、分类、发布时间），不会丢失历史字段；
+- 文章搜索已完成：ILIKE 全文搜索 + 标签匹配 + DISTINCT 去重，防抖 + 内容片段展示；
+- 阅读进度条已完成：rAF 节流 + 短文章 100% 处理；
+- 自定义 404 页面已完成。
 
 浏览器扩展若给 DOM 批量注入 `draggable="true"`，仍可能制造另一类 hydration 报警；这不是项目属性，需关闭扩展或使用无扩展浏览器复现。
 
@@ -369,7 +410,7 @@ Cloudflare 分支、OpenNext、Worker 配置和 Windows 高权限 Agent broker �
 
 当前系统已经能稳定承担“个人博客 + 运行时 CMS + 人工审批的 AI 文章投稿”。它还不是完整的无头 CMS，也不是自动写作平台：AI 只能提交，管理员必须审核；数据库和 Blob 是线上内容源；旧 `public/` 内容是备份和回退，不是线上主数据。
 
-代码侧高优先级收尾已经完成；剩下的是必须由资源所有者执行的生产操作：
+代码侧高优先级收尾已经完成，本轮还补齐了修订历史 UI、文章搜索、阅读进度条和自定义 404 页面；剩下的是必须由资源所有者执行的生产操作：
 
 1. 在 Vercel Dashboard 真正隔离 Production/Preview/Development 的 Neon 与 Blob，并设置对应 `BLOG_RESOURCE_ENV`；
 2. 用 `backup:cms --archive-blobs` 把备份存到独立故障域，并用 `backup:restore` 在空白 Neon 分支与独立 Blob Store 做一次恢复演练；
@@ -399,3 +440,101 @@ Knip 复扫后仅报告 `@svgr/webpack`。这是配置文件中以 loader 字符
 - Markdown 代码块高亮并行化，并对编辑器/审批预览增加短防抖，避免输入时重复启动高成本渲染。
 - 根布局使用 React `cache()` 去重 metadata 与布局之间的运行时配置读取。
 - 审批队列自动刷新不会覆盖当前正在编辑的草稿。
+
+## 18. 审计修复矩阵（2026-08-10）
+
+> 原 `PROJECT_AUDIT.md`（2026-08-08 审计、2026-08-09 复核）已合并到本节并删除。下表是当前权威状态，原始发现细节不再保留。
+
+| 审计项                      | 状态               | 结果                                                                                                    |
+| --------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------- |
+| P0-1 文章 SSR/SEO/404       | 已修复             | 列表和正文服务端取数，正文服务端渲染，metadata 与真实 404 已实现                                        |
+| P0-2 独立备份/恢复          | 本地演练通过       | 备份/恢复脚本已用两套空白 PostgreSQL 实测；Blob 异地恢复与生产资源演练仍需管理员执行                    |
+| P0-3 媒体索引可信度         | 已具备安全回填工具 | 回填逐对象核验 Blob 字节 SHA-256、MIME 和大小；生产回填仍需管理员显式执行                               |
+| P0-4 混合脏工作区           | 未解决             | 仍不应整体提交；`public/blogs/hardware-kb/` 保持未触碰、未提交                                          |
+| P1-1 管理员登录限速         | 已修复             | 失败窗口、阻断期、数据库记录和自动测试已实现                                                            |
+| P1-2 Blob/数据库非原子与 GC | 已具备两阶段流程   | pending/committed/orphaned/deleted 生命周期、标记清单、宽限期、ETag 校验、删除前归档和 recover 已实现   |
+| P1-3 迁移半状态与分类清空   | 已修复             | 迁移先规划校验，分类改为安全 upsert，环境确认与本地 loopback 约束已加入                                 |
+| P1-4 smoke 污染             | 部分修复           | 脚本拒绝生产和共享默认凭据；仍不应在生产执行写入 smoke                                                  |
+| P1-5 环境资源隔离           | 部分修复           | 代码强制 `BLOG_RESOURCE_ENV` 与 Vercel 环境一致；Dashboard 资源隔离仍需人工核验                         |
+| P1-6 CI 缺失                | 已修复             | GitHub Actions 执行 frozen install、test、typecheck、格式检查、Drizzle check 和 build                   |
+| P2-1 客户端 Markdown 过重   | 已修复（文章链路） | 公开文章 Markdown 已移到服务端；其他强交互页面保留 Client Component                                     |
+| P2-2 图片带宽/CLS           | 已修复             | 图片墙原件已归档并改为 WebP；响应式 srcset/sizes 已实现；媒体尺寸存入数据库；/api/media 支持 sharp 缩放 |
+| P2-3 CSP `unsafe-eval`      | 已分层收敛         | 后台/编辑页使用 nonce CSP；公开页保留 ISR 兼容策略，Preview 自动启用 strict Report-Only                 |
+| P2-4 可访问性语义           | 已修复             | `lang=zh-CN`、允许缩放、核心页面 H1 和密码表单 username 已补齐                                          |
+| P2-5 SEO 配置               | 已修复             | metadataBase、canonical、robots、静态页 sitemap 和文章更新时间已补齐                                    |
+| P2-6 修订可用性/保留        | 已修复             | 修订历史 UI（列表、详情、恢复）已完成；恢复时同步元数据；分类批量修改的标签快照已修；只读备份覆盖修订   |
+
+### 2026-08-10 代码质量修复
+
+- RSS `buildEnclosure` 和 `optionalUrl` 校验增加路径遍历防护（`..` 检测 + `path.resolve` 边界验证）；
+- `markdown-renderer.ts` 的 shiki/katex 懒加载从 boolean flag 改为 Promise 缓存，消除并发渲染竞态；
+- `card.tsx` 的 `useEffect` 返回 `clearTimeout` 清理函数，修复组件卸载后定时器泄漏；
+- `format:check` 脚本从显式文件列表改为 `prettier --check .`，配合扩展后的 `.prettierignore`；
+- 10 个文件中 11 处 `catch (error: any)` 改为 `unknown` 类型推断，使用 `instanceof Error` 收窄。
+
+### 2026-08-10 新功能与 bug 修复
+
+新增功能：
+
+1. **修订历史 UI**：`/write/[slug]` 编辑模式下的“修订历史”面板，支持列表、详情查看和恢复。恢复操作在事务中创建新版本（不覆盖当前版本），前端同步更新标题、摘要、标签、分类、发布时间和正文。
+2. **文章搜索**：`/blog` 顶部搜索框，300ms 防抖，服务端 ILIKE 全文搜索 + 标签匹配 + DISTINCT 去重，返回内容片段。
+3. **暗色模式**（已于同日晚些时候整体移除，见第 19 节）：曾实现 class 策略 + 防 FOUC inline script + Shiki 双主题 + Twikoo 适配。
+4. **阅读进度条**：文章详情页顶部 3px 进度条，rAF 节流，短文章显示 100%。
+5. **自定义 404 页面**：根级 `not-found.tsx`，品牌色 404 + 导航按钮。
+
+修复的 bug：
+
+- 修订历史 `onRestore` 只更新 `md`/`version` 导致元数据丢失 → 改为传递完整 `RestorePayload`；
+- 修订历史 `useEffect` 在列表为空或加载失败时无限循环 → 新增 `hasLoaded` 标志；
+- 搜索 `tagMatchRows` 多标签匹配导致同一文章重复 → 改用 `selectDistinct`；
+- 搜索清空后 300ms 内仍显示结果面板 → `isSearching` 依赖 `query.trim()` 而非 `debounced`；
+- 阅读进度条短文章（高度不足视口 30%）永远 0% → `total <= 0` 时 `ratio = 1`；
+- 暗色模式相关的 hover 覆盖、Shiki 双主题、Twikoo 适配等修复已随功能移除一并撤销，不再单独列出。
+
+## 19. 暗色模式移除与二次审计（2026-08-10 晚）
+
+### 暗色模式移除
+
+暗色模式在当天上线后发现与首页彩色气泡背景（黄/绿暖色系）存在根本视觉冲突：亮色气泡在深色底上压暗后呈现浑浊的橄榄色/棕色，多轮调参（压暗气泡、替换冷色气泡、纯黑/深灰底配不透明卡片）均无法达到可接受的观感，决定整体移除而非继续投入。
+
+移除范围（已经全库 grep 复核无残留）：
+
+- 删除 `src/components/theme-toggle.tsx` 及其在布局中的引用；
+- 移除 `globals.css` 的 `@custom-variant dark` 与全部 `html.dark` 规则、`article.css` 的暗色 prose/Twikoo/Shiki 覆盖；
+- 移除 `head.tsx` 的防 FOUC 主题脚本与 `localStorage.theme` 读写；
+- Shiki 代码高亮从双主题改回固定 `one-light`；
+- `blurred-bubbles.tsx` 移除暗色检测与颜色切换逻辑，恢复始终使用站点配置颜色；
+- i18n 五个语言文件无主题相关 key，无需变更。
+
+### 二次全面审计结论
+
+对 API 路由、`src/lib` 安全边界、React 组件副作用、hooks、数据层事务和文档一致性做了第二轮全面审计。子代理初步报告中的大部分告警经逐条人工核实为误报，确认无问题的方面：
+
+- 全部 13 个 admin API 端点均有 `assertAdminRequest` / `assertAdminMutationRequest` 会话与同源校验，无认证绕过点；
+- `/api/search` 有 200 字符查询上限与 50 条结果上限；`/api/ai-daily` 有 12 秒超时、1 MB 响应上限和 5 分钟缓存；`/api/csp-report` 有 32 KB 请求体上限与字段截断；
+- `reading-progress.tsx`、`music-card.tsx`、`use-markdown-render.tsx` 的事件监听、定时器均有完整 cleanup；
+- `sanitize-html` 为自研白名单实现（无外部依赖），Markdown 渲染链路服务端/客户端双重清洗；
+- i18n 语言文件 key 一致，`package.json` 脚本与本文档命令一致，`vercel.json` 安全头存在。
+
+实际修复（均为低风险小项）：
+
+- `use-search.ts`：搜索请求从 boolean 取消标志改为 `AbortController`，切词/清空时真正中止进行中的 HTTP 请求，不再占用连接与带宽；
+- `write-store.ts`：图片哈希去重的 `Map` 构建移除两处冗余 `as any`，改用判别联合收窄（`it.type === 'file'`）加 `typeof it.hash === 'string'` 守卫，保持类型安全。
+
+### 第三轮全面审计（2026-08-10 深夜）
+
+在第二轮基础上再次对全库做安全与代码质量双路扫描，子代理报告的 17 项疑似问题经逐条人工核实，15 项为误报：
+
+- 会话 Cookie 已具备 `httpOnly` + 生产环境 `secure` + `sameSite: 'strict'`；登录限流为数据库 + 内存 Map 双层设计；
+- `/api/media/[...pathname]` 的 `isAllowedMediaPathname` 是严格白名单正则（`blog/<slug>/<64位哈希>.<扩展名>` 或 `content/<白名单目录>/<64位哈希>.<扩展名>`），无路径遍历面；
+- `route-errors.ts` 对未知错误统一返回"服务器处理失败"并仅服务端记日志，无堆栈/内部细节泄露；
+- 三处 `dangerouslySetInnerHTML`（已发布文章、关于页、AI 日报）的数据源全部经过 `sanitizeHtml` 白名单清洗（`renderMarkdown` 内部出口清洗 + AI 日报客户端二次清洗）；
+- `select.tsx` 选项使用 `option.value` 作 key；`blog-list-client.tsx` 分组逻辑已 `useMemo`；`category-modal.tsx`、`use-write-data.ts` 无 stale closure；`snowfall.tsx` 为圣诞特效既定设计；
+- i18n 五个语言文件 49 个嵌套 key 完全对称；暗色模式全库 grep 确认无残留。
+
+实际修复 2 项：
+
+- `live2d-viewer.tsx`（P2）：异步初始化流程补充 `cancelled` 取消机制。修复前组件卸载后 `init()` 仍会继续加载脚本并创建 PIXI Application，而 cleanup 执行时 `app` 尚为 `null`，后创建的 WebGL 上下文永远无法销毁，造成 GPU 资源泄漏；修复后在脚本加载后与模型加载后分别检查取消标志，卸载时 cleanup 一定能销毁已创建的 app；
+- `like-button.tsx`（P3）：两处无 cleanup 的 `setTimeout` 改为 `useEffect` 管理（入场延迟显示、点赞粒子清除），组件卸载后不再回调 `setState`。
+
+三轮审计后，安全边界（认证、同源、路径白名单、错误统一、sanitize 白名单、CSP、密钥管理）确认无残留问题。

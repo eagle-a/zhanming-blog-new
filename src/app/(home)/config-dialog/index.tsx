@@ -119,9 +119,9 @@ export default function ConfigDialog({ open, onClose }: ConfigDialogProps) {
 			setBackgroundImageUploads({})
 			setSocialButtonImageUploads({})
 			onClose()
-		} catch (error: any) {
+		} catch (error) {
 			console.error('Failed to save:', error)
-			toast.error(`保存失败: ${error?.message || '未知错误'}`)
+			toast.error(`保存失败: ${error instanceof Error ? error.message : '未知错误'}`)
 		} finally {
 			setIsSaving(false)
 		}

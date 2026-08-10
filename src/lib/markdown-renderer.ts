@@ -29,44 +29,41 @@ function escapeHtmlAttribute(value: string): string {
 	return escapeHtmlText(value).replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 }
 
-// Lazy load shiki to handle environments where it's not available (e.g., Cloudflare Workers)
-let shikiModule: typeof import('shiki') | null = null
-let shikiLoadAttempted = false
+// Lazy load shiki/katex, caching the in-flight Promise so concurrent renders
+// share a single load attempt instead of racing on a boolean flag.
+let shikiPromise: Promise<typeof import('shiki') | null> | null = null
 
-async function loadShiki() {
-	if (shikiLoadAttempted) {
-		return shikiModule
-	}
-	shikiLoadAttempted = true
-
-	try {
-		shikiModule = await import('shiki')
-		return shikiModule
-	} catch (error) {
-		console.warn('Failed to load shiki module:', error)
-		return null
-	}
+function loadShiki(): Promise<typeof import('shiki') | null> {
+	if (shikiPromise) return shikiPromise
+	shikiPromise = (async () => {
+		try {
+			return await import('shiki')
+		} catch (error) {
+			console.warn('Failed to load shiki module:', error)
+			return null
+		}
+	})()
+	return shikiPromise
 }
 
-// Lazy load katex to handle environments where it's not available (e.g., Cloudflare Workers)
 let katexModule: typeof import('katex') | null = null
-let katexLoadAttempted = false
+let katexPromise: Promise<typeof import('katex') | null> | null = null
 
-async function loadKatex() {
-	if (katexModule) return katexModule
-	if (katexLoadAttempted) return null
-	katexLoadAttempted = true
-
-	try {
-		// katex is published as CJS; depending on bundler/runtime the dynamic import
-		// may return either the exports object directly or as `default`.
-		const mod: any = await import('katex')
-		katexModule = (mod?.default ?? mod) as any
-		return katexModule
-	} catch (error) {
-		console.warn('Failed to load katex module:', error)
-		return null
-	}
+function loadKatex(): Promise<typeof import('katex') | null> {
+	if (katexPromise) return katexPromise
+	katexPromise = (async () => {
+		try {
+			// katex is published as CJS; depending on bundler/runtime the dynamic import
+			// may return either the exports object directly or as `default`.
+			const mod: any = await import('katex')
+			katexModule = (mod?.default ?? mod) as any
+			return katexModule
+		} catch (error) {
+			console.warn('Failed to load katex module:', error)
+			return null
+		}
+	})()
+	return katexPromise
 }
 
 export async function renderMarkdown(markdown: string, imageDimensions?: ImageDimensionMap): Promise<MarkdownRenderResult> {

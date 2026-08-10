@@ -5,116 +5,120 @@
 
 /* 整体容器 */
 .twikoo-comments #twikoo {
-  font-size: 14px;
-  color: var(--color-primary);
+	font-size: 14px;
+	color: var(--color-primary);
 }
 
 /* 输入框和文本域 */
 .twikoo-comments .el-input__inner,
 .twikoo-comments .el-textarea__inner {
-  background: var(--color-card) !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  border-radius: 10px !important;
-  color: var(--color-primary) !important;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	background: var(--color-card) !important;
+	border: 1px solid rgba(0, 0, 0, 0.08) !important;
+	border-radius: 10px !important;
+	color: var(--color-primary) !important;
+	transition:
+		border-color 0.2s ease,
+		box-shadow 0.2s ease;
 }
 
 .twikoo-comments .el-input__inner:focus,
 .twikoo-comments .el-textarea__inner:focus {
-  border-color: var(--color-brand) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand) 15%, transparent) !important;
+	border-color: var(--color-brand) !important;
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand) 15%, transparent) !important;
 }
 
 /* 提交按钮 */
 .twikoo-comments .tk-submit-btn,
 .twikoo-comments .el-button--primary {
-  background: var(--color-brand) !important;
-  border-color: var(--color-brand) !important;
-  border-radius: 10px !important;
-  font-weight: 500;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+	background: var(--color-brand) !important;
+	border-color: var(--color-brand) !important;
+	border-radius: 10px !important;
+	font-weight: 500;
+	transition:
+		opacity 0.2s ease,
+		transform 0.2s ease;
 }
 
 .twikoo-comments .tk-submit-btn:hover,
 .twikoo-comments .el-button--primary:hover {
-  opacity: 0.85;
-  transform: translateY(-1px);
+	opacity: 0.85;
+	transform: translateY(-1px);
 }
 
 /* 评论卡片 */
 .twikoo-comments .tk-comment {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
-  padding: 16px 0;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+	padding: 16px 0;
 }
 
 /* 昵称 */
 .twikoo-comments .tk-nick {
-  color: var(--color-brand) !important;
-  font-weight: 600;
+	color: var(--color-brand) !important;
+	font-weight: 600;
 }
 
 /* 回复按钮、点赞等操作 */
 .twikoo-comments .tk-action-icon,
 .twikoo-comments .tk-icon {
-  color: var(--color-secondary) !important;
-  transition: color 0.2s ease;
+	color: var(--color-secondary) !important;
+	transition: color 0.2s ease;
 }
 
 .twikoo-comments .tk-action-icon:hover,
 .twikoo-comments .tk-icon:hover {
-  color: var(--color-brand) !important;
+	color: var(--color-brand) !important;
 }
 
 /* 引用回复块 */
 .twikoo-comments .tk-quote {
-  border-left: 3px solid var(--color-brand) !important;
-  background: color-mix(in srgb, var(--color-brand) 6%, transparent) !important;
-  border-radius: 0 8px 8px 0 !important;
-  padding: 10px 14px !important;
-  margin: 8px 0 !important;
+	border-left: 3px solid var(--color-brand) !important;
+	background: color-mix(in srgb, var(--color-brand) 6%, transparent) !important;
+	border-radius: 0 8px 8px 0 !important;
+	padding: 10px 14px !important;
+	margin: 8px 0 !important;
 }
 
 /* 管理员徽章 */
 .twikoo-comments .tk-badge {
-  background: var(--color-brand) !important;
-  border-radius: 8px !important;
+	background: var(--color-brand) !important;
+	border-radius: 8px !important;
 }
 
 /* 加载更多 */
 .twikoo-comments .tk-comments-more {
-  color: var(--color-brand) !important;
-  border: 1px solid var(--color-brand) !important;
-  border-radius: 10px !important;
-  background: transparent !important;
-  transition: background 0.2s ease;
+	color: var(--color-brand) !important;
+	border: 1px solid var(--color-brand) !important;
+	border-radius: 10px !important;
+	background: transparent !important;
+	transition: background 0.2s ease;
 }
 
 .twikoo-comments .tk-comments-more:hover {
-  background: color-mix(in srgb, var(--color-brand) 8%, transparent) !important;
+	background: color-mix(in srgb, var(--color-brand) 8%, transparent) !important;
 }
 
 /* 无评论空状态 */
 .twikoo-comments .tk-comments-no {
-  color: var(--color-secondary) !important;
+	color: var(--color-secondary) !important;
 }
 
 /* 链接 */
 .twikoo-comments .tk-content a {
-  color: var(--color-brand) !important;
-  text-decoration: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-brand) 40%, transparent);
-  transition: border-color 0.2s ease;
+	color: var(--color-brand) !important;
+	text-decoration: none;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-brand) 40%, transparent);
+	transition: border-color 0.2s ease;
 }
 
 .twikoo-comments .tk-content a:hover {
-  border-bottom-color: var(--color-brand);
+	border-bottom-color: var(--color-brand);
 }
 
 /* 代码块 */
 .twikoo-comments .tk-content code {
-  background: color-mix(in srgb, var(--color-brand) 8%, transparent) !important;
-  color: var(--color-primary) !important;
-  border-radius: 4px !important;
-  padding: 2px 6px !important;
-  font-size: 13px !important;
+	background: color-mix(in srgb, var(--color-brand) 8%, transparent) !important;
+	color: var(--color-primary) !important;
+	border-radius: 4px !important;
+	padding: 2px 6px !important;
+	font-size: 13px !important;
 }

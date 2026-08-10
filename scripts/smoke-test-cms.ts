@@ -197,8 +197,7 @@ try {
 			const [current] = await tx.select().from(schema.contentDocuments).where(eq(schema.contentDocuments.key, 'snippets')).for('update').limit(1)
 			if (!current) return
 			const changedOnlyBySmoke =
-				(Array.isArray(current.data) && current.data.includes(contentMarker)) ||
-				(snippetsRestored && current.version <= originalVersion + 2)
+				(Array.isArray(current.data) && current.data.includes(contentMarker)) || (snippetsRestored && current.version <= originalVersion + 2)
 			if (!changedOnlyBySmoke) throw new Error('Smoke cleanup refused: snippets changed concurrently')
 			await tx
 				.update(schema.contentDocuments)

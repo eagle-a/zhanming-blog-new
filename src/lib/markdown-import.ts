@@ -99,7 +99,10 @@ function parseTags(value: string): string[] {
 		if (parts.some(part => !((part.startsWith("'") && part.endsWith("'")) || (part.startsWith('"') && part.endsWith('"'))))) {
 			throw new Error('Markdown 元信息中的 tags 必须是字符串数组')
 		}
-		return parts.map(parseString).map(tag => tag.trim()).filter(Boolean)
+		return parts
+			.map(parseString)
+			.map(tag => tag.trim())
+			.filter(Boolean)
 	}
 	return value
 		.split(/[,，]/)

@@ -4,7 +4,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { and, desc, eq, gt, isNull } from 'drizzle-orm'
 import { getDb } from '@/db/client'
 import { auditEvents, contentSubmissions, submissionTickets } from '@/db/schema'
-import { agentPostSubmissionSchema, scanAgentSubmission, type AgentPostSubmission } from '@/lib/agent-submission-validation'
+import { agentPostSubmissionSchema, scanAgentSubmission, type AgentPostSubmission, type SubmissionFinding } from '@/lib/agent-submission-validation'
 import { lockMediaReferenceMutation, type DatabaseTransaction } from '@/lib/media-lifecycle'
 import { upsertPostInTransaction } from '@/lib/posts-repository'
 import { hashSubmissionTicket } from '@/lib/submission-ticket'
@@ -38,6 +38,22 @@ export async function createPostSubmissionWithTicket(ticket: string, input: Agen
 
 	return db.transaction(async tx => {
 		await lockMediaReferenceMutation(tx as DatabaseTransaction)
+		const [existing] = await tx
+			.select({
+				id: contentSubmissions.id,
+				status: contentSubmissions.status,
+				validationResult: contentSubmissions.validationResult
+			})
+			.from(contentSubmissions)
+			.where(eq(contentSubmissions.idempotencyKey, idempotencyKey))
+			.for('update')
+			.limit(1)
+		if (existing) {
+			if (existing.status === 'pending') {
+				return { id: existing.id, status: 'pending' as const, findings: existing.validationResult as SubmissionFinding[] }
+			}
+			throw new SubmissionConflictError('该幂等键对应的投稿已处理')
+		}
 		const [consumedTicket] = await tx
 			.update(submissionTickets)
 			.set({ usedAt: now })

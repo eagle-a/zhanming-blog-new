@@ -23,14 +23,6 @@
 			"@/*": ["./src/*"]
 		}
 	},
-	"include": [
-		"global.d.ts",
-		"next-env.d.ts",
-		"**/*.ts",
-		"**/*.tsx",
-		".next/types/**/*.ts",
-		".next/dev/types/**/*.ts",
-		"**/*.mts"
-	],
+	"include": ["global.d.ts", "next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", ".next/dev/types/**/*.ts", "**/*.mts"],
 	"exclude": ["node_modules", "2025-blog-public", "dist", ".next/standalone"]
 }

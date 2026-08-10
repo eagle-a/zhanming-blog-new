@@ -27,8 +27,8 @@ export async function pushSiteContent(
 	if (avatarUrl) updatedSite.avatarUrl = avatarUrl
 
 	const uploadEntries = (entries: Array<[string, FileItem]>) =>
-		Promise.all(entries.map(async ([id, item]) => (item.type === 'file' ? ([id, await uploadContentImage('site', item.file)] as const) : null))).then(
-			results => results.filter((result): result is readonly [string, string] => result !== null)
+		Promise.all(entries.map(async ([id, item]) => (item.type === 'file' ? ([id, await uploadContentImage('site', item.file)] as const) : null))).then(results =>
+			results.filter((result): result is readonly [string, string] => result !== null)
 		)
 
 	const [artUploads, backgroundUploads, socialUploads] = await Promise.all([

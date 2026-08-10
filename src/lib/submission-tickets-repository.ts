@@ -26,27 +26,18 @@ export async function createSubmissionTicket(label: string) {
 		const [active] = await tx
 			.select({ value: count() })
 			.from(submissionTickets)
-			.where(
-				and(
-					isNull(submissionTickets.usedAt),
-					isNull(submissionTickets.revokedAt),
-					gt(submissionTickets.expiresAt, now)
-				)
-			)
+			.where(and(isNull(submissionTickets.usedAt), isNull(submissionTickets.revokedAt), gt(submissionTickets.expiresAt, now)))
 		if ((active?.value || 0) >= MAX_ACTIVE_TICKETS) {
 			throw new SubmissionTicketConflictError(`未使用票据已达到 ${MAX_ACTIVE_TICKETS} 个，请先撤销或等待过期`)
 		}
 
-		const [created] = await tx
-			.insert(submissionTickets)
-			.values({ label, tokenHash, scope: 'posts:submit', createdAt: now, expiresAt })
-			.returning({
-				id: submissionTickets.id,
-				label: submissionTickets.label,
-				scope: submissionTickets.scope,
-				createdAt: submissionTickets.createdAt,
-				expiresAt: submissionTickets.expiresAt
-			})
+		const [created] = await tx.insert(submissionTickets).values({ label, tokenHash, scope: 'posts:submit', createdAt: now, expiresAt }).returning({
+			id: submissionTickets.id,
+			label: submissionTickets.label,
+			scope: submissionTickets.scope,
+			createdAt: submissionTickets.createdAt,
+			expiresAt: submissionTickets.expiresAt
+		})
 		await tx.insert(auditEvents).values({
 			actorType: 'admin',
 			actorId: 'session',

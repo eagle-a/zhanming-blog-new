@@ -87,9 +87,7 @@ export const useWriteStore = create<WriteStore>((set, get) => ({
 		if (arr.length === 0) return []
 
 		const existingHashes = new Map<string, ImageItem>(
-			images
-				.filter((it): it is Extract<ImageItem, { type: 'file'; hash?: string }> => it.type === 'file' && (it as any).hash)
-				.map(it => [(it as any).hash as string, it])
+			images.filter((it): it is Extract<ImageItem, { type: 'file' }> => it.type === 'file' && typeof it.hash === 'string').map(it => [it.hash as string, it])
 		)
 
 		const computed = await Promise.all(
@@ -200,9 +198,9 @@ export const useWriteStore = create<WriteStore>((set, get) => ({
 			})
 
 			toast.success('博客加载成功')
-		} catch (err: any) {
+		} catch (err) {
 			console.error('Failed to load blog:', err)
-			toast.error(err?.message || '加载博客失败')
+			toast.error(err instanceof Error ? err.message : '加载博客失败')
 			set({ loading: false })
 			throw err
 		}

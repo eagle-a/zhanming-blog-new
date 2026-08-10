@@ -15,6 +15,7 @@ export async function PUT(request: Request): Promise<Response> {
 		revalidateTag('posts', { expire: 0 })
 		revalidateTag('post-categories', { expire: 0 })
 		for (const slug of input.removedSlugs) revalidateTag(`post:${slug}`, { expire: 0 })
+		for (const assignment of input.assignments) revalidateTag(`post:${assignment.slug}`, { expire: 0 })
 		return Response.json({ saved: true })
 	} catch (error) {
 		return routeErrorResponse(error)

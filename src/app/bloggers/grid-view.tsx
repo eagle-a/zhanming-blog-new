@@ -30,8 +30,7 @@ export default function GridView({ bloggers, isEditMode = false, onUpdate, onDel
 	const filteredBloggers = bloggers.filter(blogger => {
 		const status = blogger.status ?? 'recent'
 		const matchesCategory = status === selectedCategory
-		const matchesSearch =
-			blogger.name.toLowerCase().includes(searchTerm.toLowerCase()) || blogger.description.toLowerCase().includes(searchTerm.toLowerCase())
+		const matchesSearch = blogger.name.toLowerCase().includes(searchTerm.toLowerCase()) || blogger.description.toLowerCase().includes(searchTerm.toLowerCase())
 		return matchesCategory && matchesSearch
 	})
 

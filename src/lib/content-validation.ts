@@ -11,7 +11,7 @@ const httpsUrl = text(2048).refine(value => {
 	}
 }, 'URL 必须是无凭据的有效 HTTPS 地址')
 const sameOriginPath = text(2048).refine(
-	value => value.startsWith('/') && !value.startsWith('//') && !/[\\\u0000-\u001f\u007f]/.test(value),
+	value => value.startsWith('/') && !value.startsWith('//') && !value.includes('..') && !/[\\\u0000-\u001f\u007f]/.test(value),
 	'站内路径格式无效'
 )
 const publicUrl = z.union([sameOriginPath, httpsUrl])

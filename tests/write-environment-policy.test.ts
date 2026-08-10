@@ -3,14 +3,8 @@ import test from 'node:test'
 import { evaluateWriteEnvironment } from '../src/lib/write-environment-policy.ts'
 
 test('allows local development writes only for a loopback database', () => {
-	assert.equal(
-		evaluateWriteEnvironment({ NODE_ENV: 'development', DATABASE_URL: 'postgresql://postgres@127.0.0.1:54329/blog' }).allowed,
-		true
-	)
-	assert.equal(
-		evaluateWriteEnvironment({ NODE_ENV: 'development', DATABASE_URL: 'postgresql://user@example.neon.tech/blog' }).allowed,
-		false
-	)
+	assert.equal(evaluateWriteEnvironment({ NODE_ENV: 'development', DATABASE_URL: 'postgresql://postgres@127.0.0.1:54329/blog' }).allowed, true)
+	assert.equal(evaluateWriteEnvironment({ NODE_ENV: 'development', DATABASE_URL: 'postgresql://user@example.neon.tech/blog' }).allowed, false)
 })
 
 test('requires an explicit resource environment on Vercel', () => {

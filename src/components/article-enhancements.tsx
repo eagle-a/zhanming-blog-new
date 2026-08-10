@@ -69,7 +69,7 @@ export function ArticleEnhancements({ slug }: { slug: string }) {
 	return (
 		<>
 			<div
-				className='fixed top-0 left-0 z-50 h-[3px] bg-brand shadow-[0_1px_6px_rgba(0,0,0,0.18)] transition-[width] duration-150 ease-out'
+				className='bg-brand fixed top-0 left-0 z-50 h-[3px] shadow-[0_1px_6px_rgba(0,0,0,0.18)] transition-[width] duration-150 ease-out'
 				style={{ width: `${progress}%` }}
 			/>
 			<DialogModal open={Boolean(preview)} onClose={() => setPreview(null)} className='max-w-none bg-transparent p-0'>

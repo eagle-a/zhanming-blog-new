@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, asc, desc, eq, inArray, isNotNull, isNull, lte, notInArray, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, lte, notInArray, or, sql } from 'drizzle-orm'
 import { unstable_cache } from 'next/cache'
 import { getDb } from '@/db/client'
 import { categories, postRevisions, posts, postTags, tags, type PostRow } from '@/db/schema'
@@ -96,9 +96,34 @@ export async function listPosts(includeDrafts = false): Promise<BlogIndexItem[]>
 	const now = new Date()
 	const condition = includeDrafts ? isNull(posts.deletedAt) : and(eq(posts.status, 'published'), isNull(posts.deletedAt), lte(posts.publishedAt, now))
 
-	const rows = await getDb().select().from(posts).where(condition).orderBy(desc(posts.publishedAt), desc(posts.id))
+	const rows = await getDb()
+		.select({
+			id: posts.id,
+			slug: posts.slug,
+			title: posts.title,
+			summary: posts.summary,
+			coverUrl: posts.coverUrl,
+			category: posts.category,
+			status: posts.status,
+			publishedAt: posts.publishedAt,
+			createdAt: posts.createdAt,
+			updatedAt: posts.updatedAt
+		})
+		.from(posts)
+		.where(condition)
+		.orderBy(desc(posts.publishedAt), desc(posts.id))
 	const tagMap = await tagsByPostIds(rows.map(row => row.id))
-	return rows.map(row => toIndexItem(row, tagMap.get(row.id) || []))
+	return rows.map(row => ({
+		slug: row.slug,
+		title: row.title,
+		tags: tagMap.get(row.id) || [],
+		date: iso(row.publishedAt || row.createdAt),
+		updatedAt: iso(row.updatedAt),
+		summary: row.summary,
+		cover: row.coverUrl || undefined,
+		hidden: row.status !== 'published',
+		category: row.category || undefined
+	}))
 }
 
 export async function getPost(slug: string, includeDrafts = false): Promise<PostRecord | null> {
@@ -163,7 +188,11 @@ export async function upsertPostInTransaction(
 		throw new PostConflictError('该 slug 已被正式文章或历史文章占用；AI 投稿不能覆盖或复活现有内容，请修改 slug')
 	}
 
-	if (current && input.expectedVersion !== undefined && current.version !== input.expectedVersion) {
+	if (current && input.expectedVersion === undefined) {
+		throw new PostConflictError('更新已有文章必须提供 expectedVersion，防止并发覆盖')
+	}
+
+	if (current && current.version !== input.expectedVersion) {
 		throw new PostConflictError()
 	}
 
@@ -364,3 +393,267 @@ export const getCachedCategories = unstable_cache(listCategories, ['post-categor
 	tags: ['post-categories'],
 	revalidate: 3600
 })
+
+export type PostRevisionSummary = {
+	id: number
+	version: number
+	createdAt: string
+	createdBy: string
+	metadataSnapshot: {
+		title: string
+		status: string
+		category: string | null
+		tags: string[]
+	}
+}
+
+export type PostRevisionDetail = PostRevisionSummary & {
+	contentMd: string
+}
+
+export async function listPostRevisions(slug: string): Promise<PostRevisionSummary[]> {
+	const [post] = await getDb().select({ id: posts.id }).from(posts).where(eq(posts.slug, slug)).limit(1)
+	if (!post) return []
+	const rows = await getDb()
+		.select({
+			id: postRevisions.id,
+			version: postRevisions.version,
+			contentMd: postRevisions.contentMd,
+			metadataSnapshot: postRevisions.metadataSnapshot,
+			createdAt: postRevisions.createdAt,
+			createdBy: postRevisions.createdBy
+		})
+		.from(postRevisions)
+		.where(eq(postRevisions.postId, post.id))
+		.orderBy(desc(postRevisions.version))
+	return rows.map(row => ({
+		id: row.id,
+		version: row.version,
+		createdAt: iso(row.createdAt),
+		createdBy: row.createdBy,
+		metadataSnapshot: (row.metadataSnapshot || {}) as { title: string; status: string; category: string | null; tags: string[] }
+	}))
+}
+
+export async function getPostRevision(slug: string, version: number): Promise<PostRevisionDetail | null> {
+	const [post] = await getDb().select({ id: posts.id }).from(posts).where(eq(posts.slug, slug)).limit(1)
+	if (!post) return null
+	const [row] = await getDb()
+		.select({
+			id: postRevisions.id,
+			version: postRevisions.version,
+			contentMd: postRevisions.contentMd,
+			metadataSnapshot: postRevisions.metadataSnapshot,
+			createdAt: postRevisions.createdAt,
+			createdBy: postRevisions.createdBy
+		})
+		.from(postRevisions)
+		.where(and(eq(postRevisions.postId, post.id), eq(postRevisions.version, version)))
+		.limit(1)
+	if (!row) return null
+	return {
+		id: row.id,
+		version: row.version,
+		contentMd: row.contentMd,
+		createdAt: iso(row.createdAt),
+		createdBy: row.createdBy,
+		metadataSnapshot: (row.metadataSnapshot || {}) as { title: string; status: string; category: string | null; tags: string[] }
+	}
+}
+
+export async function restorePostRevision(slug: string, version: number): Promise<PostRecord> {
+	const db = getDb()
+	await db.transaction(async tx => {
+		await lockMediaReferenceMutation(tx)
+		await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`post-slug:${slug}`}))`)
+		const [current] = await tx.select().from(posts).where(eq(posts.slug, slug)).for('update').limit(1)
+		if (!current) throw new PostConflictError('文章不存在，无法恢复修订')
+		const [revision] = await tx
+			.select({
+				contentMd: postRevisions.contentMd,
+				metadataSnapshot: postRevisions.metadataSnapshot
+			})
+			.from(postRevisions)
+			.where(and(eq(postRevisions.postId, current.id), eq(postRevisions.version, version)))
+			.limit(1)
+		if (!revision) throw new PostConflictError(`修订版本 ${version} 不存在`)
+
+		const snapshot = (revision.metadataSnapshot || {}) as {
+			title?: string
+			summary?: string
+			coverUrl?: string | null
+			category?: string | null
+			tags?: string[]
+			status?: string
+			publishedAt?: string | null
+		}
+
+		const tagNames = normalizeTags(snapshot.tags || [])
+		const category = normalizeCategory(snapshot.category)
+		const publishedAt = snapshot.publishedAt ? new Date(snapshot.publishedAt) : current.publishedAt || new Date()
+		const nextVersion = current.version + 1
+
+		await tx
+			.update(posts)
+			.set({
+				title: snapshot.title || current.title,
+				summary: snapshot.summary ?? current.summary,
+				contentMd: revision.contentMd,
+				coverUrl: snapshot.coverUrl ?? current.coverUrl,
+				category,
+				status: (snapshot.status as 'draft' | 'published') || current.status,
+				publishedAt,
+				updatedAt: new Date(),
+				version: nextVersion,
+				deletedAt: null
+			})
+			.where(eq(posts.id, current.id))
+
+		await tx.insert(postRevisions).values({
+			postId: current.id,
+			version: nextVersion,
+			contentMd: revision.contentMd,
+			metadataSnapshot: metadataSnapshot({
+				slug,
+				title: snapshot.title || current.title,
+				summary: snapshot.summary ?? current.summary,
+				coverUrl: snapshot.coverUrl ?? current.coverUrl,
+				category,
+				tags: tagNames,
+				status: snapshot.status || current.status,
+				publishedAt
+			}),
+			createdBy: 'admin'
+		})
+
+		await tx.delete(postTags).where(eq(postTags.postId, current.id))
+		if (tagNames.length > 0) {
+			await tx
+				.insert(tags)
+				.values(tagNames.map(name => ({ name })))
+				.onConflictDoNothing()
+			const tagRows = await tx.select({ id: tags.id }).from(tags).where(inArray(tags.name, tagNames))
+			await tx
+				.insert(postTags)
+				.values(tagRows.map(tag => ({ postId: current.id, tagId: tag.id })))
+				.onConflictDoNothing()
+		}
+
+		if (category) {
+			const [lastCategory] = await tx.select({ nextSortOrder: categories.sortOrder }).from(categories).orderBy(desc(categories.sortOrder)).limit(1)
+			await tx
+				.insert(categories)
+				.values({ name: category, sortOrder: (lastCategory?.nextSortOrder ?? -1) + 1 })
+				.onConflictDoNothing()
+		}
+
+		await markMediaReferencesCommitted(tx, snapshot.coverUrl ?? current.coverUrl, revision.contentMd)
+	})
+
+	const result = await getPost(slug, true)
+	if (!result) throw new Error('修订恢复后无法读取文章')
+	return result
+}
+
+export type PostSearchResult = {
+	slug: string
+	title: string
+	summary: string
+	date: string
+	tags: string[]
+	category: string | null
+	cover: string | null
+	snippet: string
+}
+
+const SNIPPET_RADIUS = 60
+
+function extractSnippet(contentMd: string, query: string): string {
+	const plain = contentMd
+		.replace(/[#*`>\-\[\]()!]/g, '')
+		.replace(/\s+/g, ' ')
+		.trim()
+	const idx = plain.toLowerCase().indexOf(query.toLowerCase())
+	if (idx < 0) return plain.slice(0, SNIPPET_RADIUS * 2).trim()
+	const start = Math.max(0, idx - SNIPPET_RADIUS)
+	const end = Math.min(plain.length, idx + query.length + SNIPPET_RADIUS)
+	const prefix = start > 0 ? '…' : ''
+	const suffix = end < plain.length ? '…' : ''
+	return `${prefix}${plain.slice(start, end).trim()}${suffix}`
+}
+
+export async function searchPosts(query: string, limit = 20): Promise<PostSearchResult[]> {
+	const trimmed = query.trim()
+	if (!trimmed) return []
+
+	const pattern = `%${trimmed}%`
+	const now = new Date()
+
+	const rows = await getDb()
+		.select({
+			id: posts.id,
+			slug: posts.slug,
+			title: posts.title,
+			summary: posts.summary,
+			contentMd: posts.contentMd,
+			coverUrl: posts.coverUrl,
+			category: posts.category,
+			publishedAt: posts.publishedAt,
+			createdAt: posts.createdAt
+		})
+		.from(posts)
+		.where(
+			and(
+				eq(posts.status, 'published'),
+				isNull(posts.deletedAt),
+				lte(posts.publishedAt, now),
+				or(ilike(posts.title, pattern), ilike(posts.summary, pattern), ilike(posts.contentMd, pattern))
+			)
+		)
+		.orderBy(desc(posts.publishedAt), desc(posts.id))
+		.limit(limit)
+
+	// Tag-match: find posts whose tags match the query but text fields don't.
+	// Skip notInArray when rows is empty (NOT IN () is invalid SQL in PostgreSQL).
+	// Use DISTINCT to avoid duplicate rows when a post has multiple matching tags.
+	const matchedIds = rows.map(r => r.id)
+	const tagMatchCondition =
+		matchedIds.length > 0
+			? and(eq(posts.status, 'published'), isNull(posts.deletedAt), lte(posts.publishedAt, now), ilike(tags.name, pattern), notInArray(posts.id, matchedIds))
+			: and(eq(posts.status, 'published'), isNull(posts.deletedAt), lte(posts.publishedAt, now), ilike(tags.name, pattern))
+
+	const tagMatchRows = await getDb()
+		.selectDistinct({
+			id: posts.id,
+			slug: posts.slug,
+			title: posts.title,
+			summary: posts.summary,
+			contentMd: posts.contentMd,
+			coverUrl: posts.coverUrl,
+			category: posts.category,
+			publishedAt: posts.publishedAt,
+			createdAt: posts.createdAt
+		})
+		.from(posts)
+		.innerJoin(postTags, eq(postTags.postId, posts.id))
+		.innerJoin(tags, eq(postTags.tagId, tags.id))
+		.where(tagMatchCondition)
+		.orderBy(desc(posts.publishedAt), desc(posts.id))
+		.limit(limit)
+
+	const combined = [...rows, ...tagMatchRows].slice(0, limit)
+	if (combined.length === 0) return []
+
+	const tagMap = await tagsByPostIds(combined.map(r => r.id))
+
+	return combined.map(row => ({
+		slug: row.slug,
+		title: row.title,
+		summary: row.summary,
+		date: iso(row.publishedAt || row.createdAt),
+		tags: tagMap.get(row.id) || [],
+		category: row.category,
+		cover: row.coverUrl,
+		snippet: extractSnippet(row.contentMd, trimmed)
+	}))
+}

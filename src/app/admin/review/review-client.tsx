@@ -238,7 +238,9 @@ export default function ReviewClient() {
 					<p className='text-secondary mt-1 text-sm'>AI 只能投稿；批准后内容才会公开。</p>
 				</div>
 				<div className='flex gap-2'>
-					<button onClick={() => loadData().catch(error => toast.error(error instanceof Error ? error.message : '刷新失败'))} className='rounded-xl border bg-white/60 px-4 py-2 text-sm'>
+					<button
+						onClick={() => loadData().catch(error => toast.error(error instanceof Error ? error.message : '刷新失败'))}
+						className='rounded-xl border bg-white/60 px-4 py-2 text-sm'>
 						刷新
 					</button>
 					<button onClick={() => setTab('review')} className={tab === 'review' ? 'brand-btn px-4 py-2' : 'rounded-xl border bg-white/60 px-4 py-2 text-sm'}>
@@ -254,7 +256,11 @@ export default function ReviewClient() {
 				<div className='grid gap-6 lg:grid-cols-[420px_1fr]'>
 					<section className='card static space-y-4 p-6'>
 						<h2 className='font-semibold'>生成单篇投稿码</h2>
-						<input value={ticketLabel} onChange={event => setTicketLabel(event.target.value)} className='w-full rounded-xl border bg-white/70 px-4 py-3 text-sm' />
+						<input
+							value={ticketLabel}
+							onChange={event => setTicketLabel(event.target.value)}
+							className='w-full rounded-xl border bg-white/70 px-4 py-3 text-sm'
+						/>
 						<p className='text-secondary text-xs'>有效期 30 分钟，只能成功投稿一次，权限固定为 posts:submit。投稿仍只进入待审批队列。</p>
 						<button disabled={busy || !ticketLabel.trim()} onClick={createTicket} className='brand-btn px-5 py-2 disabled:opacity-50'>
 							{busy ? '生成中...' : '生成并复制投稿码'}
@@ -279,7 +285,9 @@ export default function ReviewClient() {
 									<div key={ticket.id} className='flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white/50 p-4'>
 										<div>
 											<div className='font-medium'>{ticket.label}</div>
-											<div className='text-secondary mt-1 text-xs'>到期：{new Date(ticket.expiresAt).toLocaleString('zh-CN')} · {ticket.scope}</div>
+											<div className='text-secondary mt-1 text-xs'>
+												到期：{new Date(ticket.expiresAt).toLocaleString('zh-CN')} · {ticket.scope}
+											</div>
 										</div>
 										<div className='flex items-center gap-3'>
 											<span className={`text-xs ${status.className}`}>{status.label}</span>

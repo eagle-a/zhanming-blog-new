@@ -18,7 +18,7 @@
 		"svg": "node scripts/gen-svgs-index.js",
 		"test": "node --no-warnings --experimental-strip-types --test tests/*.test.ts",
 		"typecheck": "next typegen && tsc --noEmit",
-		"format:check": "prettier --check .github/workflows/ci.yml package.json PROJECT_AUDIT.md docs/PROJECT_OVERVIEW.md scripts/export-cms-backup.ts scripts/restore-cms-backup.ts scripts/reconcile-media.ts scripts/maintain-media.ts scripts/audit-public-assets.ts scripts/optimize-picture-assets.ts scripts/optimize-music-assets.ts scripts/lib/database.ts src/app/api/admin/media/upload/route.ts src/app/api/media/[...pathname]/route.ts src/app/blog/[id]/page.tsx src/app/layout.tsx src/app/robots.ts src/components/blog-sidebar.tsx src/components/published-blog-article.tsx src/components/music-card.tsx src/components/windows-platform-class.tsx src/db/schema.ts src/layout/head.tsx src/lib/content-repository.ts src/lib/csp-policy.ts src/lib/markdown-renderer.ts src/lib/media-dimensions.ts src/lib/media-lifecycle.ts src/lib/media-references.ts src/lib/posts-repository.ts src/lib/sanitize-html.ts src/lib/submissions-repository.ts src/proxy.ts tests/markdown-renderer.test.ts tests/media-lifecycle.test.ts tests/operations-hardening.test.ts",
+		"format:check": "prettier --check .",
 		"db:check": "drizzle-kit check",
 		"backup:cms": "node --env-file-if-exists=.env.local --no-warnings --experimental-strip-types scripts/export-cms-backup.ts",
 		"backup:restore": "node --env-file-if-exists=.env.local --no-warnings --experimental-strip-types scripts/restore-cms-backup.ts",

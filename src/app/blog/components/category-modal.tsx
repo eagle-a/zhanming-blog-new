@@ -34,10 +34,7 @@ export function CategoryModal({
 }: CategoryModalProps) {
 	const [draggingIndex, setDraggingIndex] = useState<number | null>(null)
 
-	const categoryOptions = useMemo(
-		() => [{ value: '', label: '未分类' }, ...categoryList.map(cat => ({ value: cat, label: cat }))],
-		[categoryList]
-	)
+	const categoryOptions = useMemo(() => [{ value: '', label: '未分类' }, ...categoryList.map(cat => ({ value: cat, label: cat }))], [categoryList])
 
 	const handleDragStart = useCallback((index: number) => {
 		return () => {

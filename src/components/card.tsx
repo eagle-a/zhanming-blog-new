@@ -24,13 +24,14 @@ export default function Card({ children, order, width, height, x, y, className }
 	useEffect(() => {
 		if (show) return
 		if (x === 0 && y === 0) return
-		setTimeout(
+		const timer = setTimeout(
 			() => {
 				setShow(true)
 			},
 			order * ANIMATION_DELAY * 1000
 		)
-	}, [x, y, show])
+		return () => clearTimeout(timer)
+	}, [x, y, show, order])
 
 	if (show)
 		return (

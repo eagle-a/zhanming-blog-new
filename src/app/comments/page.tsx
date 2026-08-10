@@ -7,39 +7,28 @@ import TwikooComments from '@/components/TwikooComments'
 import { useLanguage } from '@/i18n/context'
 
 export default function Page() {
-  const { siteContent } = useConfigStore()
-  const { t } = useLanguage()
-  const [currentPath, setCurrentPath] = useState<string>('')
+	const { siteContent } = useConfigStore()
+	const { t } = useLanguage()
+	const [currentPath, setCurrentPath] = useState<string>('')
 
+	// 只在客户端生成当前页面的相对路径
+	useEffect(() => {
+		if (typeof window !== 'undefined') {
+			setCurrentPath(window.location.pathname)
+		}
+	}, [])
 
-  // 只在客户端生成当前页面的相对路径
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCurrentPath(window.location.pathname)
-    }
-  }, [])
+	return (
+		<div className='flex flex-col items-center justify-center px-6 pt-32 pb-12 max-sm:px-0'>
+			<div className='w-full max-w-[800px]'>
+				<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className='mb-12 text-center'>
+					<h1 className='mb-4 text-4xl font-bold'>{t('nav.comments') || '留言板'}</h1>
+				</motion.div>
 
-  return (
-    <div className='flex flex-col items-center justify-center px-6 pt-32 pb-12 max-sm:px-0'>
-      <div className='w-full max-w-[800px]'>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className='mb-12 text-center'
-        >
-          <h1 className='mb-4 text-4xl font-bold'>{t('nav.comments') || '留言板'}</h1>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className='card relative p-6'
-        >
-          {siteContent.twikoo?.envId && (
-            <TwikooComments path="/" />
-          )}
-        </motion.div>
-      </div>
-    </div>
-  )
+				<motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className='card relative p-6'>
+					{siteContent.twikoo?.envId && <TwikooComments path='/' />}
+				</motion.div>
+			</div>
+		</div>
+	)
 }

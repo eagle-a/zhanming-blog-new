@@ -10,6 +10,11 @@ export const metadata: Metadata = {
 	openGraph: { title: '文章', description: '按时间与分类浏览站内文章。', url: '/blog' }
 }
 
+// Blog content lives in the database; prerendering /blog at build time would
+// require DATABASE_URL in every CI/Preview environment. Render at request time
+// instead — unstable_cache still keeps the underlying query result cached.
+export const dynamic = 'force-dynamic'
+
 export default async function BlogPage() {
 	const [items, categories] = allowDevelopmentLegacyFallback()
 		? [readLegacyPosts(false), readLegacyCategories()]

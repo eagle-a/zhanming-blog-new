@@ -53,7 +53,9 @@ const buildEnclosure = (cover?: string): string | null => {
 	let length: number | null = null
 
 	if (!/^https?:\/\//.test(cover)) {
-		const filePath = path.join(PUBLIC_DIR, cover.replace(/^\/+/, ''))
+		const relativePath = cover.replace(/^\/+/, '')
+		const filePath = path.resolve(PUBLIC_DIR, relativePath)
+		if (!filePath.startsWith(PUBLIC_DIR + path.sep)) return null
 		try {
 			const stat = fs.statSync(filePath)
 			if (stat.isFile()) {

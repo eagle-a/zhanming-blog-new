@@ -13,10 +13,13 @@ export function buildCsp(nonce?: string, reportOnly = false, allowLegacyInline =
 			? [scriptSources[0], "'unsafe-inline'", ...scriptSources.slice(1)]
 			: scriptSources
 	if (development) scripts.push("'unsafe-eval'")
+	// In development, Next.js DevTools and HMR inject inline styles without a nonce.
+	// Allow 'unsafe-inline' for style-src in dev so the dev overlay and styled-jsx work.
+	const styleInline = allowLegacyInline || development
 	return [
 		"default-src 'self'",
 		`script-src ${scripts.join(' ')}`,
-		`style-src 'self'${allowLegacyInline ? " 'unsafe-inline'" : ''} https://fonts.googleapis.cn`,
+		`style-src 'self'${styleInline ? " 'unsafe-inline'" : ''} https://fonts.googleapis.cn`,
 		"style-src-attr 'unsafe-inline'",
 		"img-src 'self' data: blob: https:",
 		"connect-src 'self' https://mylike.zhanmingblog.workers.dev https://mytwikoo-ashen.vercel.app",
@@ -26,7 +29,7 @@ export function buildCsp(nonce?: string, reportOnly = false, allowLegacyInline =
 		"base-uri 'self'",
 		"form-action 'self'",
 		"frame-ancestors 'none'",
-		reportOnly ? 'report-uri /api/csp-report' : ''
+		'report-uri /api/csp-report'
 	]
 		.filter(Boolean)
 		.join('; ')

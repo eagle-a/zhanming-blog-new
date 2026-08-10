@@ -1,11 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {
-	createSubmissionTicketToken,
-	hashSubmissionTicket,
-	isSubmissionTicket,
-	readSubmissionTicketAuthorization
-} from '../src/lib/submission-ticket.ts'
+import { createSubmissionTicketToken, hashSubmissionTicket, isSubmissionTicket, readSubmissionTicketAuthorization } from '../src/lib/submission-ticket.ts'
 
 test('submission tickets have 256 bits of random material and only their hash needs storage', () => {
 	const first = createSubmissionTicketToken()

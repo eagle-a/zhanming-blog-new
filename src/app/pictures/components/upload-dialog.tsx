@@ -78,7 +78,7 @@ export default function UploadDialog({ onClose, onSubmit }: UploadDialogProps) {
 					{images.length === 0 ? (
 						<div
 							onClick={() => fileInputRef.current?.click()}
-							className='flex h-32 cursor-pointer items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50 transition-colors hover:bg-secondary/10'>
+							className='hover:bg-secondary/10 flex h-32 cursor-pointer items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50 transition-colors'>
 							<div className='text-center'>
 								<Plus className='mx-auto mb-1 h-8 w-8 text-gray-500' />
 								<p className='text-secondary text-xs'>点击选择图片</p>

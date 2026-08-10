@@ -62,9 +62,7 @@ assertLocalAssetsDatabase(localAssets, databaseUrl)
 if (!blobToken && !localAssets) throw new Error('BLOB_READ_WRITE_TOKEN is required.')
 
 const localPool = localAssets ? new Pool({ connectionString: databaseUrl, max: 4 }) : null
-const db = (localPool ? nodePostgresDrizzle(localPool, { schema }) : neonDrizzle(databaseUrl, { schema })) as ReturnType<
-	typeof neonDrizzle<typeof schema>
->
+const db = (localPool ? nodePostgresDrizzle(localPool, { schema }) : neonDrizzle(databaseUrl, { schema })) as ReturnType<typeof neonDrizzle<typeof schema>>
 const legacyIndex = JSON.parse(await readFile(path.join(legacyRoot, 'index.json'), 'utf8')) as LegacyIndexItem[]
 const categoryConfig = JSON.parse(await readFile(path.join(legacyRoot, 'categories.json'), 'utf8').catch(() => '{"categories":[]}')) as {
 	categories?: string[]
@@ -166,8 +164,7 @@ for (const item of legacyIndex) {
 }
 
 const slugs = plannedPosts.map(post => post.slug)
-const existingPosts =
-	slugs.length > 0 ? await db.select().from(schema.posts).where(inArray(schema.posts.slug, slugs)) : []
+const existingPosts = slugs.length > 0 ? await db.select().from(schema.posts).where(inArray(schema.posts.slug, slugs)) : []
 const existingBySlug = new Map(existingPosts.map(post => [post.slug, post]))
 const existingTagRows =
 	existingPosts.length > 0
@@ -175,7 +172,12 @@ const existingTagRows =
 				.select({ postId: schema.postTags.postId, name: schema.tags.name })
 				.from(schema.postTags)
 				.innerJoin(schema.tags, eq(schema.postTags.tagId, schema.tags.id))
-				.where(inArray(schema.postTags.postId, existingPosts.map(post => post.id)))
+				.where(
+					inArray(
+						schema.postTags.postId,
+						existingPosts.map(post => post.id)
+					)
+				)
 		: []
 const existingTags = new Map<number, string[]>()
 for (const row of existingTagRows) existingTags.set(row.postId, [...(existingTags.get(row.postId) || []), row.name])
@@ -270,9 +272,15 @@ try {
 					createdBy: 'legacy-migration'
 				})
 				if (post.tags.length > 0) {
-					await tx.insert(schema.tags).values(post.tags.map(name => ({ name }))).onConflictDoNothing()
+					await tx
+						.insert(schema.tags)
+						.values(post.tags.map(name => ({ name })))
+						.onConflictDoNothing()
 					const tagRows = await tx.select({ id: schema.tags.id }).from(schema.tags).where(inArray(schema.tags.name, post.tags))
-					await tx.insert(schema.postTags).values(tagRows.map(tag => ({ postId: created.id, tagId: tag.id }))).onConflictDoNothing()
+					await tx
+						.insert(schema.postTags)
+						.values(tagRows.map(tag => ({ postId: created.id, tagId: tag.id })))
+						.onConflictDoNothing()
 				}
 				inserted++
 			}
@@ -298,7 +306,10 @@ if (apply) {
 	if (stored.length !== plannedPosts.length) throw new Error('Verification failed: not all legacy posts exist')
 	const indexedMedia =
 		plannedMedia.size > 0
-			? await db.select({ pathname: schema.media.pathname }).from(schema.media).where(inArray(schema.media.pathname, Array.from(plannedMedia.keys())))
+			? await db
+					.select({ pathname: schema.media.pathname })
+					.from(schema.media)
+					.where(inArray(schema.media.pathname, Array.from(plannedMedia.keys())))
 			: []
 	if (indexedMedia.length !== plannedMedia.size) throw new Error('Verification failed: not all migrated Blob objects are indexed')
 }

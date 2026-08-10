@@ -139,7 +139,7 @@ export default function BlurredBubblesBackground({
 					x,
 					y,
 					r,
-					color: colors[bubbles.length % colors.length | 0],
+					color: colors[(bubbles.length % colors.length) | 0],
 					vx: rand(-0.2, 0.2),
 					vy: rand(-0.2, 0.2),
 					jitter: rand(0.6, 1.2),
@@ -310,7 +310,7 @@ export default function BlurredBubblesBackground({
 			animate={{ opacity: 1 }}
 			initial={{ opacity: 0 }}
 			transition={{ duration: 1 }}
-			className='fixed inset-0 z-0 overflow-hidden'
+			className='bubble-background fixed inset-0 z-0 overflow-hidden'
 			style={{ filter: 'blur(50px)' }}>
 			<canvas ref={ref} className='h-full w-full' style={{ display: 'block' }} />
 		</motion.div>

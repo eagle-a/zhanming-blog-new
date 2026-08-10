@@ -51,7 +51,7 @@ const COLOR_PRESETS: ColorPreset[] = [
 			colorSecondary: '#8b7667',
 			colorBrandSecondary: '#eec25e',
 			colorBg: '#d4e8f3',
-			colorCard: '#ffffff99',
+			colorCard: '#ffffff99'
 		},
 		backgroundColors: ['#f7da3987', '#8fdbe9', '#fffef8']
 	},

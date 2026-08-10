@@ -2,13 +2,12 @@ import '@/styles/globals.css'
 
 import type { Metadata } from 'next'
 import { cache } from 'react'
-import { SpeedInsights } from '@vercel/speed-insights/next'
-import { Analytics } from '@vercel/analytics/next'
 import Layout from '@/layout'
 import Head from '@/layout/head'
 import { LanguageProvider } from '@/i18n/context'
 import { RuntimeConfigHydrator } from '@/components/runtime-config-hydrator'
 import { WindowsPlatformClass } from '@/components/windows-platform-class'
+import { AnalyticsTracker } from '@/components/analytics-tracker'
 import { getCachedContentDocument, getFallbackContentDocument } from '@/lib/content-repository'
 import { hasDatabaseConfiguration } from '@/lib/legacy-blog-reader'
 import type { CardStyles, SiteContent } from '@/app/(home)/stores/config-store'
@@ -75,8 +74,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 				<LanguageProvider>
 					<Layout>{children}</Layout>
 				</LanguageProvider>
-				<SpeedInsights />
-				<Analytics />
+				{/* Vercel analytics scripts load from va.vercel-scripts.com and are blocked by
+			    CSP in local dev and on sensitive routes (/admin, /write) whose script-src
+			    does not allow va.vercel-scripts.com. Render them only in production builds
+			    and skip them on sensitive routes to keep the dev console clean and avoid
+			    pointless CSP violations. */}
+				{process.env.NODE_ENV === 'production' && <AnalyticsTracker />}
 			</body>
 		</html>
 	)

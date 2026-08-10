@@ -37,6 +37,36 @@ const scanners: Array<{ code: SubmissionFinding['code']; severity: SubmissionFin
 		message: '内容疑似包含访问密钥或带凭据的数据库地址'
 	},
 	{
+		code: 'secret',
+		severity: 'blocked',
+		pattern: /AKIA[0-9A-Z]{16}/,
+		message: '内容疑似包含 AWS 访问密钥'
+	},
+	{
+		code: 'secret',
+		severity: 'blocked',
+		pattern: /aws_secret_access_key\s*[=:]\s*['"][A-Za-z0-9/+=]{40}['"]/i,
+		message: '内容疑似包含 AWS 秘密密钥'
+	},
+	{
+		code: 'secret',
+		severity: 'blocked',
+		pattern: /[Bb]earer\s+[A-Za-z0-9\-_.]{20,}/,
+		message: '内容疑似包含 Bearer 令牌'
+	},
+	{
+		code: 'secret',
+		severity: 'blocked',
+		pattern: /eyJ[A-Za-z0-9\-_]+\.eyJ[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+/,
+		message: '内容疑似包含 JWT 令牌'
+	},
+	{
+		code: 'secret',
+		severity: 'blocked',
+		pattern: /xox[baprs]-[0-9A-Za-z-]{10,}/,
+		message: '内容疑似包含 Slack 令牌'
+	},
+	{
 		code: 'absolute-path',
 		severity: 'warning',
 		pattern: /(?:[A-Za-z]:\\(?:Users|Documents and Settings)\\|\/(?:home|Users)\/)[^\s)\]"']+/i,

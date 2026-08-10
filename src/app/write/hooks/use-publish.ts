@@ -22,9 +22,9 @@ export function usePublish() {
 
 			const successMsg = mode === 'edit' ? '更新成功' : '发布成功'
 			toast.success(successMsg)
-		} catch (err: any) {
+		} catch (err) {
 			console.error(err)
-			toast.error(err?.message || '操作失败')
+			toast.error(err instanceof Error ? err.message : '操作失败')
 		} finally {
 			setLoading(false)
 		}
@@ -39,9 +39,9 @@ export function usePublish() {
 		try {
 			setLoading(true)
 			await deleteBlog(targetSlug)
-		} catch (err: any) {
+		} catch (err) {
 			console.error(err)
-			toast.error(err?.message || '删除失败')
+			toast.error(err instanceof Error ? err.message : '删除失败')
 		} finally {
 			setLoading(false)
 		}

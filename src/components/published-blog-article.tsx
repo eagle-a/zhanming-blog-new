@@ -3,6 +3,7 @@ import dayjs from 'dayjs'
 import { ArticleEnhancements } from '@/components/article-enhancements'
 import { BlogSidebar } from '@/components/blog-sidebar'
 import LiquidGrass from '@/components/liquid-grass'
+import { ReadingProgress } from '@/components/reading-progress'
 import type { BlogStats } from '@/lib/load-blog'
 import type { PostRecord } from '@/lib/posts-repository'
 import type { TocItem } from '@/lib/markdown-renderer'
@@ -19,6 +20,7 @@ type PublishedBlogArticleProps = {
 export function PublishedBlogArticle({ post, html, toc, stats, summaryInContent, coverDimensions }: PublishedBlogArticleProps) {
 	return (
 		<>
+			<ReadingProgress />
 			<ArticleEnhancements slug={post.slug} />
 			<div className='mx-auto flex max-w-[1140px] justify-center gap-6 px-6 pt-28 pb-12 max-sm:px-0' data-published-article>
 				<article className='card bg-article static flex-1 overflow-auto rounded-xl p-8'>

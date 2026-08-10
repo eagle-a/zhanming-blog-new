@@ -1,11 +1,28 @@
 dist/
 node_modules/
 .next/
+.vercel/
+coverage/
+out/
+build/
 
 **/.git
 **/.svn
 **/.hg
 **/node_modules
 **/package-lock.json
+**/pnpm-lock.yaml
 **/pnpm-lock.json
 
+# Auto-generated migration artifacts
+drizzle/
+
+# User content and binary assets
+public/
+
+# Environment files (contain secrets)
+.env*
+
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts

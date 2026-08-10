@@ -23,10 +23,11 @@ export default function LikeButton({ slug = 'home', delay, className }: LikeButt
 	const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number }>>([])
 
 	useEffect(() => {
-		setTimeout(() => {
+		const timer = setTimeout(() => {
 			setShow(true)
 		}, delay || 1000)
-	}, [])
+		return () => clearTimeout(timer)
+	}, [delay])
 
 	useEffect(() => {
 		if (justLiked) {
@@ -34,6 +35,12 @@ export default function LikeButton({ slug = 'home', delay, className }: LikeButt
 			return () => clearTimeout(timer)
 		}
 	}, [justLiked])
+
+	useEffect(() => {
+		if (particles.length === 0) return
+		const timer = setTimeout(() => setParticles([]), 1000)
+		return () => clearTimeout(timer)
+	}, [particles])
 
 	const fetcher = useCallback(async (url: string): Promise<number | null> => {
 		const res = await fetch(url, { method: 'GET', cache: 'no-store' })
@@ -58,7 +65,6 @@ export default function LikeButton({ slug = 'home', delay, className }: LikeButt
 			y: Math.random() * 60 - 30
 		}))
 		setParticles(newParticles)
-		setTimeout(() => setParticles([]), 1000)
 
 		try {
 			const url = `${ENDPOINT}?slug=${encodeURIComponent(slug)}`

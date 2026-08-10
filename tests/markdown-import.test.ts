@@ -34,10 +34,7 @@ hidden: false
 })
 
 test('accepts standard YAML single-quoted flow tags', () => {
-	const result = parseMarkdownImport(
-		"---\ntitle: 'Flow tags'\nslug: flow-tags\ntags: ['标签一', '标签, 二']\n---\n\n# Flow tags\n\nBody",
-		'flow-tags.md'
-	)
+	const result = parseMarkdownImport("---\ntitle: 'Flow tags'\nslug: flow-tags\ntags: ['标签一', '标签, 二']\n---\n\n# Flow tags\n\nBody", 'flow-tags.md')
 	assert.deepEqual(result.form.tags, ['标签一', '标签, 二'])
 })
 

@@ -1,63 +1,63 @@
 {
-  "nav": {
-    "blog": "All Articles",
-    "projects": "My Projects",
-    "comments": "Guestbook",
-    "share": "Recommendations",
-    "links": "About",
-    "rss": "RSS Subscribe",
-    "bloggers": "Secret Space",
-    "juya": "AI Daily"
-  },
-  "languages": {
-    "zh-CN": "Simplified Chinese",
-    "en": "English",
-    "zh-TW": "Traditional Chinese",
-    "ja": "Japanese",
-    "ko": "Korean"
-  },
-  "siteSettings": {
-    "twikoo": {
-      "title": "Twikoo Configuration",
-      "envId": "Environment ID / URL",
-      "envIdHint": "Tencent Cloud environment ID or Vercel URL",
-      "region": "Tencent Cloud Region",
-      "regionHint": "If using Tencent Cloud, fill in region code (e.g., ap-guangzhou)"
-    }
-  },
-  "common": {
-    "loading": "Loading...",
-    "error": "Error occurred",
-    "retry": "Retry",
-    "confirm": "Confirm",
-    "cancel": "Cancel",
-    "save": "Save",
-    "delete": "Delete",
-    "edit": "Edit",
-    "add": "Add",
-    "search": "Search",
-    "close": "Close",
-    "copy": "Copy",
-    "copied": "Copied",
-    "success": "Success",
-    "failed": "Failed",
-    "submit": "Submit",
-    "submitting": "Submitting...",
-    "upload": "Upload",
-    "uploading": "Uploading...",
-    "download": "Download",
-    "downloading": "Downloading...",
-    "noData": "No data",
-    "noMore": "No more",
-    "loadMore": "Load more",
-    "loadingMore": "Loading more...",
-    "empty": "Empty",
-    "comingSoon": "Coming soon",
-    "underConstruction": "Under construction...",
-    "pageNotFound": "Page not found",
-    "backToHome": "Back to home"
-  },
-  "toast": {
-    "rssUrlCopied": "RSS URL copied"
-  }
+	"nav": {
+		"blog": "All Articles",
+		"projects": "My Projects",
+		"comments": "Guestbook",
+		"share": "Recommendations",
+		"links": "About",
+		"rss": "RSS Subscribe",
+		"bloggers": "Secret Space",
+		"juya": "AI Daily"
+	},
+	"languages": {
+		"zh-CN": "Simplified Chinese",
+		"en": "English",
+		"zh-TW": "Traditional Chinese",
+		"ja": "Japanese",
+		"ko": "Korean"
+	},
+	"siteSettings": {
+		"twikoo": {
+			"title": "Twikoo Configuration",
+			"envId": "Environment ID / URL",
+			"envIdHint": "Tencent Cloud environment ID or Vercel URL",
+			"region": "Tencent Cloud Region",
+			"regionHint": "If using Tencent Cloud, fill in region code (e.g., ap-guangzhou)"
+		}
+	},
+	"common": {
+		"loading": "Loading...",
+		"error": "Error occurred",
+		"retry": "Retry",
+		"confirm": "Confirm",
+		"cancel": "Cancel",
+		"save": "Save",
+		"delete": "Delete",
+		"edit": "Edit",
+		"add": "Add",
+		"search": "Search",
+		"close": "Close",
+		"copy": "Copy",
+		"copied": "Copied",
+		"success": "Success",
+		"failed": "Failed",
+		"submit": "Submit",
+		"submitting": "Submitting...",
+		"upload": "Upload",
+		"uploading": "Uploading...",
+		"download": "Download",
+		"downloading": "Downloading...",
+		"noData": "No data",
+		"noMore": "No more",
+		"loadMore": "Load more",
+		"loadingMore": "Loading more...",
+		"empty": "Empty",
+		"comingSoon": "Coming soon",
+		"underConstruction": "Under construction...",
+		"pageNotFound": "Page not found",
+		"backToHome": "Back to home"
+	},
+	"toast": {
+		"rssUrlCopied": "RSS URL copied"
+	}
 }

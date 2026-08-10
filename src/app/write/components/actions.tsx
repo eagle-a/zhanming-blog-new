@@ -2,10 +2,11 @@ import { motion } from 'motion/react'
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import { useWriteStore } from '../stores/write-store'
+import { useWriteStore, formatDateTimeLocal } from '../stores/write-store'
 import { usePreviewStore } from '../stores/preview-store'
 import { usePublish } from '../hooks/use-publish'
 import { parseMarkdownImport } from '@/lib/markdown-import'
+import { RevisionHistory } from './revision-history'
 
 export function WriteActions() {
 	const { loading, mode, form, originalSlug, updateForm } = useWriteStore()
@@ -85,6 +86,26 @@ export function WriteActions() {
 			<input ref={mdInputRef} type='file' accept='.md' className='hidden' onChange={handleMdFileChange} />
 
 			<ul className='absolute top-4 right-6 flex items-center gap-2'>
+				{mode === 'edit' && originalSlug && (
+					<RevisionHistory
+						slug={originalSlug}
+						currentVersion={form.version}
+						onRestore={payload => {
+							updateForm({
+								...form,
+								md: payload.contentMd,
+								version: payload.version,
+								title: payload.title,
+								summary: payload.summary,
+								tags: payload.tags,
+								category: payload.category ?? '',
+								date: payload.date ? formatDateTimeLocal(new Date(payload.date)) : form.date,
+								hidden: payload.status !== 'published'
+							})
+							toast.success(`已恢复到版本 ${payload.version}，请检查后点击更新`)
+						}}
+					/>
+				)}
 				{mode === 'edit' && (
 					<>
 						<motion.div initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} className='flex items-center gap-2'>

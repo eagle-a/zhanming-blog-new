@@ -80,9 +80,9 @@ export default function Page() {
 			setImageItems(new Map())
 			setIsEditMode(false)
 			toast.success('保存成功！')
-		} catch (error: any) {
+		} catch (error) {
 			console.error('Failed to save:', error)
-			toast.error(`保存失败: ${error?.message || '未知错误'}`)
+			toast.error(`保存失败: ${error instanceof Error ? error.message : '未知错误'}`)
 		} finally {
 			setIsSaving(false)
 		}
