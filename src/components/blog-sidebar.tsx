@@ -16,13 +16,14 @@ type TocItem = {
 
 type BlogSidebarProps = {
 	cover?: string
+	coverDimensions?: { width: number; height: number }
 	summary?: string
 	toc: TocItem[]
 	slug?: string
 	stats?: BlogStats
 }
 
-export function BlogSidebar({ cover, summary, toc, slug, stats }: BlogSidebarProps) {
+export function BlogSidebar({ cover, coverDimensions, summary, toc, slug, stats }: BlogSidebarProps) {
 	const { siteContent } = useConfigStore()
 	const summaryInContent = siteContent.summaryInContent ?? false
 
@@ -34,7 +35,15 @@ export function BlogSidebar({ cover, summary, toc, slug, stats }: BlogSidebarPro
 					animate={{ opacity: 1, scale: 1 }}
 					transition={{ delay: INIT_DELAY + ANIMATION_DELAY * 1 }}
 					className='bg-card w-full rounded-xl border p-3'>
-					<img src={cover} alt='文章封面' loading='lazy' decoding='async' className='h-auto w-full rounded-xl border object-cover' />
+					<img
+						src={cover}
+						alt='文章封面'
+						loading='lazy'
+						decoding='async'
+						fetchPriority='high'
+						{...(coverDimensions ? { width: coverDimensions.width, height: coverDimensions.height } : {})}
+						className='h-auto w-full rounded-xl border object-cover'
+					/>
 				</motion.div>
 			)}
 
@@ -45,7 +54,7 @@ export function BlogSidebar({ cover, summary, toc, slug, stats }: BlogSidebarPro
 					transition={{ delay: INIT_DELAY + ANIMATION_DELAY * 2 }}
 					className='bg-card w-full rounded-xl border p-3 text-sm'>
 					<h2 className='text-secondary mb-2 font-medium'>摘要</h2>
-					<div className='text-secondary scrollbar-none max-h-[240px] cursor-text overflow-auto'>{summary}</div>
+					<div className='text-secondary max-h-[240px] cursor-text scrollbar-none overflow-auto'>{summary}</div>
 				</motion.div>
 			)}
 

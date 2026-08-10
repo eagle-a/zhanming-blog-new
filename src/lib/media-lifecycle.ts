@@ -54,7 +54,15 @@ export async function reservePendingMediaUpload(pathname: string): Promise<void>
 	})
 }
 
-export async function registerPendingMedia(input: { blobUrl: string; pathname: string; sha256: string; mimeType: string; size: number }): Promise<void> {
+export async function registerPendingMedia(input: {
+	blobUrl: string
+	pathname: string
+	sha256: string
+	mimeType: string
+	size: number
+	width?: number
+	height?: number
+}): Promise<void> {
 	const db = getDb()
 	await db.transaction(async tx => {
 		await lockMediaReferenceMutation(tx)

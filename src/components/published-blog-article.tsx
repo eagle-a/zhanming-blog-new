@@ -13,9 +13,10 @@ type PublishedBlogArticleProps = {
 	toc: TocItem[]
 	stats: BlogStats
 	summaryInContent: boolean
+	coverDimensions?: { width: number; height: number }
 }
 
-export function PublishedBlogArticle({ post, html, toc, stats, summaryInContent }: PublishedBlogArticleProps) {
+export function PublishedBlogArticle({ post, html, toc, stats, summaryInContent, coverDimensions }: PublishedBlogArticleProps) {
 	return (
 		<>
 			<ArticleEnhancements slug={post.slug} />
@@ -40,7 +41,7 @@ export function PublishedBlogArticle({ post, html, toc, stats, summaryInContent 
 					<div className='prose mt-6 max-w-none cursor-text' dangerouslySetInnerHTML={{ __html: html }} />
 				</article>
 
-				<BlogSidebar cover={post.cover} summary={post.summary} toc={toc} slug={post.slug} stats={stats} />
+				<BlogSidebar cover={post.cover} coverDimensions={coverDimensions} summary={post.summary} toc={toc} slug={post.slug} stats={stats} />
 			</div>
 
 			<Link

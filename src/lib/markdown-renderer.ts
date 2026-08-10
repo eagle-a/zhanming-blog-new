@@ -9,6 +9,10 @@ export interface MarkdownRenderResult {
 	toc: TocItem[]
 }
 
+export type ImageDimensionMap = Map<string, { width: number; height: number }>
+
+const RESPONSIVE_WIDTHS = [480, 800, 1200, 1920]
+
 function slugify(text: string): string {
 	return text
 		.toLowerCase()
@@ -65,7 +69,7 @@ async function loadKatex() {
 	}
 }
 
-export async function renderMarkdown(markdown: string): Promise<MarkdownRenderResult> {
+export async function renderMarkdown(markdown: string, imageDimensions?: ImageDimensionMap): Promise<MarkdownRenderResult> {
 	// Load optional renderers first so they apply on the FIRST lex/parse pass.
 	// (If we lex before registering extensions, math tokens won't ever be produced on a cold refresh.)
 	const codeBlockMap = new Map<string, { html: string; original: string }>()
@@ -116,6 +120,39 @@ export async function renderMarkdown(markdown: string): Promise<MarkdownRenderRe
 		}
 
 		return `<li>${inner}</li>\n`
+	}
+
+	renderer.image = (token: Tokens.Image) => {
+		const href = token.href || ''
+		const alt = escapeHtmlAttribute(token.text || '')
+		const title = token.title ? ` title="${escapeHtmlAttribute(token.title)}"` : ''
+		const baseAttrs = `loading="lazy" decoding="async"`
+
+		// For same-origin media proxy URLs, try to add width/height and srcset.
+		const marker = '/api/media/'
+		const mediaIndex = href.indexOf(marker)
+		if (mediaIndex !== -1) {
+			let pathname: string | null = null
+			try {
+				pathname = decodeURIComponent(href.slice(mediaIndex + marker.length).split(/[?#]/, 1)[0])
+			} catch {
+				pathname = null
+			}
+			const dims = pathname ? imageDimensions?.get(pathname) : undefined
+			if (dims) {
+				const widths = RESPONSIVE_WIDTHS.filter(w => w <= dims.width)
+				// Include the next standard breakpoint above the original so high-DPR screens
+				// get a sharper candidate; sharp won't upscale beyond the source pixels.
+				const nextWidth = RESPONSIVE_WIDTHS.find(w => w > dims.width)
+				if (nextWidth) widths.push(nextWidth)
+				if (widths.length > 0) {
+					const srcset = widths.map(w => `${href}${href.includes('?') ? '&' : '?'}w=${w} ${w}w`).join(', ')
+					return `<img src="${escapeHtmlAttribute(href)}" alt="${alt}"${title} width="${dims.width}" height="${dims.height}" ${baseAttrs} srcset="${escapeHtmlAttribute(srcset)}" sizes="(max-width: 640px) 100vw, 800px" />`
+				}
+				return `<img src="${escapeHtmlAttribute(href)}" alt="${alt}"${title} width="${dims.width}" height="${dims.height}" ${baseAttrs} />`
+			}
+		}
+		return `<img src="${escapeHtmlAttribute(href)}" alt="${alt}"${title} ${baseAttrs} />`
 	}
 
 	const renderMath = (content: string, displayMode: boolean) => {

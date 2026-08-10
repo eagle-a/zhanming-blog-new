@@ -65,6 +65,22 @@ function sanitizeAttribute(tag: string, name: string, value: string): string {
 	if (tag === 'a' && normalizedName === 'rel') return 'noopener noreferrer'
 	if (tag === 'img' && normalizedName === 'src' && isSafeUrl(value)) return value
 	if (tag === 'img' && (normalizedName === 'alt' || normalizedName === 'width' || normalizedName === 'height')) return value
+	if (tag === 'img' && normalizedName === 'loading' && (value === 'lazy' || value === 'eager')) return value
+	if (tag === 'img' && normalizedName === 'decoding' && (value === 'async' || value === 'sync')) return value
+	if (tag === 'img' && normalizedName === 'fetchpriority' && (value === 'high' || value === 'low' || value === 'auto')) return value
+	if (tag === 'img' && normalizedName === 'sizes' && /^[\d\s,().:%a-z-]+$/i.test(value)) return value
+	if (tag === 'img' && normalizedName === 'srcset') {
+		const candidates = value
+			.split(',')
+			.map(candidate => candidate.trim())
+			.filter(Boolean)
+		if (candidates.length === 0) return ''
+		const safe = candidates.every(candidate => {
+			const parts = candidate.split(/\s+/)
+			return isSafeUrl(parts[0]) && (!parts[1] || /^\d+(\.\d+)?[wx]$/.test(parts[1]))
+		})
+		return safe ? candidates.join(', ') : ''
+	}
 	if (tag === 'pre' && normalizedName === 'data-code') return value
 	if (tag === 'input' && normalizedName === 'type' && value.toLowerCase() === 'checkbox') return 'checkbox'
 	if (tag === 'input' && (normalizedName === 'checked' || normalizedName === 'disabled')) return normalizedName

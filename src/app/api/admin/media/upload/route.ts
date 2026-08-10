@@ -60,12 +60,24 @@ export async function POST(request: Request): Promise<Response> {
 				if (sha256 !== payload.sha256 || bytes.length !== payload.size || result.blob.contentType !== payload.mimeType) {
 					throw new Error('Uploaded Blob integrity verification failed')
 				}
+				const mimeType = result.blob.contentType
+				let dimensions: { width?: number; height?: number } = {}
+				if (mimeType.startsWith('image/') && mimeType !== 'image/svg+xml') {
+					try {
+						const { default: sharp } = await import('sharp')
+						const metadata = await sharp(bytes).metadata()
+						if (metadata.width && metadata.height) dimensions = { width: metadata.width, height: metadata.height }
+					} catch {
+						// Dimension extraction is best-effort; non-fatal if sharp fails.
+					}
+				}
 				await registerPendingMedia({
 					blobUrl: blob.url,
 					pathname: blob.pathname,
 					sha256,
-					mimeType: result.blob.contentType,
-					size: bytes.length
+					mimeType,
+					size: bytes.length,
+					...dimensions
 				})
 			}
 		})

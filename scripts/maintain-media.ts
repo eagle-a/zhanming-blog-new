@@ -7,7 +7,7 @@ import * as schema from '../src/db/schema.ts'
 import { extractMediaPathnames, MEDIA_REFERENCE_MUTATION_LOCK } from '../src/lib/media-references.ts'
 import { openScriptDatabase, type ScriptDatabase } from './lib/database.ts'
 
-type Action = 'plan' | 'backfill' | 'mark' | 'delete' | 'recover'
+type Action = 'plan' | 'backfill' | 'backfill-dimensions' | 'mark' | 'delete' | 'recover'
 type BlobInfo = { pathname: string; size: number; uploadedAt: Date; etag: string }
 type Candidate = { pathname: string; sha256: string; size: number; mimeType: string; etag: string; orphanedAt: string }
 type RecoveryItem = Candidate & { file: string; archiveSha256: string; status: 'archived' | 'deleting' | 'deleted' | 'recovered' }
@@ -22,7 +22,7 @@ const graceHoursArgument = process.argv.find(argument => argument.startsWith('--
 const graceHours = graceHoursArgument ? Number.parseInt(graceHoursArgument, 10) : 7 * 24
 const databaseUrl = process.env.DATABASE_URL?.trim()
 
-if (!['plan', 'backfill', 'mark', 'delete', 'recover'].includes(action)) throw new Error('--action is invalid')
+if (!['plan', 'backfill', 'backfill-dimensions', 'mark', 'delete', 'recover'].includes(action)) throw new Error('--action is invalid')
 if (!databaseUrl) throw new Error('DATABASE_URL is required')
 if (!Number.isSafeInteger(graceHours) || graceHours < 24) throw new Error('--grace-hours must be an integer of at least 24')
 
@@ -131,6 +131,10 @@ const orphanCandidates = mediaRows.filter(row => {
 	return row.state === 'committed' && !row.deletedAt && !references.has(row.pathname) && blobMap.has(row.pathname) && now - lastSeen.getTime() >= graceMs
 })
 
+const dimensionBackfillCandidates = mediaRows.filter(
+	row => !row.width && !row.height && row.mimeType?.startsWith('image/') && row.mimeType !== 'image/svg+xml' && !row.deletedAt
+)
+
 if (action === 'plan') {
 	console.log(
 		JSON.stringify(
@@ -142,7 +146,8 @@ if (action === 'plan') {
 				missingBlobObjects: missingIndex.filter(pathname => !blobMap.has(pathname)),
 				orphanCandidates: orphanCandidates.map(row => row.pathname),
 				alreadyMarked: mediaRows.filter(row => row.state === 'orphaned' && !row.deletedAt).map(row => row.pathname),
-				deletedRecoverableRows: mediaRows.filter(row => row.deletedAt).map(row => row.pathname)
+				deletedRecoverableRows: mediaRows.filter(row => row.deletedAt).map(row => row.pathname),
+				dimensionBackfillCandidates: dimensionBackfillCandidates.map(row => row.pathname)
 			},
 			null,
 			2
@@ -157,18 +162,58 @@ if (action === 'plan') {
 		const bytes = Buffer.from(await new Response(result.stream).arrayBuffer())
 		const actual = createHash('sha256').update(bytes).digest('hex')
 		if (actual !== expected || bytes.length !== result.blob.size) throw new Error(`Blob 完整性校验失败: ${pathname}`)
+		let dimensions: { width?: number; height?: number } = {}
+		const mimeType = result.blob.contentType
+		if (mimeType?.startsWith('image/') && mimeType !== 'image/svg+xml') {
+			try {
+				const { default: sharp } = await import('sharp')
+				const meta = await sharp(bytes).metadata()
+				if (meta.width && meta.height) dimensions = { width: meta.width, height: meta.height }
+			} catch {
+				// Best-effort dimension extraction.
+			}
+		}
 		await db.insert(schema.media).values({
 			blobUrl: result.blob.url,
 			pathname,
 			sha256: actual,
-			mimeType: result.blob.contentType,
+			mimeType,
 			size: bytes.length,
 			state: 'committed',
 			committedAt: new Date(),
-			lastSeenAt: new Date()
+			lastSeenAt: new Date(),
+			...dimensions
 		})
 	}
 	console.log(JSON.stringify({ action, backfilled: backfillCandidates }, null, 2))
+} else if (action === 'backfill-dimensions') {
+	assertMutationEnvironment()
+	let updated = 0
+	for (const row of dimensionBackfillCandidates) {
+		const result = await get(row.pathname, { access: 'private', useCache: false })
+		if (!result || result.statusCode !== 200) {
+			console.warn(`跳过（无法读取 Blob）: ${row.pathname}`)
+			continue
+		}
+		const bytes = Buffer.from(await new Response(result.stream).arrayBuffer())
+		const digest = createHash('sha256').update(bytes).digest('hex')
+		if (digest !== row.sha256 || bytes.length !== row.size) {
+			console.warn(`跳过（SHA-256 或大小不匹配）: ${row.pathname}`)
+			continue
+		}
+		let dimensions: { width: number; height: number } | null = null
+		try {
+			const { default: sharp } = await import('sharp')
+			const meta = await sharp(bytes).metadata()
+			if (meta.width && meta.height) dimensions = { width: meta.width, height: meta.height }
+		} catch {
+			// Best-effort dimension extraction.
+		}
+		if (!dimensions) continue
+		await db.update(schema.media).set({ width: dimensions.width, height: dimensions.height }).where(eq(schema.media.pathname, row.pathname))
+		updated++
+	}
+	console.log(JSON.stringify({ action, dimensionBackfillCandidates: dimensionBackfillCandidates.length, updated }, null, 2))
 } else if (action === 'mark') {
 	const environment = assertMutationEnvironment()
 	if (!outputArgument) throw new Error('--action=mark 需要 --output=<manifest.json>')

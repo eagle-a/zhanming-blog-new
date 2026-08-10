@@ -8,6 +8,8 @@ import { getCachedContentDocument, getFallbackContentDocument } from '@/lib/cont
 import { allowDevelopmentLegacyFallback, readLegacyPost } from '@/lib/legacy-blog-reader'
 import { calculateBlogStats } from '@/lib/load-blog'
 import { renderMarkdown } from '@/lib/markdown-renderer'
+import { extractMediaPathnameFromUrl, getMediaDimensions, type MediaDimensions } from '@/lib/media-dimensions'
+import { extractMediaPathnames } from '@/lib/media-references'
 import { getCachedPublishedPost, type PostRecord } from '@/lib/posts-repository'
 
 type BlogPageProps = {
@@ -71,8 +73,24 @@ export default async function BlogPage({ params }: BlogPageProps) {
 	const post = await loadPublishedPost(id)
 	if (!post) notFound()
 
+	// Look up stored image dimensions for CLS prevention and responsive srcset.
+	const mediaPathnames = extractMediaPathnames([post.contentMd, post.cover])
+	let imageDimensions: Map<string, MediaDimensions> = new Map()
+	let coverDimensions: MediaDimensions | undefined
+	if (mediaPathnames.length > 0) {
+		try {
+			imageDimensions = await getMediaDimensions(mediaPathnames)
+		} catch {
+			// Database may be unavailable in legacy fallback mode.
+		}
+	}
+	if (post.cover) {
+		const coverPath = extractMediaPathnameFromUrl(post.cover)
+		if (coverPath) coverDimensions = imageDimensions.get(coverPath)
+	}
+
 	const [{ html, toc }, site] = await Promise.all([
-		renderMarkdown(post.contentMd),
+		renderMarkdown(post.contentMd, imageDimensions),
 		allowDevelopmentLegacyFallback()
 			? Promise.resolve(getFallbackContentDocument<SiteContent>('site'))
 			: getCachedContentDocument<SiteContent>('site').catch(() => getFallbackContentDocument<SiteContent>('site'))
@@ -84,6 +102,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
 			toc={toc}
 			stats={calculateBlogStats(post.contentMd)}
 			summaryInContent={site.data.summaryInContent ?? false}
+			coverDimensions={coverDimensions}
 		/>
 	)
 }

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { bigint, bigserial, check, index, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
+import { bigint, bigserial, check, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 
 export const postStatus = pgEnum('post_status', ['draft', 'published', 'archived'])
 export const submissionType = pgEnum('submission_type', ['post'])
@@ -160,6 +160,8 @@ export const media = pgTable(
 		sha256: text('sha256').notNull(),
 		mimeType: text('mime_type').notNull(),
 		size: bigint('size', { mode: 'number' }).notNull(),
+		width: integer('width'),
+		height: integer('height'),
 		state: text('state').notNull().default('committed'),
 		pendingAt: timestamp('pending_at', { withTimezone: true, mode: 'date' }),
 		committedAt: timestamp('committed_at', { withTimezone: true, mode: 'date' }).defaultNow(),
