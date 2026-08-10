@@ -23,10 +23,12 @@ export default function MusicCard() {
 	const calendarCardStyles = cardStyles.calendarCard
 
 	const [isPlaying, setIsPlaying] = useState(false)
+	const [hasStarted, setHasStarted] = useState(false)
 	const [currentIndex, setCurrentIndex] = useState(0)
 	const [progress, setProgress] = useState(0)
 	const audioRef = useRef<HTMLAudioElement | null>(null)
 	const currentIndexRef = useRef(0)
+	const isPlayingRef = useRef(false)
 
 	const isHomePage = pathname === '/'
 
@@ -47,23 +49,19 @@ export default function MusicCard() {
 			x: styles.offsetX !== null ? center.x + styles.offsetX : center.x + CARD_SPACING + hiCardStyles.width / 2 - styles.offset,
 			y: styles.offsetY !== null ? center.y + styles.offsetY : center.y - clockCardStyles.offset + CARD_SPACING + calendarCardStyles.height + CARD_SPACING
 		}
-	}, [isPlaying, isHomePage, center, styles, hiCardStyles, clockCardStyles, calendarCardStyles])
+	}, [isHomePage, center, styles, hiCardStyles, clockCardStyles, calendarCardStyles])
 
 	const { x, y } = position
 
-	// Initialize audio element and setup event listeners
+	// Create the media element only after an explicit user action. Merely visiting
+	// a route must not start fetching the first multi-megabyte track.
 	useEffect(() => {
-		if (!audioRef.current) {
-			audioRef.current = new Audio()
-		}
-
-		const audio = audioRef.current
-
-		// 设置初始音频源
-		if (!audio.src) {
-			audio.src = `/music/${MUSIC_LIST[0].id}.mp3`
-			audio.loop = false
-		}
+		if (!hasStarted) return
+		const audio = new Audio()
+		audio.preload = 'none'
+		audio.loop = false
+		audio.src = `/music/${MUSIC_LIST[currentIndexRef.current].id}.mp3`
+		audioRef.current = audio
 
 		const updateProgress = () => {
 			if (audio.duration) {
@@ -96,32 +94,31 @@ export default function MusicCard() {
 			audio.removeEventListener('timeupdate', handleTimeUpdate)
 			audio.removeEventListener('ended', handleEnded)
 			audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+			audio.pause()
+			audio.removeAttribute('src')
+			audio.load()
+			audioRef.current = null
 		}
-	}, [])
+	}, [hasStarted])
 
 	// Handle currentIndex change - load new audio
 	useEffect(() => {
 		currentIndexRef.current = currentIndex
-		// 确保 audio 元素已初始化
-		if (!audioRef.current) {
-			audioRef.current = new Audio()
-		}
-
 		const audio = audioRef.current
-		const wasPlaying = !audio.paused
+		if (!audio) return
 		audio.pause()
-		// 根据当前歌曲ID设置音频源
 		audio.src = `/music/${currentMusic.id}.mp3`
 		audio.loop = false
 		setProgress(0)
 
-		if (wasPlaying) {
+		if (isPlayingRef.current) {
 			audio.play().catch(console.error)
 		}
 	}, [currentIndex, currentMusic])
 
 	// Handle play/pause state change
 	useEffect(() => {
+		isPlayingRef.current = isPlaying
 		if (!audioRef.current) return
 
 		if (isPlaying) {
@@ -129,20 +126,11 @@ export default function MusicCard() {
 		} else {
 			audioRef.current.pause()
 		}
-	}, [isPlaying])
-
-	// Cleanup on unmount
-	useEffect(() => {
-		return () => {
-			if (audioRef.current) {
-				audioRef.current.pause()
-				audioRef.current.src = ''
-			}
-		}
-	}, [])
+	}, [hasStarted, isPlaying])
 
 	const togglePlayPause = () => {
-		setIsPlaying(!isPlaying)
+		setHasStarted(true)
+		setIsPlaying(previous => !previous)
 	}
 
 	// 上一首

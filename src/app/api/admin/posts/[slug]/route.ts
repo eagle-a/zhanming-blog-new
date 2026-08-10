@@ -34,6 +34,7 @@ export async function DELETE(request: Request, context: { params: Promise<{ slug
 		if (!deleted) return Response.json({ error: '文章不存在或已删除' }, { status: 404 })
 		revalidateTag('posts', { expire: 0 })
 		revalidateTag(`post:${slug}`, { expire: 0 })
+		revalidateTag('post-categories', { expire: 0 })
 		return Response.json({ deleted: true })
 	} catch (error) {
 		return routeErrorResponse(error)

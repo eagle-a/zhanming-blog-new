@@ -41,6 +41,8 @@ export default function NavCard() {
 	const { t } = useLanguage()
 	const styles = cardStyles.navCard
 	const hiCardStyles = cardStyles.hiCard
+	const avatarUrl = siteContent.avatarUrl || '/images/avatar.png'
+	const isRemoteAvatar = /^https:\/\//i.test(avatarUrl)
 
 	const list = useMemo(
 		() => [
@@ -166,14 +168,14 @@ export default function NavCard() {
 						</>
 					)}
 
-					<Link className='flex items-center gap-3' href='/'>
+					<Link className='flex items-center gap-3' href='/' aria-label='返回首页'>
 						<Image
-							src={siteContent.avatarUrl || '/images/avatar.png'}
-							alt='avatar'
+							src={avatarUrl}
+							alt=''
 							width={40}
 							height={40}
 							loading='eager'
-							priority
+							unoptimized={isRemoteAvatar}
 							style={{ boxShadow: ' 0 12px 20px -5px #E2D9CE' }}
 							className='rounded-full'
 						/>
@@ -212,6 +214,7 @@ export default function NavCard() {
 									<Link
 										key={item.href}
 										href={item.href}
+										aria-label={form === 'icons' ? item.label : undefined}
 										className={cn('text-secondary text-md relative z-10 flex items-center gap-3 rounded-full px-5 py-3', form === 'icons' && 'p-0')}
 										onMouseEnter={() => setHoveredIndex(index)}>
 										<div className='flex h-7 w-7 items-center justify-center'>{renderIcon(item, hoveredIndex === index)}</div>

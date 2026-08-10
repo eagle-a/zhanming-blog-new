@@ -1,13 +1,14 @@
 import 'server-only'
 
 import { createHash, randomUUID } from 'node:crypto'
-import { and, desc, eq, gt, isNull } from 'drizzle-orm'
+import { and, desc, eq, gt, isNull, sql } from 'drizzle-orm'
 import { getDb } from '@/db/client'
 import { auditEvents, contentSubmissions, submissionTickets } from '@/db/schema'
 import { agentPostSubmissionSchema, scanAgentSubmission, type AgentPostSubmission, type SubmissionFinding } from '@/lib/agent-submission-validation'
 import { lockMediaReferenceMutation, type DatabaseTransaction } from '@/lib/media-lifecycle'
 import { upsertPostInTransaction } from '@/lib/posts-repository'
 import { hashSubmissionTicket } from '@/lib/submission-ticket'
+import { evaluateSubmissionReplay } from '@/lib/submission-replay-policy'
 
 export class SubmissionConflictError extends Error {
 	constructor(message: string) {
@@ -38,21 +39,25 @@ export async function createPostSubmissionWithTicket(ticket: string, input: Agen
 
 	return db.transaction(async tx => {
 		await lockMediaReferenceMutation(tx as DatabaseTransaction)
+		await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`submission-idempotency:${idempotencyKey}`}, 0))`)
 		const [existing] = await tx
 			.select({
 				id: contentSubmissions.id,
 				status: contentSubmissions.status,
-				validationResult: contentSubmissions.validationResult
+				contentHash: contentSubmissions.contentHash,
+				validationResult: contentSubmissions.validationResult,
+				ticketHash: submissionTickets.tokenHash
 			})
 			.from(contentSubmissions)
+			.innerJoin(submissionTickets, eq(contentSubmissions.submissionTicketId, submissionTickets.id))
 			.where(eq(contentSubmissions.idempotencyKey, idempotencyKey))
 			.for('update')
 			.limit(1)
-		if (existing) {
-			if (existing.status === 'pending') {
-				return { id: existing.id, status: 'pending' as const, findings: existing.validationResult as SubmissionFinding[] }
-			}
-			throw new SubmissionConflictError('该幂等键对应的投稿已处理')
+		const replay = evaluateSubmissionReplay(existing, { ticketHash, contentHash: hash })
+		if (replay.kind === 'unauthorized') throw new Response('Unauthorized', { status: 401 })
+		if (replay.kind === 'conflict') throw new SubmissionConflictError(replay.reason)
+		if (replay.kind === 'replay') {
+			return { id: replay.record.id, status: 'pending' as const, findings: replay.record.validationResult as SubmissionFinding[] }
 		}
 		const [consumedTicket] = await tx
 			.update(submissionTickets)

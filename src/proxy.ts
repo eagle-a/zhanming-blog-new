@@ -8,14 +8,13 @@ export function proxy(request: NextRequest) {
 	const requestHeaders = new Headers(request.headers)
 	if (nonce) {
 		requestHeaders.set('x-nonce', nonce)
-		requestHeaders.set('Content-Security-Policy', buildCsp(nonce))
+		requestHeaders.set('Content-Security-Policy', buildCsp({ nonce }))
 	}
 
 	const response = NextResponse.next({ request: { headers: requestHeaders } })
-	response.headers.set('Content-Security-Policy', buildCsp(nonce, false, !sensitivePage))
-	if (!sensitivePage && (process.env.VERCEL_ENV === 'preview' || process.env.CSP_REPORT_ONLY === '1')) {
-		response.headers.set('Content-Security-Policy-Report-Only', buildCsp(undefined, true))
-	}
+	// Static App Router pages contain framework bootstrap scripts that cannot
+	// receive a request nonce. Sensitive routes stay dynamic and nonce-protected.
+	response.headers.set('Content-Security-Policy', buildCsp({ nonce, allowInlineScripts: !sensitivePage }))
 	return response
 }
 

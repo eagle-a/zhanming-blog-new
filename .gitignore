@@ -53,3 +53,7 @@ dist/
 # others
 别人的项目/
 2025-blog-public/
+
+# Local research and review artifacts are not deployment inputs.
+/public/blogs/hardware-kb/
+/reports/

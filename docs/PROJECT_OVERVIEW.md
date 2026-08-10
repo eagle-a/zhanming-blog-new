@@ -32,7 +32,7 @@
 | 部署       | 只支持 Vercel；Cloudflare/OpenNext 不属于当前方案                       |
 | 包管理器   | pnpm 11.4.0                                                             |
 
-Next 配置启用 React Strict Mode、React Compiler、Turbopack SVG loader、服务端动态 API 路由和按标签失效缓存。图片目前设置为 `unoptimized: true`，所以不会依赖 Next 图片优化服务；媒体访问仍通过应用的同源代理。
+Next 配置启用 React Strict Mode、React Compiler、Turbopack SVG loader、Next 图片优化、服务端动态 API 路由和按标签失效缓存。内容图片仍通过应用的同源代理读取；代理只接受 480/800/1200/1920 四档缩放宽度，并由 Vercel CDN 缓存内容寻址的不可变变体。
 
 ## 3. 目录职责
 
@@ -51,7 +51,7 @@ tests/         Node test runner 测试
 docs/          项目操作和架构文档
 ```
 
-`public/blogs/hardware-kb/` 是用户内容，禁止清理、改名或删除。`.next/`、`.open-next/`、`dist/` 和 `.vercel/` 是本地构建/部署产物，不是内容源。
+`public/blogs/hardware-kb/` 是用户本地资料，禁止清理、改名或删除；该目录已从 Git 索引和 Vercel 部署输入中排除，本机文件仍完整保留。`.next/`、`.open-next/`、`dist/` 和 `.vercel/` 是本地构建/部署产物，不是内容源。
 
 ## 4. 页面与用户入口
 
@@ -325,7 +325,7 @@ pnpm dlx knip --files --exports --dependencies --no-exit-code
 
 Knip 对配置文件里以字符串形式声明的 `@svgr/webpack` 会给出误报；该依赖由 `next.config.ts` 的 SVG loader 实际使用，必须保留。
 
-`pnpm check` 串行运行测试、类型检查、增量格式门禁、Drizzle 迁移检查和生产构建。GitHub Actions 在 push 到 `main` 和 pull request 时执行同一组核心门禁。当前测试覆盖文章输入、AI 投稿、票据原子消费、敏感信息扫描、配置校验、Markdown 渲染、RSS 解析、登录限速、严格同源策略、资源环境隔离、脚本迁移安全和 Blob 路径校验。
+`pnpm check` 串行运行测试、类型检查、格式门禁、Drizzle 迁移检查和生产构建。GitHub Actions 在 push 到 `main` 和 pull request 时执行同一组核心门禁，三个第三方 Action 均固定到对应 v4.4.0 的不可变 commit SHA。当前测试覆盖文章输入、AI 投稿及票据绑定重放、敏感信息扫描、Cookie 畸形输入、配置校验、Markdown 与响应式媒体宽度、RSS 解析、登录限速、严格同源策略、资源环境隔离、脚本迁移安全和 Blob 路径校验。
 
 ### 备份与媒体对账
 
@@ -347,7 +347,7 @@ $env:RESTORE_ALLOW_NON_LOOPBACK='1'
 pnpm backup:restore -- --backup=C:\Backups\zhanming-blog-2026-08-09-with-blobs --target-environment=restore-drill --confirm-environment=restore-drill
 ```
 
-恢复后的一次性投稿票据全部撤销，不能再次授权投稿。2026-08-09 已在两个独立本地 PostgreSQL 18 空库之间完成数据库备份/恢复演练，并验证逐表行数、票据哈希重置、强制撤销和序列续写。生产恢复与 Blob 字节异地恢复仍必须由管理员在独立 Neon 分支和独立 Blob Store 上执行并记录 RPO/RTO。
+恢复脚本会先完整校验归档字节，再幂等恢复 Blob，最后在数据库事务中再次确认目标表为空并写入数据；同 pathname 已存在且字节一致时复用，不一致时拒绝覆盖。`RESTORE_FAULT_INJECT_AFTER_BLOBS` 可注入中断，清除该变量后可安全重跑；`--repair-blobs-only` 可在不连接数据库的情况下补齐 Blob。恢复后的一次性投稿票据全部撤销，不能再次授权投稿。2026-08-09 已在两个独立本地 PostgreSQL 18 空库之间完成数据库备份/恢复演练，并验证逐表行数、票据哈希重置、强制撤销和序列续写。生产恢复与 Blob 字节异地恢复仍必须由管理员在独立 Neon 分支和独立 Blob Store 上执行并记录 RPO/RTO。
 
 媒体对账只生成报告，不修复、不上传、不删除：
 
@@ -371,7 +371,7 @@ pnpm assets:audit
 - 有效未使用投稿票据：0 张；
 - 保留 1 张已撤销且已过期票据及其审计事件，这是无效授权和正常审计残留，不是文章数据。
 
-仓库仍有 26 个旧 Markdown 文章文件和用户静态资源，未被清理。`public/blogs/hardware-kb/` 明确保留。
+仓库仍有 26 个旧 Markdown 文章文件和用户静态资源，未被清理。`public/blogs/hardware-kb/` 的 33 个本地文件完整保留，但不再进入 Git 或 Vercel 部署。
 
 ## 13. 已验证问题与已知限制
 
@@ -381,7 +381,7 @@ pnpm assets:audit
 - 根布局平台检测改为零渲染客户端初始化组件，避免严格 CSP 页面出现 nonce 属性 hydration mismatch 或 React 脚本警告；
 - `/admin/review`、`/write` 与 `/write/[slug]` 已增加服务端会话 gate；未登录用户不会拿到后台 UI；
 - 管理写请求现在必须有严格同源 Origin，并通过部署环境/资源环境一致性检查；
-- 生产 CSP 已移除 `unsafe-eval` 和失效域名；开发环境仅为 React 调试启用 `unsafe-eval`；后台使用 nonce，Preview 自动启用 strict Report-Only；补齐 `metadataBase`、canonical、`robots.txt`、静态页 sitemap 与文章 `updatedAt`；
+- 生产 CSP 已移除 `unsafe-eval` 和失效域名；开发环境仅为 React 调试启用 `unsafe-eval`；后台使用每请求 nonce；Live2D 加载与 PIXI 同版本、带 SRI 的 CSP 兼容模块，不再要求放开 `unsafe-eval`；补齐 `metadataBase`、canonical、`robots.txt`、静态页 sitemap 与文章 `updatedAt`；
 - RSS `lastBuildDate` 现在只随最新文章更新时间变化；
 - 已加入 GitHub Actions、带 Blob 字节归档的 CMS 备份/恢复演练、媒体四方对账和可恢复 GC；
 - `RuntimeConfigHydrator` 改为浏览器绘制前同步配置，避免先显示 Git 回退配置再闪变；
@@ -394,9 +394,9 @@ pnpm assets:audit
 
 ### 仍存在的技术债
 
-- 公开静态/ISR 页面为了 Next.js hydration 仍保留兼容 `unsafe-inline`；后台已使用 nonce，Preview 的 strict Report-Only 结果决定公开页是否值得牺牲 ISR 全量动态化；
+- 公开静态/ISR 页面为了 Next.js 的内联 RSC/bootstrap 数据保留 `unsafe-inline`；生产浏览器实测表明，Next 16.3 的实验性 SRI 不能覆盖全部流式 chunk 和内联数据，强制严格策略会白屏。后台与写作页继续使用 nonce。除非未来接受全站动态 SSR、失去静态 CDN 缓存并增加 Vercel 成本，否则不把公开页改成全量 nonce；
 - `mylike.zhanmingblog.workers.dev` 仍被点赞组件实际调用，它是外部服务依赖，不代表 Cloudflare 部署分支，不能为了“去 Cloudflare”盲删；
-- 图片墙原图和高码率音乐已归档到仓库外并压缩；剩余大文件主要是仍在使用的音乐与明确禁止处理的硬件资料；
+- 图片墙原图已归档到仓库外并压缩；5 个仍在使用的 MP3 共约 19.3 MiB，播放器只在用户点击播放后创建 `Audio` 和设置源，不再在任意页面挂载时请求首曲。继续有损压缩会牺牲音质，因此本轮不改写用户音频；
 - 备份、恢复、媒体回填和可恢复 GC 工具已经存在，本地 PostgreSQL 数据库恢复已实测；异地调度和真实独立 Neon/Blob 恢复演练仍需要管理员选择目标资源后执行；
 - 旧迁移表和审计数据没有自动清理策略，长期运行需要定期归档/保留政策。
 
@@ -415,8 +415,7 @@ Cloudflare 分支、OpenNext、Worker 配置和 Windows 高权限 Agent broker �
 1. 在 Vercel Dashboard 真正隔离 Production/Preview/Development 的 Neon 与 Blob，并设置对应 `BLOG_RESOURCE_ENV`；
 2. 用 `backup:cms --archive-blobs` 把备份存到独立故障域，并用 `backup:restore` 在空白 Neon 分支与独立 Blob Store 做一次恢复演练；
 3. 先在 Preview 运行 `media:maintain --action=plan/backfill`，核对结果后再决定是否在生产人工执行；
-4. 查看 Preview 的 `/api/csp-report` 日志，确认公开页面 strict CSP 违规来源，再决定是否接受全量动态渲染；
-5. 为修订和审计数据确定保留期限；旧 Agent schema 已有带保护条件的迁移，不再属于设计债务。
+4. 为修订和审计数据确定保留期限；旧 Agent schema 已有带保护条件的迁移，不再属于设计债务。
 
 ## 16. 本轮清理状态（2026-08-09）
 
@@ -430,7 +429,7 @@ Cloudflare 分支、OpenNext、Worker 配置和 Windows 高权限 Agent broker �
 - 删除未被项目调用且会无差别 `git add .` 后直接推送的 `git_push.bat`；
 - 将旧项目副本和生成物移动到仓库外可恢复归档目录，而不是永久删除。
 
-Knip 复扫后仅报告 `@svgr/webpack`。这是配置文件中以 loader 字符串使用的依赖，必须保留；其余死文件和可安全删除的死依赖已清空。`public/blogs/hardware-kb/`、旧文章 Markdown、图片、音频和数据库遗留表均被明确保留。
+Knip 复扫后仅报告 `@svgr/webpack`。这是配置文件中以 loader 字符串使用的依赖，必须保留；其余死文件和可安全删除的死依赖已清空。`public/blogs/hardware-kb/` 已从 Git 索引移除但本机 33 个文件完整保留；旧文章 Markdown、图片、音频和数据库遗留表没有被删除。
 
 清理不是发布动作。当前工作区仍有此前升级改造的未提交变更；完成本地门禁后，仍需由用户决定如何拆分提交和推送。
 
@@ -445,24 +444,24 @@ Knip 复扫后仅报告 `@svgr/webpack`。这是配置文件中以 loader 字符
 
 > 原 `PROJECT_AUDIT.md`（2026-08-08 审计、2026-08-09 复核）已合并到本节并删除。下表是当前权威状态，原始发现细节不再保留。
 
-| 审计项                      | 状态               | 结果                                                                                                    |
-| --------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------- |
-| P0-1 文章 SSR/SEO/404       | 已修复             | 列表和正文服务端取数，正文服务端渲染，metadata 与真实 404 已实现                                        |
-| P0-2 独立备份/恢复          | 本地演练通过       | 备份/恢复脚本已用两套空白 PostgreSQL 实测；Blob 异地恢复与生产资源演练仍需管理员执行                    |
-| P0-3 媒体索引可信度         | 已具备安全回填工具 | 回填逐对象核验 Blob 字节 SHA-256、MIME 和大小；生产回填仍需管理员显式执行                               |
-| P0-4 混合脏工作区           | 未解决             | 仍不应整体提交；`public/blogs/hardware-kb/` 保持未触碰、未提交                                          |
-| P1-1 管理员登录限速         | 已修复             | 失败窗口、阻断期、数据库记录和自动测试已实现                                                            |
-| P1-2 Blob/数据库非原子与 GC | 已具备两阶段流程   | pending/committed/orphaned/deleted 生命周期、标记清单、宽限期、ETag 校验、删除前归档和 recover 已实现   |
-| P1-3 迁移半状态与分类清空   | 已修复             | 迁移先规划校验，分类改为安全 upsert，环境确认与本地 loopback 约束已加入                                 |
-| P1-4 smoke 污染             | 部分修复           | 脚本拒绝生产和共享默认凭据；仍不应在生产执行写入 smoke                                                  |
-| P1-5 环境资源隔离           | 部分修复           | 代码强制 `BLOG_RESOURCE_ENV` 与 Vercel 环境一致；Dashboard 资源隔离仍需人工核验                         |
-| P1-6 CI 缺失                | 已修复             | GitHub Actions 执行 frozen install、test、typecheck、格式检查、Drizzle check 和 build                   |
-| P2-1 客户端 Markdown 过重   | 已修复（文章链路） | 公开文章 Markdown 已移到服务端；其他强交互页面保留 Client Component                                     |
-| P2-2 图片带宽/CLS           | 已修复             | 图片墙原件已归档并改为 WebP；响应式 srcset/sizes 已实现；媒体尺寸存入数据库；/api/media 支持 sharp 缩放 |
-| P2-3 CSP `unsafe-eval`      | 已分层收敛         | 后台/编辑页使用 nonce CSP；公开页保留 ISR 兼容策略，Preview 自动启用 strict Report-Only                 |
-| P2-4 可访问性语义           | 已修复             | `lang=zh-CN`、允许缩放、核心页面 H1 和密码表单 username 已补齐                                          |
-| P2-5 SEO 配置               | 已修复             | metadataBase、canonical、robots、静态页 sitemap 和文章更新时间已补齐                                    |
-| P2-6 修订可用性/保留        | 已修复             | 修订历史 UI（列表、详情、恢复）已完成；恢复时同步元数据；分类批量修改的标签快照已修；只读备份覆盖修订   |
+| 审计项                      | 状态               | 结果                                                                                                  |
+| --------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------- |
+| P0-1 文章 SSR/SEO/404       | 已修复             | 列表和正文服务端取数，正文服务端渲染，metadata 与真实 404 已实现                                      |
+| P0-2 独立备份/恢复          | 本地演练通过       | 备份/恢复脚本已用两套空白 PostgreSQL 实测；Blob 异地恢复与生产资源演练仍需管理员执行                  |
+| P0-3 媒体索引可信度         | 已具备安全回填工具 | 回填逐对象核验 Blob 字节 SHA-256、MIME 和大小；生产回填仍需管理员显式执行                             |
+| P0-4 混合脏工作区           | 已隔离             | `public/blogs/hardware-kb/` 已从 Git 索引移除并加入忽略；本机 33 个文件保持完整                       |
+| P1-1 管理员登录限速         | 已修复             | 失败窗口、阻断期、数据库记录和自动测试已实现                                                          |
+| P1-2 Blob/数据库非原子与 GC | 已具备两阶段流程   | pending/committed/orphaned/deleted 生命周期、标记清单、宽限期、ETag 校验、删除前归档和 recover 已实现 |
+| P1-3 迁移半状态与分类清空   | 已修复             | 迁移先规划校验，分类改为安全 upsert，环境确认与本地 loopback 约束已加入                               |
+| P1-4 smoke 污染             | 部分修复           | 脚本拒绝生产和共享默认凭据；仍不应在生产执行写入 smoke                                                |
+| P1-5 环境资源隔离           | 部分修复           | 代码强制 `BLOG_RESOURCE_ENV` 与 Vercel 环境一致；Dashboard 资源隔离仍需人工核验                       |
+| P1-6 CI 缺失                | 已修复             | GitHub Actions 执行 frozen install、test、typecheck、格式检查、Drizzle check 和 build                 |
+| P2-1 客户端 Markdown 过重   | 已修复             | 公开文章和 About 阅读态服务端渲染；About 编辑预览按需拆包，且移除挂载后的重复文档请求                 |
+| P2-2 图片带宽/CLS           | 已修复             | 响应式 srcset/sizes 与媒体尺寸已实现；缩放宽度固定为四档，Vercel CDN 缓存变体，Next 图片优化已恢复    |
+| P2-3 CSP `unsafe-eval`      | 已分层收敛         | 生产不含 `unsafe-eval`；Live2D 使用带 SRI 的 CSP 兼容模块；后台/编辑页 nonce，公开静态页保留内联兼容  |
+| P2-4 可访问性语义           | 已修复             | `lang=zh-CN`、允许缩放、核心页面 H1 和密码表单 username 已补齐                                        |
+| P2-5 SEO 配置               | 已修复             | metadataBase、canonical、robots、静态页 sitemap 和文章更新时间已补齐                                  |
+| P2-6 修订可用性/保留        | 已修复             | 修订历史 UI（列表、详情、恢复）已完成；恢复时同步元数据；分类批量修改的标签快照已修；只读备份覆盖修订 |
 
 ### 2026-08-10 代码质量修复
 
@@ -537,4 +536,17 @@ Knip 复扫后仅报告 `@svgr/webpack`。这是配置文件中以 loader 字符
 - `live2d-viewer.tsx`（P2）：异步初始化流程补充 `cancelled` 取消机制。修复前组件卸载后 `init()` 仍会继续加载脚本并创建 PIXI Application，而 cleanup 执行时 `app` 尚为 `null`，后创建的 WebGL 上下文永远无法销毁，造成 GPU 资源泄漏；修复后在脚本加载后与模型加载后分别检查取消标志，卸载时 cleanup 一定能销毁已创建的 app；
 - `like-button.tsx`（P3）：两处无 cleanup 的 `setTimeout` 改为 `useEffect` 管理（入场延迟显示、点赞粒子清除），组件卸载后不再回调 `setState`。
 
-三轮审计后，安全边界（认证、同源、路径白名单、错误统一、sanitize 白名单、CSP、密钥管理）确认无残留问题。
+三轮审计后，安全边界（认证、同源、路径白名单、错误统一、sanitize 白名单、CSP、密钥管理）确认无已知高优先级残留问题。
+
+## 20. 综合报告整改（2026-08-10）
+
+针对 `reports/comprehensive-review-2026-08-09/REPORT.md` 的 16 项发现，本轮完成以下收口：
+
+- 内容寻址 Blob 禁止覆盖；恢复改为 Blob 优先、幂等复用、冲突拒绝、故障注入和纯 Blob 修复；
+- 畸形 Cookie 按未认证处理；投稿重放同时绑定幂等键、原票据哈希、内容哈希和 pending 状态，并用 advisory lock 串行化；
+- 移动导航补齐可访问名称；LiquidGrass 推迟 DOM 访问并清理 timer；删除文章同步失效分类缓存；
+- About 编辑预览按需加载；音乐直到明确点击才创建媒体元素；Next 图片优化恢复，任意 HTTPS 外部头像绕过受限优化器；媒体缩放只允许四档并进入 Vercel CDN；
+- GitHub Actions 固定 SHA；Windows/Linux 统一 LF 格式策略；硬件知识库从部署范围剥离但本地文件未删除；
+- Live2D 在不放开生产 `unsafe-eval` 的条件下恢复渲染。
+
+2026-08-10 本地验证：62/62 Node 测试通过，typecheck、Prettier、Drizzle check、无数据库生产构建、生产依赖审计和 `git diff --check` 通过；内置浏览器验证首页、博客搜索、文章、About 奖项图片、AI 日报、后台登录、移动导航与 Live2D，无框架遮罩或应用 console error/warn。生产资源恢复演练、生产媒体回填和 Dashboard 资源隔离仍是运维动作，不应伪装成代码已完成事项。

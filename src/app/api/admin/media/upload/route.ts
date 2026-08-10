@@ -46,7 +46,7 @@ export async function POST(request: Request): Promise<Response> {
 					allowedContentTypes: [payload.value.mimeType],
 					maximumSizeInBytes: 25 * 1024 * 1024,
 					addRandomSuffix: false,
-					allowOverwrite: true,
+					allowOverwrite: false,
 					cacheControlMaxAge: 31536000,
 					tokenPayload: JSON.stringify(payload)
 				}

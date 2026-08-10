@@ -74,12 +74,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 				<LanguageProvider>
 					<Layout>{children}</Layout>
 				</LanguageProvider>
-				{/* Vercel analytics scripts load from va.vercel-scripts.com and are blocked by
-			    CSP in local dev and on sensitive routes (/admin, /write) whose script-src
-			    does not allow va.vercel-scripts.com. Render them only in production builds
-			    and skip them on sensitive routes to keep the dev console clean and avoid
-			    pointless CSP violations. */}
-				{process.env.NODE_ENV === 'production' && <AnalyticsTracker />}
+				{/* These same-origin endpoints exist only on Vercel. A local `next start`
+				    is also a production build, but must not request /_vercel/* scripts. */}
+				{process.env.VERCEL === '1' && <AnalyticsTracker />}
 			</body>
 		</html>
 	)

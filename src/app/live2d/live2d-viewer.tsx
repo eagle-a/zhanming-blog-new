@@ -23,6 +23,10 @@ const LIVE2D_SCRIPTS = [
 		integrity: 'sha384-ZQoAYxX6eQyrW/Vpb2MtCic46Xg+z/qJ5G9WZDWnwW4SEjmApGxIpTyQUzlgDsVG'
 	},
 	{
+		src: 'https://unpkg.com/@pixi/unsafe-eval@6.2.0/dist/browser/unsafe-eval.min.js',
+		integrity: 'sha384-Cz4ciWNnlODg3vtRpl+FCafCs2bQO9Sd9hweBNVGXsor10XlHqA6OQG8LLsq3ZqO'
+	},
+	{
 		src: 'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js',
 		integrity: 'sha384-MeKqhuhBpq1ZqqshjOzqDOQJ/00BuDVdnNeYgPKul9hmgROzmT17WkmUeFJ9Jlrb'
 	},
@@ -36,30 +40,34 @@ const MODEL_URL = '/live2d/live2d.model3.json'
 
 function loadScript(src: string, integrity: string, timeout = 10000): Promise<void> {
 	return new Promise((resolve, reject) => {
-		if (document.querySelector(`script[src="${src}"]`)) {
-			resolve()
-			return
+		const existing = document.querySelector<HTMLScriptElement>(`script[src="${src}"]`)
+		if (existing?.dataset.loaded === 'true') return resolve()
+		const script = existing || document.createElement('script')
+		if (!existing) {
+			script.src = src
+			script.integrity = integrity
+			script.crossOrigin = 'anonymous'
 		}
 
-		const script = document.createElement('script')
-		script.src = src
-		script.integrity = integrity
-		script.crossOrigin = 'anonymous'
-
 		const timeoutId = setTimeout(() => {
+			script.remove()
 			reject(new Error(`加载脚本超时: ${src}`))
 		}, timeout)
 
-		script.onload = () => {
+		const handleLoad = () => {
 			clearTimeout(timeoutId)
+			script.dataset.loaded = 'true'
 			resolve()
 		}
-		script.onerror = () => {
+		const handleError = () => {
 			clearTimeout(timeoutId)
+			script.remove()
 			reject(new Error(`加载脚本失败: ${src}`))
 		}
+		script.addEventListener('load', handleLoad, { once: true })
+		script.addEventListener('error', handleError, { once: true })
 
-		document.head.appendChild(script)
+		if (!existing) document.head.appendChild(script)
 	})
 }
 

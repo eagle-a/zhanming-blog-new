@@ -11,16 +11,18 @@ const width = 210
 const height = 150
 
 export default function LiquidGrass() {
-	const bodyRef = useRef(document.body)
+	const bodyRef = useRef<HTMLElement | null>(null)
 	const [show, setShow] = useState(false)
 
 	useEffect(() => {
-		setTimeout(() => {
+		bodyRef.current = document.body
+		const timer = window.setTimeout(() => {
 			setShow(true)
 		}, 1000)
+		return () => window.clearTimeout(timer)
 	}, [])
 
-	if (!show) return null
+	if (!show || !bodyRef.current) return null
 
 	return createPortal(
 		<motion.div
@@ -67,6 +69,6 @@ export default function LiquidGrass() {
 					boxShadow: 'rgba(0, 0, 0, 0.05) 0px 4px 9px, rgba(0, 0, 0, 0.05) 0px 2px 24px inset, rgba(255, 255, 255, 0.2) 0px -2px 24px inset'
 				}}></div>
 		</motion.div>,
-		document.body
+		bodyRef.current
 	)
 }

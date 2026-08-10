@@ -1,16 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { motion } from 'motion/react'
 import { toast } from 'sonner'
-import { useMarkdownRender } from '@/hooks/use-markdown-render'
 import { pushAbout, type AboutData } from './services/push-about'
 import { useAdminAction } from '@/hooks/use-admin-action'
-import { useContentDocument } from '@/hooks/use-content-document'
 import { useConfigStore } from '@/app/(home)/stores/config-store'
 import LikeButton from '@/components/like-button'
 import GithubSVG from '@/svgs/github.svg'
-import initialData from './list.json'
+
+const AboutPreview = dynamic(() => import('./about-preview').then(module => module.AboutPreview), {
+	loading: () => <div className='text-secondary text-center'>正在加载预览...</div>
+})
 
 type AboutClientProps = {
 	serverHtml: string
@@ -21,19 +23,13 @@ type AboutClientProps = {
 export function AboutClient({ serverHtml, initialAbout, initialVersion }: AboutClientProps) {
 	const [data, setData] = useState<AboutData>(initialAbout)
 	const [originalData, setOriginalData] = useState<AboutData>(initialAbout)
+	const [version, setVersion] = useState(initialVersion)
 	const [isEditMode, setIsEditMode] = useState(false)
 	const [isSaving, setIsSaving] = useState(false)
 	const [isPreviewMode, setIsPreviewMode] = useState(false)
 	const { isAuth, runAuthenticated } = useAdminAction()
-	const aboutDocument = useContentDocument<AboutData>('about', initialData as AboutData)
 	const { siteContent } = useConfigStore()
-	const { content, loading } = useMarkdownRender(data.content)
 	const hideEditButton = siteContent.hideEditButton ?? false
-
-	useEffect(() => {
-		setData(aboutDocument.data)
-		setOriginalData(aboutDocument.data)
-	}, [aboutDocument.data])
 
 	const handleSaveClick = () => {
 		void runAuthenticated(handleSave)
@@ -48,9 +44,10 @@ export function AboutClient({ serverHtml, initialAbout, initialVersion }: AboutC
 		setIsSaving(true)
 
 		try {
-			const saved = await pushAbout(data, aboutDocument.version)
+			const saved = await pushAbout(data, version)
 			setData(saved.data)
 			setOriginalData(saved.data)
+			setVersion(saved.version)
 			setIsEditMode(false)
 			setIsPreviewMode(false)
 			toast.success('保存成功！')
@@ -91,20 +88,7 @@ export function AboutClient({ serverHtml, initialAbout, initialVersion }: AboutC
 				<div className='w-full max-w-[800px]'>
 					{isEditMode ? (
 						isPreviewMode ? (
-							<div className='space-y-6'>
-								<div className='text-center'>
-									<h1 className='mb-4 text-4xl font-bold'>{data.title || '标题预览'}</h1>
-									<p className='text-secondary text-lg'>{data.description || '描述预览'}</p>
-								</div>
-
-								{loading ? (
-									<div className='text-secondary text-center'>预览渲染中...</div>
-								) : (
-									<div className='card relative p-6'>
-										<div className='prose prose-sm max-w-none'>{content}</div>
-									</div>
-								)}
-							</div>
+							<AboutPreview title={data.title} description={data.description} content={data.content} />
 						) : (
 							<div className='space-y-6'>
 								<div className='space-y-4'>

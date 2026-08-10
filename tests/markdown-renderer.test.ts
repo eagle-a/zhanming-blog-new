@@ -45,7 +45,7 @@ test('image renderer omits srcset widths larger than original', async () => {
 	assert.match(html, /width="600"/)
 	assert.match(html, /height="400"/)
 	assert.match(html, /w=480 480w/)
-	assert.match(html, /w=800 800w/)
+	assert.doesNotMatch(html, /w=800/)
 	assert.doesNotMatch(html, /w=1200/)
 	assert.doesNotMatch(html, /w=1920/)
 })

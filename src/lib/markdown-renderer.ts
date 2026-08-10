@@ -1,6 +1,7 @@
 import { Marked, Renderer } from 'marked'
 import type { Tokens } from 'marked'
 import { sanitizeHtml } from './sanitize-html.ts'
+import { RESPONSIVE_MEDIA_WIDTHS } from './responsive-media.ts'
 
 export type TocItem = { id: string; text: string; level: number }
 
@@ -10,8 +11,6 @@ export interface MarkdownRenderResult {
 }
 
 export type ImageDimensionMap = Map<string, { width: number; height: number }>
-
-const RESPONSIVE_WIDTHS = [480, 800, 1200, 1920]
 
 function slugify(text: string): string {
 	return text
@@ -137,11 +136,7 @@ export async function renderMarkdown(markdown: string, imageDimensions?: ImageDi
 			}
 			const dims = pathname ? imageDimensions?.get(pathname) : undefined
 			if (dims) {
-				const widths = RESPONSIVE_WIDTHS.filter(w => w <= dims.width)
-				// Include the next standard breakpoint above the original so high-DPR screens
-				// get a sharper candidate; sharp won't upscale beyond the source pixels.
-				const nextWidth = RESPONSIVE_WIDTHS.find(w => w > dims.width)
-				if (nextWidth) widths.push(nextWidth)
+				const widths = RESPONSIVE_MEDIA_WIDTHS.filter(w => w <= dims.width)
 				if (widths.length > 0) {
 					const srcset = widths.map(w => `${href}${href.includes('?') ? '&' : '?'}w=${w} ${w}w`).join(', ')
 					return `<img src="${escapeHtmlAttribute(href)}" alt="${alt}"${title} width="${dims.width}" height="${dims.height}" ${baseAttrs} srcset="${escapeHtmlAttribute(srcset)}" sizes="(max-width: 640px) 100vw, 800px" />`

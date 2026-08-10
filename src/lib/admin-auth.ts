@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createHmac, scrypt, timingSafeEqual } from 'node:crypto'
+import { readCookieValue } from '@/lib/cookie'
 import { evaluateWriteEnvironment } from '@/lib/write-environment-policy'
 import { isSameOriginRequest } from '@/lib/same-origin-policy'
 
@@ -76,19 +77,8 @@ export async function verifyAdminPassword(password: string): Promise<boolean> {
 	return actual.length === expected.length && timingSafeEqual(actual, expected)
 }
 
-function getCookieValue(request: Request, name: string): string | null {
-	const cookies = request.headers.get('cookie')
-	if (!cookies) return null
-	for (const item of cookies.split(';')) {
-		const separator = item.indexOf('=')
-		if (separator < 0) continue
-		if (item.slice(0, separator).trim() === name) return decodeURIComponent(item.slice(separator + 1).trim())
-	}
-	return null
-}
-
 export function isAdminRequest(request: Request): boolean {
-	return verifyAdminSessionToken(getCookieValue(request, ADMIN_SESSION_COOKIE))
+	return verifyAdminSessionToken(readCookieValue(request.headers.get('cookie'), ADMIN_SESSION_COOKIE))
 }
 
 export function assertAdminRequest(request: Request): void {
