@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 import type { BlogIndexItem } from '@/app/blog/types'
-import { assertValidSlug, resolveSiteUrl } from '@/lib/config-validation'
+import { assertValidSlug, resolvePublicSiteUrl } from '@/lib/config-validation'
 import { getCachedPublishedPosts } from '@/lib/posts-repository'
 import { allowDevelopmentLegacyFallback, readLegacyPosts } from '@/lib/legacy-blog-reader'
 
@@ -8,9 +8,7 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-	const baseUrl = resolveSiteUrl(
-		process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://zhanmingblog.cc.cd')
-	)
+	const baseUrl = resolvePublicSiteUrl()
 
 	const posts: BlogIndexItem[] = allowDevelopmentLegacyFallback() ? readLegacyPosts(false) : await getCachedPublishedPosts()
 

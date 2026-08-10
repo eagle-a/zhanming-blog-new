@@ -11,11 +11,10 @@ import { AnalyticsTracker } from '@/components/analytics-tracker'
 import { getCachedContentDocument, getFallbackContentDocument } from '@/lib/content-repository'
 import { hasDatabaseConfiguration } from '@/lib/legacy-blog-reader'
 import type { CardStyles, SiteContent } from '@/app/(home)/stores/config-store'
-import { resolveSiteUrl } from '@/lib/config-validation'
+import { resolvePublicSiteUrl } from '@/lib/config-validation'
+import { resolveSiteDescription } from '@/lib/site-metadata'
 
-const SITE_URL = resolveSiteUrl(
-	process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://zhanmingblog.cc.cd')
-)
+const SITE_URL = resolvePublicSiteUrl()
 
 const getRuntimeConfig = cache(async (): Promise<{ siteContent: SiteContent; cardStyles: CardStyles }> => {
 	if (!hasDatabaseConfiguration()) {
@@ -38,7 +37,8 @@ const getRuntimeConfig = cache(async (): Promise<{ siteContent: SiteContent; car
 
 export async function generateMetadata(): Promise<Metadata> {
 	const { siteContent } = await getRuntimeConfig()
-	const { title, description } = siteContent.meta
+	const title = siteContent.meta.title
+	const description = resolveSiteDescription(siteContent.meta.description)
 	return {
 		metadataBase: new URL(SITE_URL),
 		title,

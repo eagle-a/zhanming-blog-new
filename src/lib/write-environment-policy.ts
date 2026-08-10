@@ -16,7 +16,7 @@ function parseEnvironment(value?: string): WriteEnvironment | undefined {
 	return normalized && VALID_ENVIRONMENTS.has(normalized) ? normalized : undefined
 }
 
-function isLoopbackDatabase(databaseUrl?: string): boolean {
+export function isLoopbackDatabase(databaseUrl?: string): boolean {
 	if (!databaseUrl) return false
 	try {
 		const hostname = new URL(databaseUrl).hostname.toLowerCase()

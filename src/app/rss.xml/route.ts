@@ -4,11 +4,12 @@ import path from 'node:path'
 import type { BlogIndexItem } from '@/app/blog/types'
 import { marked } from 'marked'
 import { sanitizeHtml } from '@/lib/sanitize-html'
-import { assertValidSlug, resolveSiteUrl } from '@/lib/config-validation'
+import { assertValidSlug, resolvePublicSiteUrl } from '@/lib/config-validation'
 import { getCachedPublishedPost, getCachedPublishedPosts } from '@/lib/posts-repository'
 import { allowDevelopmentLegacyFallback, readLegacyPosts } from '@/lib/legacy-blog-reader'
 import { getCachedContentDocument, getFallbackContentDocument } from '@/lib/content-repository'
 import type { SiteContent } from '@/app/(home)/stores/config-store'
+import { resolveSiteDescription } from '@/lib/site-metadata'
 
 // 配置 marked 为同步模式
 marked.use({
@@ -16,9 +17,7 @@ marked.use({
 })
 
 const FEED_PATH = '/rss.xml'
-const SITE_ORIGIN = resolveSiteUrl(
-	process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://zhanmingblog.cc.cd')
-)
+const SITE_ORIGIN = resolvePublicSiteUrl()
 const FEED_URL = `${SITE_ORIGIN}${FEED_PATH}`
 const PUBLIC_DIR = path.join(process.cwd(), 'public')
 
@@ -124,7 +123,7 @@ export async function GET(): Promise<Response> {
 		}
 	}
 	const title = siteContent.meta?.title || 'Blog'
-	const description = siteContent.meta?.description || 'Latest updates from Blog'
+	const description = resolveSiteDescription(siteContent.meta?.description)
 	const username = siteContent.meta?.username || 'author'
 
 	const latestTimestamp = blogs.reduce((latest, blog) => {

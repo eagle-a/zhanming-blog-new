@@ -1,5 +1,7 @@
 const SAFE_SLUG = /^[a-z0-9][a-z0-9_-]{0,99}$/i
 
+export const DEFAULT_PUBLIC_SITE_URL = 'https://zhanmingblog.cc.cd'
+
 export function validateSlug(slug: string): boolean {
 	return SAFE_SLUG.test(slug.trim())
 }
@@ -35,4 +37,8 @@ export function resolveSiteUrl(rawUrl?: string): string {
 	}
 
 	return parsed.toString().replace(/\/+$/, '')
+}
+
+export function resolvePublicSiteUrl(rawUrl = process.env.NEXT_PUBLIC_SITE_URL): string {
+	return resolveSiteUrl(rawUrl || DEFAULT_PUBLIC_SITE_URL)
 }

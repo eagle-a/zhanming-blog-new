@@ -5,29 +5,33 @@ import { hasDatabaseConfiguration } from '@/lib/legacy-blog-reader'
 import { renderMarkdown } from '@/lib/markdown-renderer'
 import type { AboutData } from './services/push-about'
 import initialData from './list.json'
+import { resolveAboutDescription } from '@/lib/site-metadata'
 
 export const dynamic = 'force-dynamic'
 
 async function loadAbout(): Promise<{ data: AboutData; version: number }> {
 	if (!hasDatabaseConfiguration()) {
-		return { data: getFallbackContentDocument<AboutData>('about').data, version: 0 }
+		const data = getFallbackContentDocument<AboutData>('about').data
+		return { data: { ...data, description: resolveAboutDescription(data.description) }, version: 0 }
 	}
 	try {
 		const doc = await getCachedContentDocument<AboutData>('about')
-		return { data: doc.data, version: doc.version }
+		return { data: { ...doc.data, description: resolveAboutDescription(doc.data.description) }, version: doc.version }
 	} catch {
-		return { data: getFallbackContentDocument<AboutData>('about').data, version: 0 }
+		const data = getFallbackContentDocument<AboutData>('about').data
+		return { data: { ...data, description: resolveAboutDescription(data.description) }, version: 0 }
 	}
 }
 
 export async function generateMetadata(): Promise<Metadata> {
 	const { data } = await loadAbout()
+	const description = resolveAboutDescription(data.description)
 	return {
 		title: data.title || '关于',
-		description: data.description || '',
+		description,
 		alternates: { canonical: '/about' },
-		openGraph: { title: data.title, description: data.description, url: '/about' },
-		twitter: { title: data.title, description: data.description }
+		openGraph: { title: data.title, description, url: '/about' },
+		twitter: { title: data.title, description }
 	}
 }
 

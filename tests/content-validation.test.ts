@@ -12,6 +12,7 @@ import {
 	parseContentDocument,
 	type ContentDocumentKey
 } from '../src/lib/content-validation.ts'
+import { FALLBACK_SHARE_LOGO, resolveShareLogo } from '../src/app/share/share-logo.ts'
 
 const sourceFiles: Record<ContentDocumentKey, URL> = {
 	site: new URL('../src/config/site-content.json', import.meta.url),
@@ -86,4 +87,10 @@ test('allows only immutable blog and content Blob proxy paths', () => {
 	assert.equal(isAllowedMediaPathname(`content/migrated/${digest}.svg`), true)
 	assert.equal(isAllowedMediaPathname(`content/unknown/${digest}.png`), false)
 	assert.equal(isAllowedMediaPathname(`content/site/../../secret.png`), false)
+})
+
+test('maps retired third-party share logos to a stable local asset', () => {
+	assert.equal(resolveShareLogo('https://tinypng.com/static/images/george-anim/large_george_x2.webp'), '/images/share/tinypng.png')
+	assert.equal(resolveShareLogo(''), FALLBACK_SHARE_LOGO)
+	assert.equal(resolveShareLogo('/images/share/example.svg'), '/images/share/example.svg')
 })

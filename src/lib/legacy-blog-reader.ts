@@ -5,8 +5,10 @@ import legacyCategories from '@/../public/blogs/categories.json'
 import type { BlogIndexItem } from '@/app/blog/types'
 import { assertValidSlug } from './config-validation'
 import { filterPublicBlogs } from './blog-visibility'
+import { isLoopbackDatabase } from './write-environment-policy'
 
 const publicDir = path.join(process.cwd(), 'public')
+const LOCAL_LEGACY_DATABASE_SENTINEL = 'legacy://read-only'
 
 export function readLegacyPosts(includeDrafts = false): BlogIndexItem[] {
 	const items = legacyIndex as BlogIndexItem[]
@@ -35,9 +37,10 @@ export function readLegacyPost(slug: string): (BlogIndexItem & { contentMd: stri
 }
 
 export function hasDatabaseConfiguration(): boolean {
-	return Boolean(process.env.DATABASE_URL?.trim())
+	const databaseUrl = process.env.DATABASE_URL?.trim()
+	return Boolean(databaseUrl && databaseUrl !== LOCAL_LEGACY_DATABASE_SENTINEL)
 }
 
 export function allowDevelopmentLegacyFallback(): boolean {
-	return process.env.NODE_ENV !== 'production' && !hasDatabaseConfiguration()
+	return process.env.NODE_ENV !== 'production' && !isLoopbackDatabase(process.env.DATABASE_URL)
 }

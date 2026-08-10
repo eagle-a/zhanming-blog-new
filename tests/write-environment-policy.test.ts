@@ -1,10 +1,20 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import test from 'node:test'
-import { evaluateWriteEnvironment } from '../src/lib/write-environment-policy.ts'
+import { evaluateWriteEnvironment, isLoopbackDatabase } from '../src/lib/write-environment-policy.ts'
 
 test('allows local development writes only for a loopback database', () => {
+	assert.equal(isLoopbackDatabase('postgresql://postgres@127.0.0.1:54329/blog'), true)
+	assert.equal(isLoopbackDatabase('postgresql://user@example.neon.tech/blog'), false)
 	assert.equal(evaluateWriteEnvironment({ NODE_ENV: 'development', DATABASE_URL: 'postgresql://postgres@127.0.0.1:54329/blog' }).allowed, true)
 	assert.equal(evaluateWriteEnvironment({ NODE_ENV: 'development', DATABASE_URL: 'postgresql://user@example.neon.tech/blog' }).allowed, false)
+})
+
+test('local runner uses a non-empty read-only sentinel when PostgreSQL is unavailable', async () => {
+	const runner = await readFile(new URL('../scripts/run-local-next.mjs', import.meta.url), 'utf8')
+	const legacyReader = await readFile(new URL('../src/lib/legacy-blog-reader.ts', import.meta.url), 'utf8')
+	assert.match(runner, /localPostgresAvailable\s*\?\s*'postgresql:[^']+'\s*:\s*'legacy:\/\/read-only'/)
+	assert.match(legacyReader, /databaseUrl !== LOCAL_LEGACY_DATABASE_SENTINEL/)
 })
 
 test('requires an explicit resource environment on Vercel', () => {
