@@ -22,6 +22,13 @@ export type JuyaAIFeed = {
 	issues: JuyaAIIssue[]
 }
 
+export type JuyaAIIssueSummary = Omit<JuyaAIIssue, 'contentHtml'>
+
+export type JuyaAIFeedView = Omit<JuyaAIFeed, 'issues'> & {
+	issues: JuyaAIIssueSummary[]
+	selectedIssue: JuyaAIIssue
+}
+
 type UnknownRecord = Record<string, unknown>
 
 function asRecord(value: unknown): UnknownRecord {
@@ -125,5 +132,20 @@ export function parseJuyaAIFeed(xml: string): JuyaAIFeed {
 		rssUrl: JUYA_AI_RSS_URL,
 		updatedAt: rawUpdatedAt || issues[0].publishedAt,
 		issues: issues.slice(0, 10)
+	}
+}
+
+export function createJuyaAIFeedView(feed: JuyaAIFeed, selectedId?: string): JuyaAIFeedView | null {
+	const selectedIssue = selectedId ? feed.issues.find(issue => issue.id === selectedId) : feed.issues[0]
+	if (!selectedIssue) return null
+
+	return {
+		title: feed.title,
+		description: feed.description,
+		homeUrl: feed.homeUrl,
+		rssUrl: feed.rssUrl,
+		updatedAt: feed.updatedAt,
+		issues: feed.issues.map(({ contentHtml: _contentHtml, ...issue }) => issue),
+		selectedIssue
 	}
 }

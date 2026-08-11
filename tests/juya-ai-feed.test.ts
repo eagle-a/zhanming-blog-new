@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { parseJuyaAIFeed } from '../src/lib/juya-ai-feed.ts'
+import { createJuyaAIFeedView, parseJuyaAIFeed } from '../src/lib/juya-ai-feed.ts'
 
 const feed = `<?xml version="1.0" encoding="utf-8"?>
 <rss xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
@@ -45,4 +45,15 @@ test('rejects RSS documents without valid Juya issue links', () => {
 		() => parseJuyaAIFeed('<rss><channel><item><title>2026-08-07</title><link>https://evil.test/issues/2026-08-07/</link></item></channel></rss>'),
 		/no valid issues/
 	)
+})
+
+test('serializes issue summaries with only the selected full body', () => {
+	const parsed = parseJuyaAIFeed(feed)
+	const view = createJuyaAIFeedView(parsed)
+
+	assert.ok(view)
+	assert.equal(view.selectedIssue.id, parsed.issues[0].id)
+	assert.match(view.selectedIssue.contentHtml, /assets\.juya\.uk\/cover\.png/)
+	assert.equal('contentHtml' in view.issues[0], false)
+	assert.equal(createJuyaAIFeedView(parsed, 'https://daily.juya.uk/issues/1999-01-01/'), null)
 })

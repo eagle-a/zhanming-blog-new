@@ -5,11 +5,11 @@ import useSWR from 'swr'
 import { AlertCircle, Clock3, ExternalLink, RefreshCw, Rss } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { sanitizeHtml } from '@/lib/sanitize-html'
-import type { JuyaAIFeed, JuyaAIIssue } from '@/lib/juya-ai-feed'
+import type { JuyaAIFeedView, JuyaAIIssue } from '@/lib/juya-ai-feed'
 
-async function fetchFeed(url: string): Promise<JuyaAIFeed> {
+async function fetchFeed(url: string): Promise<JuyaAIFeedView> {
 	const response = await fetch(url, { credentials: 'same-origin' })
-	const body = (await response.json()) as JuyaAIFeed & { error?: string }
+	const body = (await response.json()) as JuyaAIFeedView & { error?: string }
 	if (!response.ok) throw new Error(body.error || 'AI 日报加载失败')
 	return body
 }
@@ -71,9 +71,23 @@ function IssueContent({ issue }: { issue: JuyaAIIssue }) {
 	)
 }
 
-export function DailyClient({ initialFeed }: { initialFeed: JuyaAIFeed | null }) {
+function IssueLoadingState() {
+	return (
+		<div className='card relative! min-h-[720px] animate-pulse p-6' aria-label='正在加载所选日报'>
+			<div className='mb-6 h-7 w-52 rounded-lg bg-black/5' />
+			<div className='mb-8 h-48 rounded-2xl bg-black/5' />
+			<div className='space-y-3'>
+				<div className='h-4 w-full rounded bg-black/5' />
+				<div className='h-4 w-11/12 rounded bg-black/5' />
+				<div className='h-4 w-4/5 rounded bg-black/5' />
+			</div>
+		</div>
+	)
+}
+
+export function DailyClient({ initialFeed }: { initialFeed: JuyaAIFeedView | null }) {
 	const reduceMotion = useReducedMotion()
-	const { data, error, isLoading, isValidating, mutate } = useSWR<JuyaAIFeed>('/api/ai-daily', fetchFeed, {
+	const { data, error, isLoading, isValidating, mutate } = useSWR<JuyaAIFeedView>('/api/ai-daily', fetchFeed, {
 		fallbackData: initialFeed || undefined,
 		revalidateOnFocus: false,
 		revalidateIfStale: false,
@@ -81,13 +95,33 @@ export function DailyClient({ initialFeed }: { initialFeed: JuyaAIFeed | null })
 		keepPreviousData: true
 	})
 	const [selectedId, setSelectedId] = useState('')
+	const effectiveSelectedId = selectedId || data?.selectedIssue.id || ''
+	const selectedUrl = data && effectiveSelectedId !== data.selectedIssue.id ? `/api/ai-daily?issue=${encodeURIComponent(effectiveSelectedId)}` : null
+	const {
+		data: selectedView,
+		error: selectedError,
+		isValidating: isSelectedValidating,
+		mutate: mutateSelected
+	} = useSWR<JuyaAIFeedView>(selectedUrl, fetchFeed, {
+		revalidateOnFocus: false,
+		dedupingInterval: 60_000,
+		keepPreviousData: false
+	})
 
 	useEffect(() => {
 		if (!data?.issues.length) return
 		if (!data.issues.some(issue => issue.id === selectedId)) setSelectedId(data.issues[0].id)
 	}, [data, selectedId])
 
-	const selectedIssue = data?.issues.find(issue => issue.id === selectedId) || data?.issues[0]
+	const selectedIssue =
+		data?.selectedIssue.id === effectiveSelectedId
+			? data.selectedIssue
+			: selectedView?.selectedIssue.id === effectiveSelectedId
+				? selectedView.selectedIssue
+				: undefined
+	const currentError = error || selectedError
+	const refreshing = isValidating || isSelectedValidating
+	const reload = () => Promise.all([mutate(), selectedUrl ? mutateSelected() : Promise.resolve()])
 
 	return (
 		<main className='min-h-screen overflow-x-clip px-4 pt-28 pb-14 sm:px-6'>
@@ -122,24 +156,24 @@ export function DailyClient({ initialFeed }: { initialFeed: JuyaAIFeed | null })
 					</a>
 					<button
 						type='button'
-						onClick={() => void mutate()}
-						disabled={isValidating}
+						onClick={() => void reload()}
+						disabled={refreshing}
 						className='bg-card inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm disabled:cursor-wait disabled:opacity-60'>
-						<RefreshCw className={`h-4 w-4 ${isValidating ? 'animate-spin' : ''}`} />
+						<RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
 						重新加载
 					</button>
 				</div>
 
-				{error ? (
+				{currentError ? (
 					<div className='card relative! mx-auto max-w-xl p-8 text-center'>
 						<AlertCircle className='mx-auto mb-3 h-8 w-8 text-red-500' />
 						<h2 className='mb-2 text-lg font-semibold'>AI 日报暂时无法加载</h2>
-						<p className='text-secondary mb-5 text-sm'>{error instanceof Error ? error.message : '请稍后重试'}</p>
-						<button type='button' onClick={() => void mutate()} className='brand-btn px-5'>
+						<p className='text-secondary mb-5 text-sm'>{currentError instanceof Error ? currentError.message : '请稍后重试'}</p>
+						<button type='button' onClick={() => void reload()} className='brand-btn px-5'>
 							重试
 						</button>
 					</div>
-				) : isLoading || !data || !selectedIssue ? (
+				) : isLoading || !data ? (
 					<LoadingState />
 				) : (
 					<div className='grid min-w-0 items-start gap-5 lg:grid-cols-[210px_minmax(0,1fr)]'>
@@ -147,7 +181,7 @@ export function DailyClient({ initialFeed }: { initialFeed: JuyaAIFeed | null })
 							<h2 className='px-3 pt-2 pb-3 text-base font-semibold'>最近 {data.issues.length} 期</h2>
 							<nav aria-label='AI 日报期数' className='flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible'>
 								{data.issues.map(issue => {
-									const active = issue.id === selectedIssue.id
+									const active = issue.id === effectiveSelectedId
 									return (
 										<button
 											key={issue.id}
@@ -161,7 +195,7 @@ export function DailyClient({ initialFeed }: { initialFeed: JuyaAIFeed | null })
 								})}
 							</nav>
 						</aside>
-						<IssueContent issue={selectedIssue} />
+						{selectedIssue ? <IssueContent issue={selectedIssue} /> : <IssueLoadingState />}
 					</div>
 				)}
 

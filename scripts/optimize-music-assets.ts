@@ -11,7 +11,21 @@ const archiveArgument = process.argv.find(argument => argument.startsWith('--arc
 const root = path.resolve(process.cwd())
 const musicRoot = path.join(root, 'public', 'music')
 const usedFiles = MUSIC_LIST.map(item => path.join(musicRoot, `${item.id}.mp3`))
-const unusedFiles = [path.join(musicRoot, 'christmas.m4a'), path.join(musicRoot, 'search_links.txt')]
+const unusedCandidates = [path.join(musicRoot, 'christmas.m4a'), path.join(musicRoot, 'search_links.txt')]
+
+const unusedFiles = (
+	await Promise.all(
+		unusedCandidates.map(async file => {
+			try {
+				await stat(file)
+				return file
+			} catch (error) {
+				if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null
+				throw error
+			}
+		})
+	)
+).filter((file): file is string => file !== null)
 
 const plan = await Promise.all(
 	usedFiles.map(async file => {

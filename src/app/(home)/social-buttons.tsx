@@ -50,6 +50,25 @@ interface SocialButtonConfig {
 	order: number
 }
 
+const SOCIAL_LABELS: Record<SocialButtonType, string> = {
+	github: 'GitHub',
+	juejin: '掘金',
+	email: '复制邮箱地址',
+	link: '外部链接',
+	x: 'X',
+	tg: 'Telegram',
+	wechat: '微信',
+	facebook: 'Facebook',
+	tiktok: 'TikTok',
+	instagram: 'Instagram',
+	weibo: '微博',
+	xiaohongshu: '小红书',
+	zhihu: '知乎',
+	bilibili: '哔哩哔哩',
+	qq: 'QQ',
+	rss: 'RSS'
+}
+
 export default function SocialButtons() {
 	const center = useCenterStore()
 	const { cardStyles, siteContent } = useConfigStore()
@@ -71,17 +90,23 @@ export default function SocialButtons() {
 
 	useEffect(() => {
 		const baseDelay = order * ANIMATION_DELAY * 1000
-
+		const timers: Array<ReturnType<typeof setTimeout>> = []
 		sortedButtons.forEach((button, index) => {
 			const showDelay = baseDelay + index * delay
-			setTimeout(() => {
-				setShowStates(prev => ({ ...prev, [button.id]: true }))
-			}, showDelay)
+			timers.push(
+				setTimeout(() => {
+					setShowStates(prev => ({ ...prev, [button.id]: true }))
+				}, showDelay)
+			)
 		})
 
-		setTimeout(() => {
-			setShowStates(prev => ({ ...prev, container: true }))
-		}, baseDelay)
+		timers.push(
+			setTimeout(() => {
+				setShowStates(prev => ({ ...prev, container: true }))
+			}, baseDelay)
+		)
+
+		return () => timers.forEach(timer => clearTimeout(timer))
 	}, [order, delay, sortedButtons])
 
 	useEffect(() => {
@@ -143,6 +168,7 @@ export default function SocialButtons() {
 		const Icon = iconMap[button.type]
 		const hasLabel = Boolean(button.label)
 		const iconSize = hasLabel ? 'size-6' : 'size-8'
+		const accessibleLabel = button.label || SOCIAL_LABELS[button.type]
 
 		if (button.type === 'github') {
 			return (
@@ -150,6 +176,8 @@ export default function SocialButtons() {
 					key={button.id}
 					href={button.value}
 					target='_blank'
+					rel='noopener noreferrer'
+					aria-label={hasLabel ? undefined : accessibleLabel}
 					{...commonProps}
 					className={`font-averia flex items-center gap-2 rounded-xl border bg-[#070707] text-xl text-white ${!hasLabel ? 'p-1.5' : 'px-3 py-1.5'}`}
 					style={{ boxShadow: ' inset 0 0 12px rgba(255, 255, 255, 0.4)' }}>
@@ -179,6 +207,9 @@ export default function SocialButtons() {
 							onClick={() => {
 								setOpenDropdowns(prev => ({ ...prev, [button.id]: !prev[button.id] }))
 							}}
+							aria-label={`显示${accessibleLabel}二维码`}
+							aria-expanded={isOpen}
+							aria-haspopup='dialog'
 							{...commonProps}
 							className='card btn relative rounded-xl p-1.5'>
 							<Icon className='size-8' />
@@ -209,7 +240,7 @@ export default function SocialButtons() {
 													left: buttonRefs.current[button.id] ? `${buttonRefs.current[button.id]!.getBoundingClientRect().left}px` : '0px',
 													boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
 												}}>
-												<img src={button.value} alt='QR Code' className='h-48 w-48 rounded-lg object-cover' />
+												<img src={button.value} alt={`${accessibleLabel}二维码`} className='h-48 w-48 rounded-lg object-cover' />
 											</motion.div>
 										</>
 									)}
@@ -245,6 +276,7 @@ export default function SocialButtons() {
 							document.body.removeChild(textArea)
 						}
 					}}
+					aria-label={accessibleLabel}
 					{...commonProps}
 					className='card btn relative rounded-xl p-1.5'>
 					<Icon className='size-8' />
@@ -258,6 +290,7 @@ export default function SocialButtons() {
 					key={button.id}
 					href={button.value}
 					target='_blank'
+					rel='noopener noreferrer'
 					{...commonProps}
 					className='card relative flex items-center gap-2 rounded-xl px-3 py-2.5 font-medium whitespace-nowrap'>
 					{hasLabel ? button.label : button.value}
@@ -271,6 +304,8 @@ export default function SocialButtons() {
 					key={button.id}
 					href={button.value}
 					target='_blank'
+					rel='noopener noreferrer'
+					aria-label={hasLabel ? undefined : accessibleLabel}
 					{...commonProps}
 					className={`card relative rounded-xl bg-orange-500 font-medium whitespace-nowrap text-white hover:bg-orange-600 ${hasLabel ? 'flex items-center gap-2 px-3 py-2.5' : 'p-1.5'}`}>
 					<Icon className={iconSize} />
@@ -284,6 +319,8 @@ export default function SocialButtons() {
 				key={button.id}
 				href={button.value}
 				target='_blank'
+				rel='noopener noreferrer'
+				aria-label={hasLabel ? undefined : accessibleLabel}
 				{...commonProps}
 				className={`card relative rounded-xl font-medium whitespace-nowrap ${hasLabel ? 'flex items-center gap-2 px-3 py-2.5' : 'p-1.5'}`}>
 				<Icon className={iconSize} />

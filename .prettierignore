@@ -5,6 +5,7 @@ node_modules/
 coverage/
 out/
 build/
+.nvmrc
 
 **/.git
 **/.svn

@@ -2,6 +2,9 @@
 	"name": "zhanming-blog-new",
 	"version": "0.1.0",
 	"private": true,
+	"engines": {
+		"node": "22.x"
+	},
 	"packageManager": "pnpm@11.4.0",
 	"scripts": {
 		"dev": "node scripts/run-local-next.mjs dev --turbopack -H 127.0.0.1 -p 2025",
@@ -62,7 +65,7 @@
 	"devDependencies": {
 		"@svgr/webpack": "^8.1.0",
 		"@tailwindcss/postcss": "^4",
-		"@types/node": "^20",
+		"@types/node": "^22",
 		"@types/pg": "^8.20.4",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",

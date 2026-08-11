@@ -22,7 +22,8 @@ export default function WriteButton() {
 	const [show, setShow] = useState(false)
 
 	useEffect(() => {
-		setTimeout(() => setShow(true), styles.order * ANIMATION_DELAY * 1000)
+		const timer = window.setTimeout(() => setShow(true), styles.order * ANIMATION_DELAY * 1000)
+		return () => window.clearTimeout(timer)
 	}, [styles.order])
 
 	if (maxSM) return null
@@ -64,6 +65,7 @@ export default function WriteButton() {
 					whileHover={{ scale: 1.05 }}
 					whileTap={{ scale: 0.95 }}
 					onClick={() => setConfigDialogOpen(true)}
+					aria-label='打开首页设置'
 					className='p-2'>
 					<DotsSVG className='h-6 w-6' />
 				</motion.button>
