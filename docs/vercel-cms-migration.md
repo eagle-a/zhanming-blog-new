@@ -2,7 +2,7 @@
 
 ## 目标架构
 
-生产写入链路是：管理员密码登录 → Private Blob 上传 → Neon 事务写入 → Next.js 缓存失效。Git 仓库只承载代码和只读备份，内容更新不再触发 Vercel 构建。
+文章和运行时配置的生产写入链路是：管理员密码登录 → Private Blob 上传 → Neon 事务写入 → Next.js 缓存失效，这些更新不触发 Vercel 构建。关于页是明确例外：它由 Git 中的单一 Markdown 文件管理，修改后随代码部署。
 
 Neon 中的主要表：
 
@@ -10,7 +10,7 @@ Neon 中的主要表：
 - `content_documents`、`content_document_revisions`
 - `media`
 
-运行时配置文档固定为：`site`、`card-styles`、`about`、`bloggers`、`projects`、`shares`、`pictures`、`snippets`。
+运行时配置文档固定为：`site`、`card-styles`、`bloggers`、`projects`、`shares`、`pictures`、`snippets`。关于页不是 CMS 文档，唯一来源是 `public/about/content.md`，修改后随代码部署。
 
 ## 上线前检查
 
@@ -37,13 +37,13 @@ pnpm migrate:content -- --apply
 
 `migrate:content` 会：
 
-1. 严格验证八份仓库 JSON；
+1. 严格验证七份仓库 JSON；
 2. 递归查找其中的站内图片引用；
 3. 在任何外部写入前确认引用文件存在、未越出 `public/` 且不超过 25 MB；
 4. 按完整 SHA-256 复制到 `content/migrated/`；
 5. 把文档中的本地 URL 改成 `/api/media/...` 同源代理地址；
 6. 仅在文档不存在时插入版本 1 和修订 1；
-7. 校验八份文档及首版修订都可读取。
+7. 校验七份文档及首版修订都可读取。
 
 重复执行不会覆盖已经在后台编辑的文档。旧文件与旧 Blob 都不会被脚本删除。
 
@@ -66,7 +66,6 @@ git diff --check
 ```text
 /api/content/site
 /api/content/card-styles
-/api/content/about
 /api/content/bloggers
 /api/content/projects
 /api/content/shares

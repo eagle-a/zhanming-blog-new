@@ -7,7 +7,6 @@ import { contentDocumentRevisions, contentDocuments } from '@/db/schema'
 import type { ContentDocumentKey } from '@/lib/content-validation'
 import { lockMediaReferenceMutation, markMediaReferencesCommitted, type DatabaseTransaction } from '@/lib/media-lifecycle'
 
-import aboutFallback from '@/app/about/list.json'
 import bloggersFallback from '@/app/bloggers/list.json'
 import picturesFallback from '@/app/pictures/list.json'
 import projectsFallback from '@/app/projects/list.json'
@@ -26,7 +25,6 @@ export type ContentDocumentRecord<T = unknown> = {
 const fallbacks: Record<ContentDocumentKey, unknown> = {
 	site: siteFallback,
 	'card-styles': cardStylesFallback,
-	about: aboutFallback,
 	bloggers: bloggersFallback,
 	projects: projectsFallback,
 	shares: sharesFallback,

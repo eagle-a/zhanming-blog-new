@@ -17,7 +17,6 @@ import { FALLBACK_SHARE_LOGO, resolveShareLogo } from '../src/app/share/share-lo
 const sourceFiles: Record<ContentDocumentKey, URL> = {
 	site: new URL('../src/config/site-content.json', import.meta.url),
 	'card-styles': new URL('../src/config/card-styles.json', import.meta.url),
-	about: new URL('../src/app/about/list.json', import.meta.url),
 	bloggers: new URL('../src/app/bloggers/list.json', import.meta.url),
 	projects: new URL('../src/app/projects/list.json', import.meta.url),
 	shares: new URL('../src/app/share/list.json', import.meta.url),
@@ -29,8 +28,8 @@ async function readDocument(key: ContentDocumentKey): Promise<any> {
 	return JSON.parse(await readFile(sourceFiles[key], 'utf8'))
 }
 
-test('all eight bundled content documents pass strict validation', async () => {
-	assert.equal(CONTENT_DOCUMENT_KEYS.length, 8)
+test('all seven runtime content documents pass strict validation', async () => {
+	assert.equal(CONTENT_DOCUMENT_KEYS.length, 7)
 	for (const key of CONTENT_DOCUMENT_KEYS) {
 		const document = await readDocument(key)
 		assert.doesNotThrow(() => parseContentDocument(key, document))
@@ -39,6 +38,7 @@ test('all eight bundled content documents pass strict validation', async () => {
 
 test('rejects unknown document keys and unsafe runtime URLs', async () => {
 	assert.equal(isContentDocumentKey('site'), true)
+	assert.equal(isContentDocumentKey('about'), false)
 	assert.equal(isContentDocumentKey('unknown'), false)
 
 	const site = await readDocument('site')
@@ -60,7 +60,7 @@ test('rejects unknown document keys and unsafe runtime URLs', async () => {
 })
 
 test('rejects oversized content documents', () => {
-	assert.throws(() => parseContentDocument('about', { title: 'oversized', description: '', content: '界'.repeat(700_000) }), /2 MB/)
+	assert.throws(() => parseContentDocument('snippets', ['界'.repeat(700_000)]), /2 MB/)
 })
 
 test('returns the complete SHA-256 digest for uploaded files', async () => {

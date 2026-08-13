@@ -10,7 +10,6 @@ export const dynamic = 'force-dynamic'
 const pathsByKey: Record<string, string[]> = {
 	site: ['/'],
 	'card-styles': ['/'],
-	about: ['/about'],
 	bloggers: ['/bloggers'],
 	projects: ['/projects'],
 	shares: ['/', '/share'],

@@ -19,14 +19,6 @@ const imageUrl = publicUrl
 const color = text(32).regex(/^#[0-9a-f]{3,8}$/i, '颜色格式无效')
 const tags = z.array(nonEmptyText(50)).max(50)
 
-const aboutSchema = z
-	.object({
-		title: nonEmptyText(200),
-		description: text(2000),
-		content: text(500_000)
-	})
-	.strict()
-
 const bloggersSchema = z
 	.array(
 		z
@@ -218,7 +210,6 @@ const cardStylesSchema = z
 const contentDocumentSchemas = {
 	site: siteContentSchema,
 	'card-styles': cardStylesSchema,
-	about: aboutSchema,
 	bloggers: bloggersSchema,
 	projects: projectsSchema,
 	shares: sharesSchema,

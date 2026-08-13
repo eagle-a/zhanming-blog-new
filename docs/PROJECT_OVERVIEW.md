@@ -62,7 +62,7 @@ docs/          项目操作和架构文档
 | `/`              | 可拖拽卡片式首页：头像、问候、插画、时钟、日历、社交按钮、分享、文章入口等 | 运行时站点配置和卡片样式，失败时回退 JSON         |
 | `/blog`          | 按日/周/月/年/分类浏览已发布文章，支持已读标记、全文搜索和管理员编辑入口   | PostgreSQL；本地无数据库开发时回退 `public/blogs` |
 | `/blog/[slug]`   | 文章详情、Markdown、代码复制、图片预览、阅读进度条和 SEO metadata          | PostgreSQL；本地回退旧 Markdown                   |
-| `/about`         | 关于页和管理员编辑                                                         | `about` 内容文档 + 回退 JSON                      |
+| `/about`         | 关于页                                                                     | 构建时读取 `public/about/content.md`              |
 | `/bloggers`      | 博主收藏                                                                   | `bloggers` 内容文档 + 回退 JSON                   |
 | `/projects`      | 项目展示                                                                   | `projects` 内容文档 + 回退 JSON                   |
 | `/share`         | 资源分享                                                                   | `shares` 内容文档 + 回退 JSON                     |
@@ -91,19 +91,19 @@ docs/          项目操作和架构文档
 
 ### 5.1 PostgreSQL 核心表
 
-| 表                           | 用途                                                                                                    |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `posts`                      | 文章当前版本、状态、发布时间、分类、封面和软删除时间                                                    |
-| `post_revisions`             | 每次文章保存/批准的正文和元数据快照                                                                     |
-| `tags`、`post_tags`          | 标签和文章多对多关系                                                                                    |
-| `categories`                 | 分类顺序和更新时间                                                                                      |
-| `content_documents`          | `site`、`card-styles`、`about`、`bloggers`、`projects`、`shares`、`pictures`、`snippets` 八类运行时配置 |
-| `content_document_revisions` | 配置版本历史                                                                                            |
-| `media`                      | Blob URL、pathname、SHA-256、MIME、大小和可恢复生命周期状态登记                                         |
-| `content_submissions`        | AI 投稿及审批状态、内容哈希、校验结果和拒绝原因                                                         |
-| `submission_tickets`         | 一次性文章投稿票据，只保存哈希和生命周期状态                                                            |
-| `audit_events`               | 投稿票据、投稿、审批、拒绝、编辑等审计记录                                                              |
-| `admin_login_attempts`       | 管理员登录限速状态                                                                                      |
+| 表                           | 用途                                                                                           |
+| ---------------------------- | ---------------------------------------------------------------------------------------------- |
+| `posts`                      | 文章当前版本、状态、发布时间、分类、封面和软删除时间                                           |
+| `post_revisions`             | 每次文章保存/批准的正文和元数据快照                                                            |
+| `tags`、`post_tags`          | 标签和文章多对多关系                                                                           |
+| `categories`                 | 分类顺序和更新时间                                                                             |
+| `content_documents`          | `site`、`card-styles`、`bloggers`、`projects`、`shares`、`pictures`、`snippets` 七类运行时配置 |
+| `content_document_revisions` | 配置版本历史                                                                                   |
+| `media`                      | Blob URL、pathname、SHA-256、MIME、大小和可恢复生命周期状态登记                                |
+| `content_submissions`        | AI 投稿及审批状态、内容哈希、校验结果和拒绝原因                                                |
+| `submission_tickets`         | 一次性文章投稿票据，只保存哈希和生命周期状态                                                   |
+| `audit_events`               | 投稿票据、投稿、审批、拒绝、编辑等审计记录                                                     |
+| `admin_login_attempts`       | 管理员登录限速状态                                                                             |
 
 旧的 `agent_api_keys`、`agent_request_nonces` 和 `work_report`/`advisor_reply` submission 枚举已由 `drizzle/0009_fixed_firebird.sql` 清理；迁移前会拒绝仍存在的旧 Agent 数据、非 post 投稿和重复幂等键，避免静默丢数据。
 
