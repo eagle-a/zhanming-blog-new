@@ -8,6 +8,7 @@ import EditableStarRating from '@/components/editable-star-rating'
 import { useState } from 'react'
 import LogoUploadDialog, { type LogoItem } from './logo-upload-dialog'
 import { FALLBACK_SHARE_LOGO, resolveShareLogo } from '../share-logo'
+import { isLocalMediaSource, LocalMediaMark } from '@/components/local-media-mark'
 
 export interface Share {
 	name: string
@@ -33,6 +34,8 @@ export function ShareCard({ share, isEditMode = false, onUpdate, onDelete }: Sha
 	const [showLogoDialog, setShowLogoDialog] = useState(false)
 	const [logoItem, setLogoItem] = useState<LogoItem | null>(null)
 	const [logoError, setLogoError] = useState(false)
+	const resolvedLogo = resolveShareLogo(localShare.logo)
+	const hasLocalLogo = isLocalMediaSource(localShare.logo) || resolvedLogo !== FALLBACK_SHARE_LOGO
 
 	const handleFieldChange = (field: keyof Share, value: any) => {
 		const updated = { ...localShare, [field]: value }
@@ -96,14 +99,17 @@ export function ShareCard({ share, isEditMode = false, onUpdate, onDelete }: Sha
 
 			<div>
 				<div className='mb-4 flex items-center gap-4'>
-					<div className='group relative'>
-						<img
-							src={logoError ? FALLBACK_SHARE_LOGO : resolveShareLogo(localShare.logo)}
-							alt={localShare.name}
-							className={cn('h-16 w-16 rounded-xl object-cover', canEdit && 'cursor-pointer')}
-							onClick={() => canEdit && setShowLogoDialog(true)}
-							onError={() => setLogoError(true)}
-						/>
+					<div className='group relative' onClick={() => canEdit && setShowLogoDialog(true)}>
+						{hasLocalLogo ? (
+							<img
+								src={logoError ? FALLBACK_SHARE_LOGO : resolvedLogo}
+								alt={localShare.name}
+								className={cn('h-16 w-16 rounded-xl object-cover', canEdit && 'cursor-pointer')}
+								onError={() => setLogoError(true)}
+							/>
+						) : (
+							<LocalMediaMark name={localShare.name} className={cn('h-16 w-16 rounded-xl text-2xl', canEdit && 'cursor-pointer')} />
+						)}
 						{canEdit && (
 							<div className='ev pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-black/40 opacity-0 transition-opacity group-hover:opacity-100'>
 								<span className='text-xs text-white'>更换</span>

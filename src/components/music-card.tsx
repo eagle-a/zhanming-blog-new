@@ -192,6 +192,7 @@ export default function MusicCard() {
 				<div className='flex items-center gap-1'>
 					<button
 						onClick={handlePrev}
+						aria-label='上一首'
 						className='flex h-7 w-7 items-center justify-center rounded-full bg-white/80 transition-opacity hover:opacity-80'
 						title='上一首'>
 						<ChevronLeft className='text-brand h-4 w-4' />
@@ -207,6 +208,7 @@ export default function MusicCard() {
 
 					<button
 						onClick={handleNext}
+						aria-label='下一首'
 						className='flex h-7 w-7 items-center justify-center rounded-full bg-white/80 transition-opacity hover:opacity-80'
 						title='下一首'>
 						<ChevronRight className='text-brand h-4 w-4' />

@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { renderMarkdown } from '../src/lib/markdown-renderer.ts'
+import { renderMarkdown, stripLeadingDuplicateHeading } from '../src/lib/markdown-renderer.ts'
+
+test('removes only a leading heading that duplicates the article title', () => {
+	assert.equal(stripLeadingDuplicateHeading('# Article title\n\nBody', 'Article title'), 'Body')
+	assert.equal(stripLeadingDuplicateHeading('## **Article title** ##\r\n\r\nBody', 'Article title'), 'Body')
+	assert.equal(stripLeadingDuplicateHeading('# Different title\n\nBody', 'Article title'), '# Different title\n\nBody')
+	assert.equal(stripLeadingDuplicateHeading('Intro\n\n# Article title', 'Article title'), 'Intro\n\n# Article title')
+})
 
 test('renders stable unique heading ids across repeated calls', async () => {
 	const markdown = '# 标题\n\n## 标题\n\n# 标题'

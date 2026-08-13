@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { HomeDraggableLayer } from './home-draggable-layer'
 import { useContentDocument } from '@/hooks/use-content-document'
 import { FALLBACK_SHARE_LOGO, resolveShareLogo } from '@/app/share/share-logo'
+import { isLocalMediaSource, LocalMediaMark } from '@/components/local-media-mark'
 
 type ShareItem = {
 	name: string
@@ -40,6 +41,8 @@ export default function ShareCard() {
 
 	const x = styles.offsetX !== null ? center.x + styles.offsetX : center.x + hiCardStyles.width / 2 - socialButtonsStyles.width
 	const y = styles.offsetY !== null ? center.y + styles.offsetY : center.y + hiCardStyles.height / 2 + CARD_SPACING + socialButtonsStyles.height + CARD_SPACING
+	const resolvedLogo = resolveShareLogo(randomItem.logo)
+	const hasLocalLogo = isLocalMediaSource(randomItem.logo) || resolvedLogo !== FALLBACK_SHARE_LOGO
 
 	return (
 		<HomeDraggableLayer cardKey='shareCard' x={x} y={y} width={styles.width} height={styles.height}>
@@ -60,14 +63,18 @@ export default function ShareCard() {
 				<Link href='/share' className='mt-2 block space-y-2'>
 					<div className='flex items-center'>
 						<div className='relative mr-3 h-12 w-12 shrink-0 overflow-hidden rounded-xl'>
-							<img
-								src={resolveShareLogo(randomItem.logo)}
-								alt={randomItem.name}
-								className='h-full w-full object-contain'
-								onError={event => {
-									event.currentTarget.src = FALLBACK_SHARE_LOGO
-								}}
-							/>
+							{hasLocalLogo ? (
+								<img
+									src={resolvedLogo}
+									alt={randomItem.name}
+									className='h-full w-full object-contain'
+									onError={event => {
+										event.currentTarget.src = FALLBACK_SHARE_LOGO
+									}}
+								/>
+							) : (
+								<LocalMediaMark name={randomItem.name} className='h-full w-full rounded-xl text-lg' />
+							)}
 						</div>
 						<h3 className='text-sm font-medium'>{randomItem.name}</h3>
 					</div>

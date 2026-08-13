@@ -12,6 +12,22 @@ export interface MarkdownRenderResult {
 
 export type ImageDimensionMap = Map<string, { width: number; height: number }>
 
+function normalizeHeadingText(value: string): string {
+	return value
+		.replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+		.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+		.replace(/[*_`~]/g, '')
+		.replace(/\s+/g, ' ')
+		.trim()
+}
+
+export function stripLeadingDuplicateHeading(markdown: string, title: string): string {
+	const match = markdown.match(/^(?:\uFEFF)?(\s*)(#{1,6})\s+(.+?)(?:\s+#+)?\s*(?:\r?\n|$)/)
+	if (!match || normalizeHeadingText(match[3]) !== normalizeHeadingText(title)) return markdown
+
+	return markdown.slice(match[0].length).replace(/^\s*\r?\n/, '')
+}
+
 function slugify(text: string): string {
 	return text
 		.toLowerCase()

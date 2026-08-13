@@ -18,9 +18,10 @@ type AboutClientProps = {
 	serverHtml: string
 	initialAbout: AboutData
 	initialVersion: number
+	editable: boolean
 }
 
-export function AboutClient({ serverHtml, initialAbout, initialVersion }: AboutClientProps) {
+export function AboutClient({ serverHtml, initialAbout, initialVersion, editable }: AboutClientProps) {
 	const [data, setData] = useState<AboutData>(initialAbout)
 	const [originalData, setOriginalData] = useState<AboutData>(initialAbout)
 	const [version, setVersion] = useState(initialVersion)
@@ -69,7 +70,7 @@ export function AboutClient({ serverHtml, initialAbout, initialVersion }: AboutC
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
-			if (!isEditMode && (e.ctrlKey || e.metaKey) && e.key === ',') {
+			if (editable && !isEditMode && (e.ctrlKey || e.metaKey) && e.key === ',') {
 				e.preventDefault()
 				setIsEditMode(true)
 				setIsPreviewMode(false)
@@ -80,7 +81,7 @@ export function AboutClient({ serverHtml, initialAbout, initialVersion }: AboutC
 		return () => {
 			window.removeEventListener('keydown', handleKeyDown)
 		}
-	}, [isEditMode])
+	}, [editable, isEditMode])
 
 	return (
 		<>
@@ -172,6 +173,7 @@ export function AboutClient({ serverHtml, initialAbout, initialVersion }: AboutC
 						</motion.button>
 					</>
 				) : (
+					editable &&
 					!hideEditButton && (
 						<motion.button
 							whileHover={{ scale: 1.05 }}

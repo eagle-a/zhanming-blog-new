@@ -17,11 +17,21 @@ test('keeps static public pages compatible while sensitive pages remain strict',
 	assert.match(scriptDirective, /'unsafe-inline'/)
 	assert.doesNotMatch(scriptDirective, /'unsafe-eval'/)
 	assert.match(policy, /report-uri \/api\/csp-report/)
+	assert.match(policy, /https:\/\/owo\.imaegoo\.com/)
 })
 
 test('allows eval only for the React development runtime', () => {
 	assert.match(buildCsp({ allowInlineScripts: true, development: true }), /script-src[^;]*'unsafe-eval'/)
 	assert.doesNotMatch(buildCsp({ allowInlineScripts: true, development: false }), /script-src[^;]*'unsafe-eval'/)
+})
+
+test('about page uses the local Markdown source only during development', async () => {
+	const loader = await readFile(new URL('../src/lib/about-content.ts', import.meta.url), 'utf8')
+	const page = await readFile(new URL('../src/app/about/page.tsx', import.meta.url), 'utf8')
+	assert.match(loader, /process\.env\.NODE_ENV !== 'production'/)
+	assert.match(loader, /'public', 'about', 'content\.md'/)
+	assert.match(page, /if \(usesLocalAboutContent\(\)\)/)
+	assert.match(page, /editable=\{!usesLocalAboutContent\(\)\}/)
 })
 
 test('allows the fixed CSP-safe PIXI runtime without enabling unsafe eval', async () => {

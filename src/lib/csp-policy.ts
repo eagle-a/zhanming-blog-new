@@ -29,7 +29,7 @@ export function buildCsp({ nonce, allowInlineScripts = false, development = proc
 		`style-src 'self'${styleInline ? " 'unsafe-inline'" : ''} https://fonts.googleapis.cn`,
 		"style-src-attr 'unsafe-inline'",
 		"img-src 'self' data: blob: https:",
-		"connect-src 'self' https://mylike.zhanmingblog.workers.dev https://mytwikoo-ashen.vercel.app",
+		"connect-src 'self' https://mylike.zhanmingblog.workers.dev https://mytwikoo-ashen.vercel.app https://owo.imaegoo.com",
 		"font-src 'self' data: https://fonts.gstatic.cn",
 		"frame-src 'self' https://vercel.live",
 		"object-src 'none'",

@@ -91,6 +91,7 @@ test('allows only immutable blog and content Blob proxy paths', () => {
 
 test('maps retired third-party share logos to a stable local asset', () => {
 	assert.equal(resolveShareLogo('https://tinypng.com/static/images/george-anim/large_george_x2.webp'), '/images/share/tinypng.png')
+	assert.equal(resolveShareLogo('https://example.com/favicon.png'), FALLBACK_SHARE_LOGO)
 	assert.equal(resolveShareLogo(''), FALLBACK_SHARE_LOGO)
 	assert.equal(resolveShareLogo('/images/share/example.svg'), '/images/share/example.svg')
 })

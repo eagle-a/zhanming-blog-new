@@ -9,13 +9,33 @@
 	color: var(--color-primary);
 }
 
+.twikoo-comments {
+	overflow-x: clip;
+}
+
+.twikoo-comments:has(#twikoo) > .comment-loading {
+	display: none;
+}
+
+.twikoo-comments .tk-submit {
+	border: 0;
+	background: transparent;
+	padding: 0;
+}
+
+.twikoo-comments .tk-meta-input,
+.twikoo-comments .tk-input {
+	color: var(--color-primary) !important;
+}
+
 /* 输入框和文本域 */
 .twikoo-comments .el-input__inner,
 .twikoo-comments .el-textarea__inner {
-	background: var(--color-card) !important;
-	border: 1px solid rgba(0, 0, 0, 0.08) !important;
+	background: rgba(255, 255, 255, 0.52) !important;
+	border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent) !important;
 	border-radius: 10px !important;
 	color: var(--color-primary) !important;
+	box-shadow: inset 0 1px 2px rgba(51, 79, 82, 0.04);
 	transition:
 		border-color 0.2s ease,
 		box-shadow 0.2s ease;
@@ -32,11 +52,18 @@
 .twikoo-comments .el-button--primary {
 	background: var(--color-brand) !important;
 	border-color: var(--color-brand) !important;
+	color: #143e3b !important;
 	border-radius: 10px !important;
-	font-weight: 500;
+	font-weight: 700;
 	transition:
 		opacity 0.2s ease,
 		transform 0.2s ease;
+}
+
+.twikoo-comments .el-input__inner::placeholder,
+.twikoo-comments .el-textarea__inner::placeholder {
+	color: color-mix(in srgb, var(--color-primary) 62%, transparent) !important;
+	opacity: 1;
 }
 
 .twikoo-comments .tk-submit-btn:hover,

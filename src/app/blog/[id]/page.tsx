@@ -7,7 +7,7 @@ import { assertValidSlug } from '@/lib/config-validation'
 import { getCachedContentDocument, getFallbackContentDocument } from '@/lib/content-repository'
 import { allowDevelopmentLegacyFallback, readLegacyPost } from '@/lib/legacy-blog-reader'
 import { calculateBlogStats } from '@/lib/load-blog'
-import { renderMarkdown } from '@/lib/markdown-renderer'
+import { renderMarkdown, stripLeadingDuplicateHeading } from '@/lib/markdown-renderer'
 import { extractMediaPathnameFromUrl, getMediaDimensions, type MediaDimensions } from '@/lib/media-dimensions'
 import { extractMediaPathnames } from '@/lib/media-references'
 import { getCachedPublishedPost, type PostRecord } from '@/lib/posts-repository'
@@ -90,7 +90,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
 	}
 
 	const [{ html, toc }, site] = await Promise.all([
-		renderMarkdown(post.contentMd, imageDimensions),
+		renderMarkdown(stripLeadingDuplicateHeading(post.contentMd, post.title), imageDimensions),
 		allowDevelopmentLegacyFallback()
 			? Promise.resolve(getFallbackContentDocument<SiteContent>('site'))
 			: getCachedContentDocument<SiteContent>('site').catch(() => getFallbackContentDocument<SiteContent>('site'))

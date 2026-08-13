@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
-import { AlertCircle, Clock3, ExternalLink, RefreshCw, Rss } from 'lucide-react'
+import { AlertCircle, ChevronDown, Clock3, ExternalLink, RefreshCw, Rss } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { sanitizeHtml } from '@/lib/sanitize-html'
 import type { JuyaAIFeedView, JuyaAIIssue } from '@/lib/juya-ai-feed'
@@ -26,6 +26,18 @@ function formatUpdatedAt(value: string): string {
 	}).format(new Date(value))
 }
 
+function splitIssueContent(contentHtml: string): { overview: string; details: string } {
+	const content = sanitizeHtml(contentHtml)
+	const overviewHeading = content.search(/<h2[^>]*>\s*概览\s*<\/h2>/i)
+	if (overviewHeading < 0) return { overview: content, details: '' }
+
+	const dividerMatch = /<hr\s*\/?\s*>/i.exec(content.slice(overviewHeading))
+	if (!dividerMatch?.index) return { overview: content, details: '' }
+	const dividerStart = overviewHeading + dividerMatch.index
+	const detailsStart = dividerStart + dividerMatch[0].length
+	return { overview: content.slice(0, dividerStart), details: content.slice(detailsStart) }
+}
+
 function LoadingState() {
 	return (
 		<div className='grid gap-6 lg:grid-cols-[210px_minmax(0,1fr)]'>
@@ -44,7 +56,8 @@ function LoadingState() {
 }
 
 function IssueContent({ issue }: { issue: JuyaAIIssue }) {
-	const content = useMemo(() => sanitizeHtml(issue.contentHtml), [issue.contentHtml])
+	const [expanded, setExpanded] = useState(false)
+	const content = useMemo(() => splitIssueContent(issue.contentHtml), [issue.contentHtml])
 	return (
 		<motion.article
 			key={issue.id}
@@ -66,7 +79,26 @@ function IssueContent({ issue }: { issue: JuyaAIIssue }) {
 					<ExternalLink className='h-4 w-4' />
 				</a>
 			</div>
-			<div className='ai-daily-article' dangerouslySetInnerHTML={{ __html: content }} />
+			<section aria-labelledby='daily-overview-title'>
+				<h3 id='daily-overview-title' className='sr-only'>
+					今日速览
+				</h3>
+				<div className='ai-daily-article' dangerouslySetInnerHTML={{ __html: content.overview }} />
+			</section>
+			{content.details ? (
+				<div className='mt-7 border-t pt-6'>
+					<button
+						type='button'
+						onClick={() => setExpanded(value => !value)}
+						aria-expanded={expanded}
+						aria-controls='daily-details'
+						className='brand-btn mx-auto flex items-center justify-center gap-2 px-5'>
+						{expanded ? '收起详细报道' : '展开详细报道'}
+						<ChevronDown className={`h-4 w-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+					</button>
+					{expanded ? <div id='daily-details' className='ai-daily-article mt-7' dangerouslySetInnerHTML={{ __html: content.details }} /> : null}
+				</div>
+			) : null}
 		</motion.article>
 	)
 }
@@ -195,7 +227,7 @@ export function DailyClient({ initialFeed }: { initialFeed: JuyaAIFeedView | nul
 								})}
 							</nav>
 						</aside>
-						{selectedIssue ? <IssueContent issue={selectedIssue} /> : <IssueLoadingState />}
+						{selectedIssue ? <IssueContent key={selectedIssue.id} issue={selectedIssue} /> : <IssueLoadingState />}
 					</div>
 				)}
 

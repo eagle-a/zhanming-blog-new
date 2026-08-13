@@ -5,5 +5,6 @@ const LEGACY_LOGO_ALIASES: Record<string, string> = {
 }
 
 export function resolveShareLogo(logo: string): string {
-	return LEGACY_LOGO_ALIASES[logo] || logo || FALLBACK_SHARE_LOGO
+	const resolved = LEGACY_LOGO_ALIASES[logo] || logo
+	return resolved?.startsWith('/') && !resolved.startsWith('//') ? resolved : FALLBACK_SHARE_LOGO
 }
