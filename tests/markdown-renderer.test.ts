@@ -62,3 +62,9 @@ test('image renderer handles external urls without srcset', async () => {
 	assert.match(html, /loading="lazy"/)
 	assert.doesNotMatch(html, /srcset/)
 })
+
+test('image renderer migrates the legacy report asset prefix to public static files', async () => {
+	const { html } = await renderMarkdown('![report](assets/half-week-report-2026-09-09/an807-termination-combinations.png)')
+	assert.match(html, /src="\/images\/half-week-report-2026-09-09\/an807-termination-combinations\.png"/)
+	assert.doesNotMatch(html, /assets\/half-week-report/)
+})

@@ -12,6 +12,18 @@ export interface MarkdownRenderResult {
 
 export type ImageDimensionMap = Map<string, { width: number; height: number }>
 
+// Preserve images from the first local report submission after its assets were
+// promoted to public static files. New submissions should use public URLs.
+const LEGACY_IMAGE_PATHS = [['assets/half-week-report-2026-09-09/', '/images/half-week-report-2026-09-09/']] as const
+
+function normalizeImageHref(href: string): string {
+	const normalized = href.trim().replace(/^\.\//, '')
+	for (const [legacyPrefix, publicPrefix] of LEGACY_IMAGE_PATHS) {
+		if (normalized.startsWith(legacyPrefix)) return `${publicPrefix}${normalized.slice(legacyPrefix.length)}`
+	}
+	return href
+}
+
 function normalizeHeadingText(value: string): string {
 	return value
 		.replace(/!\[[^\]]*\]\([^)]*\)/g, '')
@@ -135,7 +147,7 @@ export async function renderMarkdown(markdown: string, imageDimensions?: ImageDi
 	}
 
 	renderer.image = (token: Tokens.Image) => {
-		const href = token.href || ''
+		const href = normalizeImageHref(token.href || '')
 		const alt = escapeHtmlAttribute(token.text || '')
 		const title = token.title ? ` title="${escapeHtmlAttribute(token.title)}"` : ''
 		const baseAttrs = `loading="lazy" decoding="async"`
