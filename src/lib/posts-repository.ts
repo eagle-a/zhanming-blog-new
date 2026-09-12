@@ -379,13 +379,13 @@ export async function applyBatchPostEdits(input: {
 
 export const getCachedPublishedPosts = unstable_cache(() => listPosts(false), ['published-posts'], {
 	tags: ['posts'],
-	revalidate: 3600
+	revalidate: 600
 })
 
 export function getCachedPublishedPost(slug: string): Promise<PostRecord | null> {
 	return unstable_cache(() => getPost(slug, false), ['published-post', slug], {
 		tags: ['posts', `post:${slug}`],
-		revalidate: 3600
+		revalidate: 600
 	})()
 }
 
