@@ -37,7 +37,7 @@ export default function WriteButton() {
 		<HomeDraggableLayer cardKey='writeButtons' x={x} y={y} width={styles.width} height={styles.height}>
 			<motion.div initial={{ left: x, top: y }} animate={{ left: x, top: y }} className='absolute flex items-center gap-4'>
 				<motion.button
-					onClick={() => router.push('/write')}
+					onClick={() => router.push('/blog')}
 					initial={{ opacity: 0, scale: 0.6 }}
 					animate={{ opacity: 1, scale: 1 }}
 					whileHover={{ scale: 1.05 }}
@@ -56,7 +56,7 @@ export default function WriteButton() {
 					)}
 
 					<PenSVG />
-					<span>写文章</span>
+					<span>文章管理</span>
 				</motion.button>
 				<LanguageSwitcher />
 				<motion.button

@@ -19,9 +19,10 @@ import { useAdminSession } from '@/hooks/use-admin-session'
 import { useConfigStore } from '@/app/(home)/stores/config-store'
 import { cn } from '@/lib/utils'
 import { saveBlogEdits } from './services/save-blog-edits'
-import { Check, Search, X } from 'lucide-react'
+import { Check, Pencil, Search, X } from 'lucide-react'
 import { useBlogCoverHover } from './components/blog-cover-hover'
 import { useBlogSearch } from '@/hooks/use-search'
+import { useRouter } from 'next/navigation'
 
 const BlogCoverHoverPreview = dynamic(() => import('./components/blog-cover-hover').then(m => m.BlogCoverHoverPreview), { ssr: false })
 const CategoryModal = dynamic(() => import('./components/category-modal').then(m => m.CategoryModal), { ssr: false })
@@ -33,6 +34,7 @@ export default function BlogListClient({ initialItems, initialCategories }: { in
 	const { categories: categoriesFromServer } = useCategories(initialCategories)
 	const { isRead } = useReadArticles()
 	const { isAuth, login } = useAdminSession()
+	const router = useRouter()
 	const { siteContent } = useConfigStore()
 	const hideEditButton = siteContent.hideEditButton ?? false
 	const enableCategories = siteContent.enableCategories ?? false
@@ -541,6 +543,19 @@ export default function BlogListClient({ initialItems, initialCategories }: { in
 								disabled={saving}
 								className='rounded-xl border bg-white/60 px-4 py-2 text-sm transition-colors hover:bg-white/80'>
 								分类
+							</motion.button>
+						)}
+						{selectedCount === 1 && (
+							<motion.button
+								whileHover={{ scale: 1.05 }}
+								whileTap={{ scale: 0.95 }}
+								onClick={() => {
+									const slug = Array.from(selectedSlugs)[0]
+									if (slug) router.push(`/write/${slug}`)
+								}}
+								className='rounded-xl border bg-white/60 px-4 py-2 text-sm transition-colors hover:bg-white/80'>
+								<Pencil className='mr-1 inline-block h-4 w-4' aria-hidden='true' />
+								修改内容
 							</motion.button>
 						)}
 						<motion.button
