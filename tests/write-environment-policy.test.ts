@@ -14,7 +14,9 @@ test('local runner uses a non-empty read-only sentinel when PostgreSQL is unavai
 	const runner = await readFile(new URL('../scripts/run-local-next.mjs', import.meta.url), 'utf8')
 	const legacyReader = await readFile(new URL('../src/lib/legacy-blog-reader.ts', import.meta.url), 'utf8')
 	assert.match(runner, /localPostgresAvailable\s*\?\s*'postgresql:[^']+'\s*:\s*'legacy:\/\/read-only'/)
+	assert.match(runner, /BLOG_CONTENT_SOURCE\s*=\s*localPostgresAvailable\s*\?\s*'database'\s*:\s*'legacy'/)
 	assert.match(legacyReader, /databaseUrl !== LOCAL_LEGACY_DATABASE_SENTINEL/)
+	assert.match(legacyReader, /BLOG_CONTENT_SOURCE === 'legacy'/)
 })
 
 test('requires an explicit resource environment on Vercel', () => {

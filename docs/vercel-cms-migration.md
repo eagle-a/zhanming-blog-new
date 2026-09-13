@@ -18,7 +18,7 @@ Neon 中的主要表：
 2. Production 与 Preview 已配置 `BLOG_ADMIN_PASSWORD_HASH`、`BLOG_SESSION_SECRET`。
 3. `NEXT_PUBLIC_SITE_URL` 在 Production 为 `https://zhanmingblog.cc.cd`。
 4. 当前 CLI 项目必须由 `.vercel/project.json` 指向 `zhanming-blog-new`。
-5. 不允许删除或改写 `public/blogs/`、旧 JSON、旧图片。
+5. `public/blogs/`、旧 JSON、旧图片仅作为迁移归档保留；不得把它们当作生产内容源。旧文章回退只由 `scripts/run-local-next.mjs` 显式设置 `BLOG_CONTENT_SOURCE=legacy` 时启用，线上 `/blogs/*` 路径不提供访问。
 
 Vercel 的 Sensitive 变量不能用于普通 Development 拉取是平台限制，不是配置故障。本地验证可以使用一次性的本地管理员密钥，但不得写入仓库。
 

@@ -2,6 +2,12 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { buildCsp } from '@/lib/csp-policy'
 
 export function proxy(request: NextRequest) {
+	// The old Git-backed article tree remains in the repository for migration
+	// and local fallback, but it is not a public content source anymore.
+	if (request.nextUrl.pathname === '/blogs' || request.nextUrl.pathname.startsWith('/blogs/')) {
+		return new NextResponse('Not found', { status: 404 })
+	}
+
 	const sensitivePage =
 		request.nextUrl.pathname.startsWith('/admin/') || request.nextUrl.pathname === '/write' || request.nextUrl.pathname.startsWith('/write/')
 	const nonce = sensitivePage ? btoa(crypto.randomUUID()) : undefined

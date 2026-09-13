@@ -5,7 +5,6 @@ import legacyCategories from '@/../public/blogs/categories.json'
 import type { BlogIndexItem } from '@/app/blog/types'
 import { assertValidSlug } from './config-validation'
 import { filterPublicBlogs } from './blog-visibility'
-import { isLoopbackDatabase } from './write-environment-policy'
 
 const publicDir = path.join(process.cwd(), 'public')
 const LOCAL_LEGACY_DATABASE_SENTINEL = 'legacy://read-only'
@@ -42,5 +41,8 @@ export function hasDatabaseConfiguration(): boolean {
 }
 
 export function allowDevelopmentLegacyFallback(): boolean {
-	return process.env.NODE_ENV !== 'production' && !isLoopbackDatabase(process.env.DATABASE_URL)
+	// Legacy content is an explicit local compatibility mode. Do not infer it
+	// from a missing/unusual database URL: that made stale public/blogs data
+	// silently win over the CMS whenever local environment variables drifted.
+	return process.env.NODE_ENV !== 'production' && process.env.BLOG_CONTENT_SOURCE === 'legacy'
 }

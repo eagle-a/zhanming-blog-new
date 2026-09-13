@@ -15,6 +15,7 @@ const localPostgresAvailable = await new Promise(resolve => {
 	socket.once('error', () => finish(false))
 })
 process.env.DATABASE_URL = localPostgresAvailable ? 'postgresql://postgres@127.0.0.1:54329/zhanming_blog_dev' : 'legacy://read-only'
+process.env.BLOG_CONTENT_SOURCE = localPostgresAvailable ? 'database' : 'legacy'
 process.env.BLOB_READ_WRITE_TOKEN = ''
 
 if (!localPostgresAvailable) console.warn('[local] PostgreSQL 127.0.0.1:54329 is unavailable; using read-only Git content fallback.')

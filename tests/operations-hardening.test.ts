@@ -33,6 +33,15 @@ test('about page has one Git-backed content source in every environment', async 
 	assert.doesNotMatch(page, /getCachedContentDocument|DATABASE_URL|editable=/)
 })
 
+test('legacy article fallback is explicit and old public URLs are blocked', async () => {
+	const legacyReader = await readFile(new URL('../src/lib/legacy-blog-reader.ts', import.meta.url), 'utf8')
+	const runner = await readFile(new URL('../scripts/run-local-next.mjs', import.meta.url), 'utf8')
+	const proxy = await readFile(new URL('../src/proxy.ts', import.meta.url), 'utf8')
+	assert.match(legacyReader, /process\.env\.BLOG_CONTENT_SOURCE === 'legacy'/)
+	assert.match(runner, /process\.env\.BLOG_CONTENT_SOURCE = localPostgresAvailable \? 'database' : 'legacy'/)
+	assert.match(proxy, /pathname === '\/blogs' \|\| request\.nextUrl\.pathname\.startsWith\('\/blogs\/'\)/)
+})
+
 test('allows the fixed CSP-safe PIXI runtime without enabling unsafe eval', async () => {
 	const viewer = await readFile(new URL('../src/app/live2d/live2d-viewer.tsx', import.meta.url), 'utf8')
 	const productionPolicy = buildCsp({ allowInlineScripts: true, development: false })

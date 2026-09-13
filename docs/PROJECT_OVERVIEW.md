@@ -12,7 +12,7 @@
 - 管理员通过密码会话修改内容；
 - 本地 AI 可以生成 Markdown 并投稿，但不能直接公开发布；
 - 文章日常更新不需要提交 Git 或重新构建；
-- Git 仓库中的 `public/` 仍保留旧内容，作为迁移备份和本地开发回退。
+- Git 仓库中的 `public/` 仍保留旧内容，作为迁移备份；旧文章回退只在本地启动脚本显式设置 `BLOG_CONTENT_SOURCE=legacy` 时启用。
 
 当前最重要的事实：AI 投稿链路已经可用，但它只支持公开文章，不是通用自动化发布平台。
 
@@ -51,7 +51,7 @@ tests/         Node test runner 测试
 docs/          项目操作和架构文档
 ```
 
-`public/blogs/hardware-kb/` 是用户本地资料，禁止清理、改名或删除；该目录已从 Git 索引和 Vercel 部署输入中排除，本机文件仍完整保留。`.next/`、`.open-next/`、`dist/` 和 `.vercel/` 是本地构建/部署产物，不是内容源。
+`public/blogs/` 是迁移期间保留的旧文章树，不是线上 CMS 内容源；线上 `/blogs/*` 路径已阻断。`public/blogs/hardware-kb/` 是用户本地资料，禁止清理、改名或删除；该目录已从 Git 索引和 Vercel 部署输入中排除，本机文件仍完整保留。`.next/`、`.open-next/`、`dist/` 和 `.vercel/` 是本地构建/部署产物，不是内容源。
 
 ## 4. 页面与用户入口
 
