@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/.pnpm-store/
 /.pnp
 .pnp.*
 .yarn/*
@@ -55,5 +56,4 @@ dist/
 2025-blog-public/
 
 # Local research and review artifacts are not deployment inputs.
-/public/blogs/hardware-kb/
 /reports/

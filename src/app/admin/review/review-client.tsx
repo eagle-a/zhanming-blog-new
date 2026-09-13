@@ -64,6 +64,8 @@ export default function ReviewClient() {
 	const [tickets, setTickets] = useState<SubmissionTicket[]>([])
 	const [ticketLabel, setTicketLabel] = useState('本地 AI 单篇投稿')
 	const [createdTicket, setCreatedTicket] = useState<CreatedTicket | null>(null)
+	const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
+	const [rejectionReason, setRejectionReason] = useState('')
 	const [tab, setTab] = useState<'review' | 'tickets'>('review')
 	const [busy, setBusy] = useState(false)
 
@@ -94,7 +96,16 @@ export default function ReviewClient() {
 
 	useEffect(() => {
 		setDraft(selected?.payload || null)
-	}, [selectedId])
+	}, [selected])
+
+	useEffect(() => {
+		if (!rejectDialogOpen) return
+		const onKeyDown = (event: KeyboardEvent) => {
+			if (event.key === 'Escape' && !busy) setRejectDialogOpen(false)
+		}
+		window.addEventListener('keydown', onKeyDown)
+		return () => window.removeEventListener('keydown', onKeyDown)
+	}, [busy, rejectDialogOpen])
 
 	const submitLogin = async (event: React.FormEvent) => {
 		event.preventDefault()
@@ -132,9 +143,23 @@ export default function ReviewClient() {
 		}
 	}
 
+	const saveDraftOnly = async () => {
+		if (!selected || !draft) return
+		try {
+			setBusy(true)
+			await saveDraft()
+			toast.success('草稿已保存')
+			await loadData()
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : '草稿保存失败')
+		} finally {
+			setBusy(false)
+		}
+	}
+
 	const reject = async () => {
 		if (!selected) return
-		const reason = window.prompt('请输入拒绝原因')?.trim()
+		const reason = rejectionReason.trim()
 		if (!reason) return
 		try {
 			setBusy(true)
@@ -146,6 +171,8 @@ export default function ReviewClient() {
 				})
 			)
 			toast.success('已拒绝投稿')
+			setRejectDialogOpen(false)
+			setRejectionReason('')
 			await loadData()
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : '拒绝失败')
@@ -392,12 +419,15 @@ export default function ReviewClient() {
 									/>
 								</label>
 								<div className='flex flex-wrap gap-3 md:col-span-2'>
+									<button disabled={busy} onClick={saveDraftOnly} className='rounded-xl border bg-white/70 px-5 py-2 text-sm disabled:opacity-50'>
+										{busy ? '处理中...' : '保存草稿'}
+									</button>
 									<button disabled={busy} onClick={approve} className='brand-btn px-5 py-2 disabled:opacity-50'>
 										{busy ? '处理中...' : '保存并批准发布'}
 									</button>
 									<button
 										disabled={busy}
-										onClick={reject}
+										onClick={() => setRejectDialogOpen(true)}
 										className='rounded-xl border border-red-200 bg-red-50 px-5 py-2 text-sm text-red-600 disabled:opacity-50'>
 										拒绝
 									</button>
@@ -406,6 +436,45 @@ export default function ReviewClient() {
 							<MarkdownPreview payload={draft} />
 						</main>
 					)}
+				</div>
+			)}
+
+			{rejectDialogOpen && selected && (
+				<div
+					className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4'
+					role='presentation'
+					onMouseDown={event => {
+						if (event.target === event.currentTarget) setRejectDialogOpen(false)
+					}}>
+					<section role='dialog' aria-modal='true' aria-labelledby='reject-dialog-title' className='card static w-full max-w-lg p-6 shadow-xl'>
+						<h2 id='reject-dialog-title' className='text-lg font-semibold'>
+							拒绝投稿
+						</h2>
+						<p className='text-secondary mt-2 text-sm'>请填写拒绝原因，原因会记录到审批结果中。</p>
+						<label htmlFor='reject-reason' className='sr-only'>
+							拒绝原因
+						</label>
+						<textarea
+							id='reject-reason'
+							autoFocus
+							value={rejectionReason}
+							onChange={event => setRejectionReason(event.target.value)}
+							placeholder='例如：内容需要补充来源或存在不准确表述'
+							className='mt-4 min-h-32 w-full resize-y rounded-xl border bg-white/70 p-3 text-sm'
+						/>
+						<div className='mt-5 flex justify-end gap-3'>
+							<button type='button' onClick={() => setRejectDialogOpen(false)} className='rounded-xl border bg-white/60 px-4 py-2 text-sm'>
+								取消
+							</button>
+							<button
+								type='button'
+								disabled={busy || !rejectionReason.trim()}
+								onClick={reject}
+								className='rounded-xl bg-red-600 px-4 py-2 text-sm text-white disabled:opacity-50'>
+								{busy ? '处理中...' : '确认拒绝'}
+							</button>
+						</div>
+					</section>
 				</div>
 			)}
 		</div>

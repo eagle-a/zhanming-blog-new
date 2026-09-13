@@ -31,7 +31,7 @@
 
 首次上线需要先完成：
 
-1. 在明确隔离的 Vercel Development/Preview 数据库执行到 `drizzle/0006_mighty_longshot.sql`；
+1. 在明确隔离的 Vercel Development/Preview 数据库执行全部现有迁移，直到最新的 `drizzle/0011_responsive_media_dimensions.sql`；
 2. 验证后再迁移 Production 数据库；
 3. 部署包含投稿 API 和 `/admin/review` 的版本；
 4. 配置管理员密码哈希与会话密钥。

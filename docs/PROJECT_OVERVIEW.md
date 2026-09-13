@@ -1,6 +1,6 @@
 # eagle-a 项目整体说明
 
-> 核对日期：2026-08-10（修订历史 UI、文章搜索、阅读进度条、自定义 404 页面；暗色模式试点后已移除，见第 19 节）
+> 核对日期：2026-09-12（包含项目可见性清理、响应式媒体校验和当前测试基线）
 > 本文只描述当前仓库已经存在的功能、数据流和限制，不收录未实现的产品规划。
 
 ## 1. 项目定位
@@ -51,7 +51,7 @@ tests/         Node test runner 测试
 docs/          项目操作和架构文档
 ```
 
-`public/blogs/` 是迁移期间保留的旧文章树，不是线上 CMS 内容源；线上 `/blogs/*` 路径已阻断。`public/blogs/hardware-kb/` 是用户本地资料，禁止清理、改名或删除；该目录已从 Git 索引和 Vercel 部署输入中排除，本机文件仍完整保留。`.next/`、`.open-next/`、`dist/` 和 `.vercel/` 是本地构建/部署产物，不是内容源。
+`public/blogs/` 是迁移期间保留的旧文章树，不是线上 CMS 内容源；线上 `/blogs/*` 路径已阻断。硬件资料已移出仓库，存放在本机 Downloads 的 `notify-engine-hardware-kb` 目录，不参与 Git 或 Vercel 部署。`.next/`、`.open-next/`、`dist/` 和 `.vercel/` 是本地构建/部署产物，不是内容源。
 
 ## 4. 页面与用户入口
 
@@ -364,7 +364,7 @@ pnpm assets:audit
 - 有效未使用投稿票据：0 张；
 - 保留 1 张已撤销且已过期票据及其审计事件，这是无效授权和正常审计残留，不是文章数据。
 
-仓库仍有 26 个旧 Markdown 文章文件和用户静态资源，未被清理。`public/blogs/hardware-kb/` 的 33 个本地文件完整保留，但不再进入 Git 或 Vercel 部署。
+仓库仍有 11 个旧 Markdown 文章文件未被清理；原先的硬件资料已完整移出仓库，存放在本机 Downloads。
 
 ## 13. 已验证问题与已知限制
 
@@ -422,7 +422,7 @@ Cloudflare 分支、OpenNext、Worker 配置和 Windows 高权限 Agent broker �
 - 删除未被项目调用且会无差别 `git add .` 后直接推送的 `git_push.bat`；
 - 将旧项目副本和生成物移动到仓库外可恢复归档目录，而不是永久删除。
 
-Knip 复扫后仅报告 `@svgr/webpack`。这是配置文件中以 loader 字符串使用的依赖，必须保留；其余死文件和可安全删除的死依赖已清空。`public/blogs/hardware-kb/` 已从 Git 索引移除但本机 33 个文件完整保留；旧文章 Markdown、图片、音频和数据库遗留表没有被删除。
+Knip 复扫后仅报告 `@svgr/webpack`。这是配置文件中以 loader 字符串使用的依赖，必须保留；其余死文件和可安全删除的死依赖已清空。硬件资料已移至仓库外的本机 Downloads；旧文章 Markdown、图片、音频和数据库遗留表没有被删除。
 
 清理不是发布动作。当前工作区仍有此前升级改造的未提交变更；完成本地门禁后，仍需由用户决定如何拆分提交和推送。
 
@@ -442,7 +442,7 @@ Knip 复扫后仅报告 `@svgr/webpack`。这是配置文件中以 loader 字符
 | P0-1 文章 SSR/SEO/404       | 已修复             | 列表和正文服务端取数，正文服务端渲染，metadata 与真实 404 已实现                                      |
 | P0-2 独立备份/恢复          | 本地演练通过       | 备份/恢复脚本已用两套空白 PostgreSQL 实测；Blob 异地恢复与生产资源演练仍需管理员执行                  |
 | P0-3 媒体索引可信度         | 已具备安全回填工具 | 回填逐对象核验 Blob 字节 SHA-256、MIME 和大小；生产回填仍需管理员显式执行                             |
-| P0-4 混合脏工作区           | 已隔离             | `public/blogs/hardware-kb/` 已从 Git 索引移除并加入忽略；本机 33 个文件保持完整                       |
+| P0-4 混合脏工作区           | 已隔离             | 硬件资料已移出仓库并存放于本机 Downloads，不进入 Git 或 Vercel 部署                       |
 | P1-1 管理员登录限速         | 已修复             | 失败窗口、阻断期、数据库记录和自动测试已实现                                                          |
 | P1-2 Blob/数据库非原子与 GC | 已具备两阶段流程   | pending/committed/orphaned/deleted 生命周期、标记清单、宽限期、ETag 校验、删除前归档和 recover 已实现 |
 | P1-3 迁移半状态与分类清空   | 已修复             | 迁移先规划校验，分类改为安全 upsert，环境确认与本地 loopback 约束已加入                               |
@@ -542,4 +542,4 @@ Knip 复扫后仅报告 `@svgr/webpack`。这是配置文件中以 loader 字符
 - GitHub Actions 固定 SHA；Windows/Linux 统一 LF 格式策略；硬件知识库从部署范围剥离但本地文件未删除；
 - Live2D 在不放开生产 `unsafe-eval` 的条件下恢复渲染。
 
-2026-08-10 本地验证：62/62 Node 测试通过，typecheck、Prettier、Drizzle check、无数据库生产构建、生产依赖审计和 `git diff --check` 通过；内置浏览器验证首页、博客搜索、文章、About 奖项图片、AI 日报、后台登录、移动导航与 Live2D，无框架遮罩或应用 console error/warn。生产资源恢复演练、生产媒体回填和 Dashboard 资源隔离仍是运维动作，不应伪装成代码已完成事项。
+2026-09-12 本地验证：78/78 Node 测试通过。生产资源恢复演练、生产媒体回填和 Dashboard 资源隔离仍是运维动作，不应伪装成代码已完成事项。
