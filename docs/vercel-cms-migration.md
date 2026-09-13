@@ -19,6 +19,7 @@ Neon 中的主要表：
 3. `NEXT_PUBLIC_SITE_URL` 在 Production 为 `https://zhanmingblog.cc.cd`。
 4. 当前 CLI 项目必须由 `.vercel/project.json` 指向 `zhanming-blog-new`。
 5. `public/blogs/`、旧 JSON、旧图片仅作为迁移归档保留；不得把它们当作生产内容源。旧文章回退只由 `scripts/run-local-next.mjs` 显式设置 `BLOG_CONTENT_SOURCE=legacy` 时启用，线上 `/blogs/*` 路径不提供访问。
+6. 推送或手动部署前必须运行 `pnpm release:check`；工作树不干净或不在 `main` 分支时发布会被拒绝。
 
 Vercel 的 Sensitive 变量不能用于普通 Development 拉取是平台限制，不是配置故障。本地验证可以使用一次性的本地管理员密钥，但不得写入仓库。
 
@@ -94,7 +95,8 @@ git diff --check
 3. 文档保存后版本加一且公开读取立即反映；
 4. 旧版本保存返回 `409`；
 5. 图片上传后只能通过允许的 `/api/media/` 路径读取；
-6. 测试数据恢复，临时文章、媒体索引和 Blob 被清理。
+6. 测试数据恢复，临时文章、媒体索引和 Blob 被清理；
+7. 管理员访问 `/api/admin/diagnostics`，核对资源环境、部署 SHA、数据库名/schema 和非敏感数据库指纹。
 
 ## 回滚与恢复
 

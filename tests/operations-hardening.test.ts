@@ -42,6 +42,28 @@ test('legacy article fallback is explicit and old public URLs are blocked', asyn
 	assert.match(proxy, /pathname === '\/blogs' \|\| request\.nextUrl\.pathname\.startsWith\('\/blogs\/'\)/)
 })
 
+test('admin diagnostics exposes resource identity without credentials', async () => {
+	const route = await readFile(new URL('../src/app/api/admin/diagnostics/route.ts', import.meta.url), 'utf8')
+	assert.match(route, /assertAdminRequest\(request\)/)
+	assert.match(route, /current_database\(\)/)
+	assert.match(route, /createHash\('sha256'\)/)
+	assert.doesNotMatch(route, /connectionString[,}]|DATABASE_URL\s*:/)
+})
+
+test('login throttling does not trust generic forwarded headers in production', async () => {
+	const source = await readFile(new URL('../src/lib/admin-login-rate-limit.ts', import.meta.url), 'utf8')
+	assert.match(source, /process\.env\.VERCEL === '1'/)
+	assert.match(source, /untrusted-production-proxy/)
+	assert.match(source, /client-spoofable/)
+})
+
+test('release check refuses a dirty or non-main checkout', async () => {
+	const script = await readFile(new URL('../scripts/check-release-state.mjs', import.meta.url), 'utf8')
+	assert.match(script, /git', \['status', '--porcelain'\]/)
+	assert.match(script, /working tree is not clean/)
+	assert.match(script, /branch !== 'main'/)
+})
+
 test('allows the fixed CSP-safe PIXI runtime without enabling unsafe eval', async () => {
 	const viewer = await readFile(new URL('../src/app/live2d/live2d-viewer.tsx', import.meta.url), 'utf8')
 	const productionPolicy = buildCsp({ allowInlineScripts: true, development: false })

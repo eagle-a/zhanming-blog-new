@@ -32,7 +32,7 @@
 | 部署       | 只支持 Vercel；Cloudflare/OpenNext 不属于当前方案                       |
 | 包管理器   | pnpm 11.4.0                                                             |
 
-Next 配置启用 React Strict Mode、React Compiler、Turbopack SVG loader、Next 图片优化、服务端动态 API 路由和按标签失效缓存。内容图片仍通过应用的同源代理读取；代理只接受 480/800/1200/1920 四档缩放宽度，并由 Vercel CDN 缓存内容寻址的不可变变体。
+Next 配置启用 React Strict Mode、React Compiler、Turbopack SVG loader、Next 图片优化和服务端动态 API 路由。根布局、CMS 文章与运行时配置按请求读取 Neon，避免数据库查询发生在构建阶段或被服务端数据缓存遮蔽。内容图片仍通过应用的同源代理读取；代理只接受 480/800/1200/1920 四档缩放宽度，并由 Vercel CDN 缓存内容寻址的不可变变体。
 
 ## 3. 目录职责
 
@@ -223,14 +223,7 @@ pnpm agent:submit C:\path\to\article.md
 
 ## 8. 缓存和发布语义
 
-服务端仓储使用 `unstable_cache`：
-
-- 已发布文章列表：标签 `posts`，约 1 小时缓存；
-- 单篇文章：标签 `posts` 和 `post:<slug>`；
-- 分类：标签 `post-categories`；
-- 配置：标签 `content:<key>`；
-- 管理写入、批准和批量修改后主动失效对应标签/路径；
-- 公开 API 返回可重新验证的缓存头，管理员和审批 API 返回 `no-store`。
+CMS 文章、分类和运行时配置在动态请求中直接读取 Neon，不使用服务端数据库结果缓存。这样直接修复数据库后不会等待 TTL 才可见；管理写入仍会执行标签/路径失效，公开 API 返回可重新验证的缓存头，管理员和审批 API 返回 `no-store`。内容寻址媒体仍由 Vercel CDN 做长期不可变缓存。
 
 因此，批准文章后不需要 Git commit 或 Vercel rebuild。只有代码、依赖、环境变量或数据库迁移发生变化时，才需要部署或人工执行迁移。
 

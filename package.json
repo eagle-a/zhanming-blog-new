@@ -30,6 +30,7 @@
 		"assets:audit": "node --no-warnings --experimental-strip-types scripts/audit-public-assets.ts",
 		"assets:optimize-pictures": "node --no-warnings --experimental-strip-types scripts/optimize-picture-assets.ts",
 		"assets:optimize-music": "node --no-warnings --experimental-strip-types scripts/optimize-music-assets.ts",
+		"release:check": "node scripts/check-release-state.mjs",
 		"check": "pnpm test && pnpm typecheck && pnpm format:check && pnpm db:check && pnpm build",
 		"build": "next build"
 	},

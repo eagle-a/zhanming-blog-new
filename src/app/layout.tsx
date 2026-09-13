@@ -14,6 +14,11 @@ import type { CardStyles, SiteContent } from '@/app/(home)/stores/config-store'
 import { resolvePublicSiteUrl } from '@/lib/config-validation'
 import { resolveSiteDescription } from '@/lib/site-metadata'
 
+// Runtime site configuration comes from Neon and must not be queried while a
+// static build is being generated. This also ensures direct CMS repairs are
+// visible on the next request instead of being frozen into build output.
+export const dynamic = 'force-dynamic'
+
 const SITE_URL = resolvePublicSiteUrl()
 
 const getRuntimeConfig = cache(async (): Promise<{ siteContent: SiteContent; cardStyles: CardStyles }> => {

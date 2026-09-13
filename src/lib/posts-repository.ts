@@ -1,7 +1,6 @@
 import 'server-only'
 
 import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, lte, notInArray, or, sql } from 'drizzle-orm'
-import { unstable_cache } from 'next/cache'
 import { getDb } from '@/db/client'
 import { categories, postRevisions, posts, postTags, tags, type PostRow } from '@/db/schema'
 import type { BlogIndexItem } from '@/app/blog/types'
@@ -377,22 +376,17 @@ export async function applyBatchPostEdits(input: {
 	})
 }
 
-export const getCachedPublishedPosts = unstable_cache(() => listPosts(false), ['published-posts'], {
-	tags: ['posts'],
-	revalidate: 600
-})
+// CMS content is read from the database on every dynamic request. Keeping a
+// server data cache here made direct operational repairs in Neon invisible
+// until TTL expiry; mutation routes already invalidate tags for framework
+// caches, but SQL repairs cannot do that.
+export const getCachedPublishedPosts = listPosts
 
 export function getCachedPublishedPost(slug: string): Promise<PostRecord | null> {
-	return unstable_cache(() => getPost(slug, false), ['published-post', slug], {
-		tags: ['posts', `post:${slug}`],
-		revalidate: 600
-	})()
+	return getPost(slug, false)
 }
 
-export const getCachedCategories = unstable_cache(listCategories, ['post-categories'], {
-	tags: ['post-categories'],
-	revalidate: 3600
-})
+export const getCachedCategories = listCategories
 
 export type PostRevisionSummary = {
 	id: number

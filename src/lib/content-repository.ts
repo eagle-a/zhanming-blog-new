@@ -1,7 +1,6 @@
 import 'server-only'
 
 import { eq, sql } from 'drizzle-orm'
-import { unstable_cache } from 'next/cache'
 import { getDb } from '@/db/client'
 import { contentDocumentRevisions, contentDocuments } from '@/db/schema'
 import type { ContentDocumentKey } from '@/lib/content-validation'
@@ -55,10 +54,7 @@ async function getContentDocument<T>(key: ContentDocumentKey): Promise<ContentDo
 }
 
 export function getCachedContentDocument<T>(key: ContentDocumentKey): Promise<ContentDocumentRecord<T>> {
-	return unstable_cache(() => getContentDocument<T>(key), ['content-document', key], {
-		tags: [`content:${key}`],
-		revalidate: 3600
-	})()
+	return getContentDocument<T>(key)
 }
 
 export async function upsertContentDocument<T>(

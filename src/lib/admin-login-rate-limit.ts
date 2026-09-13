@@ -14,10 +14,16 @@ function sessionSecret(): string {
 }
 
 function clientAddress(request: Request): string {
-	const vercelAddress = request.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim()
-	if (vercelAddress) return vercelAddress
-	const forwardedAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-	return forwardedAddress || 'unknown-client'
+	// Only trust the platform-specific header when running on Vercel. A
+	// generic forwarded header is client-spoofable when this app is exposed
+	// directly or behind an untrusted proxy.
+	if (process.env.VERCEL === '1') {
+		return request.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() || 'vercel-unknown-client'
+	}
+	if (process.env.NODE_ENV !== 'production') {
+		return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local-client'
+	}
+	return 'untrusted-production-proxy'
 }
 
 function keyForRequest(request: Request): string {
