@@ -13,6 +13,7 @@ import {
 	type ContentDocumentKey
 } from '../src/lib/content-validation.ts'
 import { FALLBACK_SHARE_LOGO, resolveShareLogo } from '../src/app/share/share-logo.ts'
+import { filterVisibleProjects } from '../src/lib/project-visibility.ts'
 
 const sourceFiles: Record<ContentDocumentKey, URL> = {
 	site: new URL('../src/config/site-content.json', import.meta.url),
@@ -34,6 +35,18 @@ test('all seven runtime content documents pass strict validation', async () => {
 		const document = await readDocument(key)
 		assert.doesNotThrow(() => parseContentDocument(key, document))
 	}
+})
+
+test('retired projects are absent from the repository fallback and public projection', async () => {
+	const projects = await readDocument('projects')
+	assert.deepEqual(
+		projects.map((project: { name: string }) => project.name),
+		['eagle-a', 'zhanming-blog-new', 'hue-tools', 'exif-photo-blog']
+	)
+	assert.deepEqual(
+		filterVisibleProjects([...projects, { name: 'juya-news-card' }, { name: 'vue3-vite-express' }]).map(project => project.name),
+		['eagle-a', 'zhanming-blog-new', 'hue-tools', 'exif-photo-blog']
+	)
 })
 
 test('rejects unknown document keys and unsafe runtime URLs', async () => {

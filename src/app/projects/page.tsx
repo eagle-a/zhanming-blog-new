@@ -9,25 +9,29 @@ import { pushProjects } from './services/push-projects'
 import { useAdminAction } from '@/hooks/use-admin-action'
 import { useContentDocument } from '@/hooks/use-content-document'
 import { useConfigStore } from '@/app/(home)/stores/config-store'
+import { filterVisibleProjects } from '@/lib/project-visibility'
 import initialList from './list.json'
 import type { ImageItem } from './components/image-upload-dialog'
 
+const initialProjects = filterVisibleProjects(initialList as Project[])
+
 export default function Page() {
-	const [projects, setProjects] = useState<Project[]>(initialList as Project[])
-	const [originalProjects, setOriginalProjects] = useState<Project[]>(initialList as Project[])
+	const [projects, setProjects] = useState<Project[]>(initialProjects)
+	const [originalProjects, setOriginalProjects] = useState<Project[]>(initialProjects)
 	const [isEditMode, setIsEditMode] = useState(false)
 	const [isSaving, setIsSaving] = useState(false)
 	const [editingProject, setEditingProject] = useState<Project | null>(null)
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 	const [imageItems, setImageItems] = useState<Map<string, ImageItem>>(new Map())
 	const { isAuth, runAuthenticated } = useAdminAction()
-	const projectsDocument = useContentDocument<Project[]>('projects', initialList as Project[])
+	const projectsDocument = useContentDocument<Project[]>('projects', initialProjects)
 	const { siteContent } = useConfigStore()
 	const hideEditButton = siteContent.hideEditButton ?? false
 
 	useEffect(() => {
-		setProjects(projectsDocument.data)
-		setOriginalProjects(projectsDocument.data)
+		const visibleProjects = filterVisibleProjects(projectsDocument.data)
+		setProjects(visibleProjects)
+		setOriginalProjects(visibleProjects)
 	}, [projectsDocument.data])
 
 	const handleUpdate = (updatedProject: Project, oldProject: Project, imageItem?: ImageItem) => {

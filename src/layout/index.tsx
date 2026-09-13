@@ -24,8 +24,10 @@ export default function Layout({ children }: PropsWithChildren) {
 	return (
 		<>
 			<Toaster
-				position='bottom-right'
+				position='bottom-center'
 				richColors
+				offset={{ bottom: maxSM ? 92 : 28 }}
+				mobileOffset={{ bottom: 92, left: 16, right: 16 }}
 				icons={{
 					success: <CircleCheckIcon className='size-4' />,
 					info: <InfoIcon className='size-4' />,
@@ -35,7 +37,8 @@ export default function Layout({ children }: PropsWithChildren) {
 				}}
 				style={
 					{
-						'--border-radius': '12px'
+						'--border-radius': '16px',
+						'--width': 'min(360px, calc(100vw - 32px))'
 					} as React.CSSProperties
 				}
 			/>
