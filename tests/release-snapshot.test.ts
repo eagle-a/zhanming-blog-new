@@ -14,6 +14,7 @@ test('release snapshot contains the exact commit, not ignored files or later edi
 		git('init', '--quiet')
 		await writeFile(path.join(cwd, '.gitignore'), '.env*\n.vercel\n')
 		await writeFile(path.join(cwd, 'source.txt'), 'committed')
+		await writeFile(path.join(cwd, '中文 空格.txt'), 'UTF-8 asset')
 		git('add', '.')
 		git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--quiet', '-m', 'fixture')
 		const sha = git('rev-parse', 'HEAD').trim()
@@ -23,6 +24,7 @@ test('release snapshot contains the exact commit, not ignored files or later edi
 		await writeFile(path.join(cwd, '.vercel/project.json'), JSON.stringify({ orgId: 'team_fixture', projectId: 'prj_fixture', ignored: 'local state' }))
 		snapshot = await createReleaseSnapshot(sha, cwd)
 		assert.equal(await readFile(path.join(snapshot.directory, 'source.txt'), 'utf8'), 'committed')
+		assert.equal(await readFile(path.join(snapshot.directory, '中文 空格.txt'), 'utf8'), 'UTF-8 asset')
 		await assert.rejects(access(path.join(snapshot.directory, '.env.local')))
 		assert.deepEqual(JSON.parse(await readFile(path.join(snapshot.directory, '.vercel/project.json'), 'utf8')), {
 			orgId: 'team_fixture',

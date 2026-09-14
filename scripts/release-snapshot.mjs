@@ -13,9 +13,25 @@ export async function createReleaseSnapshot(sha, cwd = process.cwd()) {
 	const directory = path.join(temporary, 'source')
 	try {
 		await mkdir(directory)
-		const archive = path.join(temporary, 'source.tar')
-		execFileSync('git', ['archive', '--format=tar', `--output=${archive}`, sha], { cwd, windowsHide: true, timeout: 30_000 })
-		execFileSync('tar', ['-xf', archive, '-C', directory], { windowsHide: true, timeout: 30_000 })
+		const archive = path.join(temporary, 'source.zip')
+		execFileSync('git', ['archive', '--format=zip', `--output=${archive}`, sha], { cwd, windowsHide: true, timeout: 30_000 })
+		// Windows' bundled tar can reject UTF-8 Git filenames depending on the
+		// active locale. ZIP + .NET preserves Chinese asset names and spaces.
+		if (process.platform === 'win32') {
+			const literal = value => `'${value.replaceAll("'", "''")}'`
+			execFileSync(
+				'powershell.exe',
+				[
+					'-NoProfile',
+					'-NonInteractive',
+					'-Command',
+					`$ErrorActionPreference='Stop'; Expand-Archive -LiteralPath ${literal(archive)} -DestinationPath ${literal(directory)}`
+				],
+				{ windowsHide: true, timeout: 60_000 }
+			)
+		} else {
+			execFileSync('unzip', ['-q', archive, '-d', directory], { timeout: 30_000 })
+		}
 		await mkdir(path.join(directory, '.vercel'), { recursive: true })
 		await writeFile(path.join(directory, '.vercel/project.json'), JSON.stringify({ orgId: project.orgId, projectId: project.projectId }))
 		return { directory, cleanup: () => rm(temporary, { recursive: true, force: true }) }
