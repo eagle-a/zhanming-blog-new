@@ -20,7 +20,7 @@ export async function GET(request: Request): Promise<Response> {
 		return Response.json(
 			{
 				environment: process.env.BLOG_RESOURCE_ENV || process.env.VERCEL_ENV || 'development',
-				deployment: process.env.VERCEL_GIT_COMMIT_SHA || null,
+				deployment: process.env.BLOG_RELEASE_COMMIT || process.env.VERCEL_GIT_COMMIT_SHA || null,
 				database: {
 					name: typeof identity?.database === 'string' ? identity.database : null,
 					schema: typeof identity?.schema === 'string' ? identity.schema : null,
