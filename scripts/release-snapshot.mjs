@@ -34,7 +34,7 @@ export async function createReleaseSnapshot(sha, cwd = process.cwd()) {
 		}
 		await mkdir(path.join(directory, '.vercel'), { recursive: true })
 		await writeFile(path.join(directory, '.vercel/project.json'), JSON.stringify({ orgId: project.orgId, projectId: project.projectId }))
-		return { directory, cleanup: () => rm(temporary, { recursive: true, force: true }) }
+		return { directory, cleanup: () => rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 250 }) }
 	} catch (error) {
 		await rm(temporary, { recursive: true, force: true })
 		throw error

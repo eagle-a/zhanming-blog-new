@@ -33,5 +33,11 @@ try {
 	console.error(error.message)
 	process.exitCode = 1
 } finally {
-	await snapshot?.cleanup()
+	try {
+		await snapshot?.cleanup()
+	} catch (error) {
+		// Windows can retain the CLI's cwd handle briefly after a successful
+		// deployment. Cleanup is local housekeeping, not the release outcome.
+		console.warn(`Temporary snapshot cleanup failed (${error.code}); remove later: ${snapshot?.directory}`)
+	}
 }
