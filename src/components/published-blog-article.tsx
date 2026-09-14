@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import dayjs from 'dayjs'
+import { publicationDate } from '@/lib/publication-date'
 import { ArticleEnhancements } from '@/components/article-enhancements'
 import { BlogSidebar } from '@/components/blog-sidebar'
 import LiquidGrass from '@/components/liquid-grass'
@@ -32,7 +32,7 @@ export function PublishedBlogArticle({ post, html, toc, stats, summaryInContent,
 							))}
 						</div>
 						<div className='text-secondary mt-3 flex flex-wrap items-center justify-center gap-3 text-center text-sm'>
-							<time dateTime={post.date}>{dayjs(post.date).format('YYYY年 M月 D日')}</time>
+							<time dateTime={post.date}>{publicationDate(post.date).format('YYYY年 M月 D日')}</time>
 							<span className='text-border'>|</span>
 							<span>{stats.wordCount.toLocaleString()} 字</span>
 							<span className='text-border'>|</span>

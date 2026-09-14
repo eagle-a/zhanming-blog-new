@@ -152,6 +152,8 @@ pnpm media:maintain -- --action=plan
 
 Sonner 2.0.8 使用 `patches/sonner@2.0.8.patch` 禁止运行时注入内联 CSS，统一从 `globals.css` 导入其公开静态样式。升级 Sonner 时必须重新评估补丁并通过生产 CSP 测试，不得用放宽 `style-src` 代替修复。
 
+文章列表、时间分组、搜索结果和正文标题的发布日期统一按 UTC 显示，保持原有服务端日期，避免浏览器时区造成日期漂移和 hydration 错误；这不修改数据库时间。浏览器回归覆盖 UTC、洛杉矶和上海时区。
+
 Cloudflare/OpenNext 执行链路已经移除。仓库中的 `.open-next`、`.wrangler`、Cloudflare Worker 配置或部署脚本都不应恢复。
 
 详细上线和回滚流程见 [`docs/vercel-cms-migration.md`](docs/vercel-cms-migration.md)。

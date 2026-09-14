@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useMemo, useState, type DragEvent } from 'react'
-import dayjs from 'dayjs'
+import { publicationDate } from '@/lib/publication-date'
 import type { BlogIndexItem } from '@/hooks/use-blog-index'
 import { DialogModal } from '@/components/dialog-modal'
 import { Select } from '@/components/select'
@@ -121,7 +121,7 @@ export function CategoryModal({
 						<div key={item.slug} className='flex flex-col gap-2 rounded-lg border bg-white/80 px-3 py-2 sm:flex-row sm:items-center sm:justify-between'>
 							<div className='text-sm font-medium'>
 								{item.title || item.slug}
-								<span className='text-secondary ml-2 text-xs'>{dayjs(item.date).format('YYYY-MM-DD')}</span>
+								<span className='text-secondary ml-2 text-xs'>{publicationDate(item.date).format('YYYY-MM-DD')}</span>
 							</div>
 							<Select
 								value={item.category || ''}

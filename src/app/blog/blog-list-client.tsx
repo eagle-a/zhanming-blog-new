@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import dayjs from 'dayjs'
+import { publicationDate } from '@/lib/publication-date'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import { motion } from 'motion/react'
 
@@ -75,7 +76,7 @@ export default function BlogListClient({ initialItems, initialCategories }: { in
 			(acc, item) => {
 				let key: string
 				let label: string
-				const date = dayjs(item.date)
+				const date = publicationDate(item.date)
 
 				switch (displayMode) {
 					case 'category':
@@ -391,7 +392,7 @@ export default function BlogListClient({ initialItems, initialCategories }: { in
 								{search.results.map(result => (
 									<li key={result.slug}>
 										<Link href={`/blog/${result.slug}`} className='group flex items-start gap-3 py-3 transition-all hover:translate-x-1'>
-											<span className='text-secondary mt-0.5 w-[60px] shrink-0 text-xs'>{dayjs(result.date).format('YYYY-MM-DD')}</span>
+											<span className='text-secondary mt-0.5 w-[60px] shrink-0 text-xs'>{publicationDate(result.date).format('YYYY-MM-DD')}</span>
 											<div className='min-w-0 flex-1'>
 												<div className='group-hover:text-brand truncate text-sm font-medium'>{result.title || result.slug}</div>
 												{result.snippet && <p className='text-secondary mt-1 line-clamp-2 text-xs'>{result.snippet}</p>}
@@ -477,7 +478,7 @@ export default function BlogListClient({ initialItems, initialCategories }: { in
 															<Check />
 														</span>
 													)}
-													<span className='text-secondary w-[44px] shrink-0 text-sm font-medium'>{dayjs(it.date).format('MM-DD')}</span>
+													<span className='text-secondary w-[44px] shrink-0 text-sm font-medium'>{publicationDate(it.date).format('MM-DD')}</span>
 
 													<div className='relative flex h-2 w-2 items-center justify-center'>
 														<div className='bg-secondary group-hover:bg-brand h-[5px] w-[5px] rounded-full transition-all group-hover:h-4'></div>
