@@ -1,7 +1,7 @@
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -1,11 +1,7 @@
+@@ -1,9 +1,5 @@
  'use client';
  function __insertCSS(code) {
 -  if (!code || typeof document == 'undefined') return
@@ -13,12 +13,10 @@ diff --git a/dist/index.js b/dist/index.js
 +  // The application imports sonner/dist/styles.css in its static stylesheet.
 +  // Do not inject inline styles: sensitive pages enforce a strict style CSP.
  }
- 
- Object.defineProperty(exports, '__esModule', { value: true });
 diff --git a/dist/index.mjs b/dist/index.mjs
 --- a/dist/index.mjs
 +++ b/dist/index.mjs
-@@ -1,11 +1,7 @@
+@@ -1,9 +1,5 @@
  'use client';
  function __insertCSS(code) {
 -  if (!code || typeof document == 'undefined') return
@@ -30,5 +28,3 @@ diff --git a/dist/index.mjs b/dist/index.mjs
 +  // The application imports sonner/dist/styles.css in its static stylesheet.
 +  // Do not inject inline styles: sensitive pages enforce a strict style CSP.
  }
- 
- import React from 'react';

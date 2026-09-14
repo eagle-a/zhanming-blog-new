@@ -15,7 +15,7 @@ overrides:
   baseline-browser-mapping@<2.11.0: 2.11.12
 
 patchedDependencies:
-  sonner@2.0.8: 9cd59ca721e3449e56d0f2912dead36eec8334a346b322f4d4aadc5b0e036870
+  sonner@2.0.8: e41076ef35980b2e86c082883ba0eb9138d9ce76965751ffbd3508025b9350f4
 
 importers:
 
@@ -83,7 +83,7 @@ importers:
         version: 3.23.0
       sonner:
         specifier: 2.0.8
-        version: 2.0.8(patch_hash=9cd59ca721e3449e56d0f2912dead36eec8334a346b322f4d4aadc5b0e036870)(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 2.0.8(patch_hash=e41076ef35980b2e86c082883ba0eb9138d9ce76965751ffbd3508025b9350f4)(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       swr:
         specifier: ^2.3.6
         version: 2.5.0(react@19.2.8)
@@ -5095,7 +5095,7 @@ snapshots:
       dot-case: 3.0.4
       tslib: 2.8.1
 
-  sonner@2.0.8(patch_hash=9cd59ca721e3449e56d0f2912dead36eec8334a346b322f4d4aadc5b0e036870)(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  sonner@2.0.8(patch_hash=e41076ef35980b2e86c082883ba0eb9138d9ce76965751ffbd3508025b9350f4)(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
