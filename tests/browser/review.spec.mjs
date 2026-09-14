@@ -10,6 +10,78 @@ test.afterAll(async () => {
 	await fixture?.close()
 })
 
+test('two windows cannot overwrite stale drafts; approval and rejection complete only with the current version', async ({ context }) => {
+	const rows = ['first', 'second'].map(id => ({
+		id,
+		type: 'post',
+		status: 'pending',
+		contentHash: 'a'.repeat(64),
+		validationResult: [],
+		createdAt: '2026-09-14T00:00:00Z',
+		updatedAt: '2026-09-14T00:00:00Z',
+		agentName: 'Fixture',
+		payload: { title: id, slug: id, contentMd: 'Fixture body', summary: '', tags: [], category: null, coverUrl: '', publishedAt: '2026-09-14T00:00:00Z' }
+	}))
+	let saves = 0
+	const publications = [],
+		rejections = []
+	await context.route('**/api/admin/**', async route => {
+		const req = route.request(),
+			path = new URL(req.url()).pathname
+		if (path === '/api/admin/review')
+			return route.fulfill({
+				json: {
+					items: rows.filter(row => row.status === 'pending').map(({ payload, ...row }) => ({ ...row, title: payload.title, slug: payload.slug })),
+					nextCursor: null
+				}
+			})
+		const row = rows.find(row => row.id === path.split('/')[4])
+		if (!row) return route.fulfill({ status: 404, json: { error: 'Unexpected fixture request' } })
+		if (req.method() === 'GET') return route.fulfill({ json: structuredClone(row) })
+		const body = req.postDataJSON()
+		if (body.expectedContentHash !== row.contentHash || row.status !== 'pending') return route.fulfill({ status: 409, json: { error: 'Version conflict' } })
+		if (req.method() === 'PATCH') {
+			saves++
+			row.payload = body.payload
+			row.contentHash = (saves === 1 ? 'b' : 'c').repeat(64)
+		} else if (path.endsWith('/approve')) {
+			publications.push(structuredClone(row))
+			row.status = 'approved'
+		} else if (path.endsWith('/reject')) {
+			rejections.push(body)
+			row.status = 'rejected'
+		} else throw new Error('Unexpected mutation in fixture')
+		return route.fulfill({ json: structuredClone(row) })
+	})
+	const first = await context.newPage(),
+		second = await context.newPage()
+	await Promise.all([first.goto(fixture.url), second.goto(fixture.url)])
+	await expect(first.getByLabel('标题', { exact: true })).toHaveValue('first')
+	await expect(second.getByLabel('标题', { exact: true })).toHaveValue('first')
+	await second.getByLabel('标题', { exact: true }).fill('Stale unsaved title')
+	await first.getByLabel('标题', { exact: true }).fill('Reviewed title')
+	await first.getByRole('button', { name: '保存草稿', exact: true }).click()
+	await expect(first.getByText('草稿已与服务器同步。')).toBeVisible()
+	await second.getByRole('button', { name: '保存草稿', exact: true }).click()
+	await expect(second.getByText('Version conflict', { exact: true })).toBeVisible()
+	await expect(second.getByLabel('标题', { exact: true })).toHaveValue('Stale unsaved title')
+	expect(rows[0].payload.title).toBe('Reviewed title')
+	await first.getByRole('button', { name: '保存并批准发布' }).click()
+	expect(publications).toHaveLength(0)
+	await first.getByRole('button', { name: '确认发布', exact: true }).click()
+	await expect(first.getByText('已批准并发布', { exact: true })).toBeVisible()
+	expect(publications).toHaveLength(1)
+	expect(publications[0].contentHash).toBe('c'.repeat(64))
+	expect(publications[0].payload.title).toBe('Reviewed title')
+	await expect(first.getByLabel('标题', { exact: true })).toHaveValue('second')
+	await first.getByRole('button', { name: '拒绝', exact: true }).click()
+	await first.getByLabel('拒绝原因', { exact: true }).fill('Needs sources')
+	await first.getByRole('button', { name: '确认拒绝', exact: true }).click()
+	await expect(first.getByText('已拒绝投稿', { exact: true })).toBeVisible()
+	expect(rejections).toEqual([{ reason: 'Needs sources', expectedContentHash: 'a'.repeat(64) }])
+	expect(rows.map(row => row.status)).toEqual(['approved', 'rejected'])
+})
+
 test('missing detail and ticket API failures have recoverable states', async ({ page, context }) => {
 	let ticketRequests = 0
 	await context.route('**/api/admin/**', async route => {

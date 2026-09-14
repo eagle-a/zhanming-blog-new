@@ -12,6 +12,10 @@ export async function checkReleaseState({ exec = execFileSync, request = fetch }
 	if (branch !== 'main') throw new Error(`Release refused: expected branch main, got ${branch || '(detached HEAD)'}.`)
 	const sha = exec('git', ['rev-parse', 'HEAD'], options).trim()
 	if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error('Release refused: invalid commit SHA.')
+	const config = JSON.parse(exec('git', ['show', `${sha}:vercel.json`], options))
+	if (config.git?.deploymentEnabled !== false && config.git?.deploymentEnabled?.main !== false) {
+		throw new Error('Release refused: Git auto-deployment of main must be disabled in vercel.json.')
+	}
 	const remote = exec('git', ['remote', 'get-url', 'origin'], options).trim()
 	const match = remote.match(/^(?:https:\/\/github\.com\/|git@github\.com:)([\w.-]+)\/([\w.-]+?)(?:\.git)?$/)
 	if (!match) throw new Error('Release refused: origin must be a canonical GitHub repository URL.')
@@ -38,6 +42,9 @@ export async function checkReleaseState({ exec = execFileSync, request = fetch }
 		exec('git', ['branch', '--show-current'], options).trim() !== 'main'
 	) {
 		throw new Error('Release refused: checkout changed during verification.')
+	}
+	if (exec('git', ['ls-remote', '--exit-code', 'origin', 'refs/heads/main'], options).trim().split(/\s+/)[0] !== sha) {
+		throw new Error('Release refused: remote main changed during verification.')
 	}
 	return { sha, repository: `${owner}/${repo}`, ciRun: run.html_url }
 }

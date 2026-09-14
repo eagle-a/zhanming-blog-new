@@ -4,9 +4,20 @@ import { checkReleaseState } from '../scripts/check-release-state.mjs'
 
 const sha = 'a'.repeat(40)
 function fixture(
-	options: { dirty?: boolean; branch?: string; remoteSha?: string; conclusion?: string; ciSha?: string; changed?: boolean; http?: number } = {}
+	options: {
+		dirty?: boolean
+		branch?: string
+		remoteSha?: string
+		conclusion?: string
+		ciSha?: string
+		changed?: boolean
+		http?: number
+		autoDeploy?: boolean
+		remoteChanged?: boolean
+	} = {}
 ) {
 	let statusReads = 0
+	let remoteReads = 0
 	return {
 		exec(_command: string, args: string[]) {
 			if (args[0] === 'status') {
@@ -15,8 +26,12 @@ function fixture(
 			}
 			if (args[0] === 'branch') return options.branch ?? 'main'
 			if (args[0] === 'rev-parse') return sha
+			if (args[0] === 'show') return JSON.stringify({ git: { deploymentEnabled: { main: options.autoDeploy ?? false } } })
 			if (args[0] === 'remote') return 'https://github.com/eagle-a/zhanming-blog-new.git'
-			if (args[0] === 'ls-remote') return `${options.remoteSha ?? sha}\trefs/heads/main`
+			if (args[0] === 'ls-remote') {
+				remoteReads++
+				return `${options.remoteChanged && remoteReads > 1 ? 'd'.repeat(40) : (options.remoteSha ?? sha)}\trefs/heads/main`
+			}
 			throw new Error(`Unexpected command ${args}`)
 		},
 		request: (async (url: string) => {
@@ -52,7 +67,9 @@ test('release gate refuses dirty, wrong branch, unpushed, failed CI, and stale C
 		{ conclusion: 'failure' },
 		{ ciSha: 'c'.repeat(40) },
 		{ changed: true },
-		{ http: 403 }
+		{ http: 403 },
+		{ autoDeploy: true },
+		{ remoteChanged: true }
 	]) {
 		await assert.rejects(checkReleaseState(fixture(options)), /Release refused/)
 	}

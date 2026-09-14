@@ -397,7 +397,7 @@ pnpm assets:audit
 
 ## 14. 当前部署决策
 
-只部署到 Vercel。Vercel 项目需要连接正确的 Git 仓库、配置生产环境变量、针对明确的 Neon 数据库执行迁移，然后由 Vercel 构建代码。日常文章和配置更新走数据库运行时链路，不重新构建。
+只部署到 Vercel。`main` 的 Git 自动部署已在 `vercel.json` 关闭，其他分支可生成 Preview。生产统一使用 `pnpm deploy:production`：核对已推送的精确 SHA 和成功 CI 后，只上传该提交的归档快照；真实生产配置由 Vercel 提供，不上传本机环境文件。Vercel 项目需要连接正确的 Git 仓库、配置生产环境变量、针对明确的 Neon 数据库执行迁移。日常文章和配置更新走数据库运行时链路，不重新构建。
 
 Cloudflare 分支、OpenNext、Worker 配置和 Windows 高权限 Agent broker 不属于当前系统，不应恢复。
 

@@ -19,7 +19,7 @@ Neon 中的主要表：
 3. `NEXT_PUBLIC_SITE_URL` 在 Production 为 `https://zhanmingblog.cc.cd`。
 4. 当前 CLI 项目必须由 `.vercel/project.json` 指向 `zhanming-blog-new`。
 5. `public/blogs/`、旧 JSON、旧图片仅作为迁移归档保留；不得把它们当作生产内容源。旧文章回退只由 `scripts/run-local-next.mjs` 显式设置 `BLOG_CONTENT_SOURCE=legacy` 时启用，线上 `/blogs/*` 路径不提供访问。
-6. 推送或手动部署前必须运行 `pnpm release:check`；工作树不干净或不在 `main` 分支时发布会被拒绝。
+6. 先提交、推送 `main` 并等待对应 SHA 的 GitHub CI 成功，再运行 `pnpm release:check` 或 `pnpm deploy:production`；不要在推送前运行需要核对远端 SHA 的发布检查。工作区必须干净。
 
 Vercel 的 Sensitive 变量不能用于普通 Development 拉取是平台限制，不是配置故障。本地验证可以使用一次性的本地管理员密钥，但不得写入仓库。
 
@@ -58,7 +58,7 @@ pnpm audit --prod --registry https://registry.npmjs.org
 git diff --check
 ```
 
-检查通过后，先部署 Preview 并验证，再提升为 Production。禁止在 Build Command 中自动运行数据库迁移。
+变更可先在非 `main` 分支部署 Preview 验证。生产入口统一为：提交并推送 `main` → 对应 SHA 的 CI 成功 → `pnpm deploy:production`。`vercel.json` 已禁止 `main` 的 Git 自动部署，包装脚本只上传已验证提交的归档快照，不包含本地忽略文件。禁止直接把未经过对应提交 CI 验证的 Preview 提升为生产；禁止在 Build Command 中自动运行数据库迁移。拥有平台管理权限者仍可绕过流程，这不是平台级权限锁。
 
 ## 验证清单
 

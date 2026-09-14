@@ -136,17 +136,21 @@ pnpm media:maintain -- --action=plan
 
 ## 部署
 
-只支持 Vercel。代码推送到已连接的 Git 仓库后由 Vercel 构建；日常文章和站点内容更新不需要推送代码。
+只支持 Vercel。`vercel.json` 禁止 `main` 的 Git 自动部署，其他分支仍可生成 Preview；日常文章和站点内容更新不需要推送代码。
 
-推荐生产发布使用 `pnpm deploy:production`。它只允许干净的 `main`、本地与实时远端 SHA 一致、该 SHA 最新的 GitHub CI 成功，然后调用 Vercel 并写入 `releaseCommit` 元数据。认证、网络或 CI 状态无法核实会阻止发布。检查不会提交、推送或修改数据库。
+生产发布使用 `pnpm deploy:production`：先提交并推送 `main`，等待 GitHub CI 成功，再运行该命令。它检查干净工作区、实时远端 SHA、该 SHA 最新 CI 和关闭自动部署的配置，只上传 `git archive` 导出的提交快照，并写入 `releaseCommit` 元数据。本机忽略的 `.env`、未提交修改和本地资料不会被带入发布。认证、网络或 CI 状态无法核实会阻止发布。
 
-注意：本地脚本不能约束 Dashboard 或直接运行 `vercel deploy --prod`。若启用了 Vercel Git 自动生产部署，需要项目所有者在平台配置等待 CI 或调整发布入口，否则仍可能绕过此门禁。
+注意：拥有 Vercel 发布权限的人仍可通过 Dashboard、直接 CLI 或修改配置绕过仓库流程；此门禁不是平台权限隔离。日常生产发布不要绕开包装脚本，紧急回滚由项目所有者在平台执行并记录部署 ID。
 
 ### 审稿回归测试
 
 `pnpm test` 包含进程内 PostgreSQL 仓储测试（执行实际迁移，不读取业务数据库凭据）；`pnpm test:browser` 使用隔离页面中的真实审稿组件和模拟接口，不访问真实管理员 API。
 
 首次运行浏览器测试：`pnpm exec playwright install chromium`。已有 Chromium 时可设置 `REVIEW_BROWSER_EXECUTABLE` 指向可执行文件。截图与 trace 写入系统临时目录，不进入仓库。CI 会安装 Chromium 并运行同一套测试。
+
+`pnpm build` 后运行 `pnpm test:production`，以只读占位配置启动独立生产服务，验证审批/编辑登录页的真实 CSP、通知样式和移动端布局；登录请求被模拟，不使用真实凭据。CI 也执行该检查。
+
+Sonner 2.0.8 使用 `patches/sonner@2.0.8.patch` 禁止运行时注入内联 CSS，统一从 `globals.css` 导入其公开静态样式。升级 Sonner 时必须重新评估补丁并通过生产 CSP 测试，不得用放宽 `style-src` 代替修复。
 
 Cloudflare/OpenNext 执行链路已经移除。仓库中的 `.open-next`、`.wrangler`、Cloudflare Worker 配置或部署脚本都不应恢复。
 

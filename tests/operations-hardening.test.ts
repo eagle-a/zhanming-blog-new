@@ -8,6 +8,7 @@ test('uses nonce-based script CSP on administrator pages', () => {
 	const scriptDirective = policy.split(';').find(value => value.trim().startsWith('script-src')) || ''
 	assert.match(scriptDirective, /'nonce-test-nonce'/)
 	assert.doesNotMatch(scriptDirective, /'unsafe-inline'/)
+	assert.doesNotMatch(policy.split(';').find(value => value.trim().startsWith('style-src ')) || '', /'unsafe-inline'/)
 	assert.match(policy, /style-src-attr 'unsafe-inline'/)
 })
 

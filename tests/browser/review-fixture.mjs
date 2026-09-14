@@ -1,6 +1,7 @@
 import { createRequire } from 'node:module'
 import { readFile } from 'node:fs/promises'
 import { createServer } from 'node:http'
+import { buildCsp } from '../../src/lib/csp-policy.ts'
 const root = process.cwd()
 const require = createRequire(root + '/package.json')
 const { build } = require('esbuild')
@@ -47,6 +48,7 @@ export async function startReviewFixture() {
 			res.writeHead(500)
 			res.end('Unmocked API request')
 		} else {
+			res.setHeader('Content-Security-Policy', buildCsp({ development: false }))
 			res.setHeader('content-type', 'text/html')
 			res.end(
 				'<!doctype html><html lang="zh-CN"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Review QA</title><link rel="stylesheet" href="/styles.css"><body><div id="root"></div><script src="/bundle.js"></script></body></html>'
