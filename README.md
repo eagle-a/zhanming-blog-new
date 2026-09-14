@@ -106,6 +106,8 @@ pnpm audit --prod --registry https://registry.npmjs.org
 
 ### AI 投稿审批
 
+**自动代理投稿目前受阻：** `AGENTS.md` 要求命名管道，但当前 CLI 是 HTTP 实现。以下命令只能由人类用户手动执行；AI 可以准备文章，不能用现有 CLI 绕过管道限制。详情见投稿指南开头的限制说明。
+
 本地 AI 可以读取并生成 Markdown，但不能直接公开发布。管理员在 `/admin/review` 生成一张 30 分钟有效、只能成功使用一次的投稿码；CLI 把一篇文章送入 `pending` 队列，管理员预览、修改并批准后才写入正式文章表。
 
 ```powershell
@@ -135,6 +137,16 @@ pnpm media:maintain -- --action=plan
 ## 部署
 
 只支持 Vercel。代码推送到已连接的 Git 仓库后由 Vercel 构建；日常文章和站点内容更新不需要推送代码。
+
+推荐生产发布使用 `pnpm deploy:production`。它只允许干净的 `main`、本地与实时远端 SHA 一致、该 SHA 最新的 GitHub CI 成功，然后调用 Vercel 并写入 `releaseCommit` 元数据。认证、网络或 CI 状态无法核实会阻止发布。检查不会提交、推送或修改数据库。
+
+注意：本地脚本不能约束 Dashboard 或直接运行 `vercel deploy --prod`。若启用了 Vercel Git 自动生产部署，需要项目所有者在平台配置等待 CI 或调整发布入口，否则仍可能绕过此门禁。
+
+### 审稿回归测试
+
+`pnpm test` 包含进程内 PostgreSQL 仓储测试（执行实际迁移，不读取业务数据库凭据）；`pnpm test:browser` 使用隔离页面中的真实审稿组件和模拟接口，不访问真实管理员 API。
+
+首次运行浏览器测试：`pnpm exec playwright install chromium`。已有 Chromium 时可设置 `REVIEW_BROWSER_EXECUTABLE` 指向可执行文件。截图与 trace 写入系统临时目录，不进入仓库。CI 会安装 Chromium 并运行同一套测试。
 
 Cloudflare/OpenNext 执行链路已经移除。仓库中的 `.open-next`、`.wrangler`、Cloudflare Worker 配置或部署脚本都不应恢复。
 

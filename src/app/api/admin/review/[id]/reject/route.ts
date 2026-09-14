@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { reviewRejectSchema } from '@/lib/review-validation'
 import { assertAdminMutationRequest } from '@/lib/admin-auth'
 import { rejectContentSubmission } from '@/lib/submissions-repository'
 import { routeErrorResponse } from '@/lib/route-errors'
@@ -6,13 +6,11 @@ import { routeErrorResponse } from '@/lib/route-errors'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const rejectSchema = z.object({ reason: z.string().trim().min(1).max(2000) }).strict()
-
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> {
 	try {
 		assertAdminMutationRequest(request)
-		const { reason } = rejectSchema.parse(await request.json())
-		return Response.json(await rejectContentSubmission((await context.params).id, reason), { headers: { 'Cache-Control': 'no-store' } })
+		const { reason, expectedContentHash } = reviewRejectSchema.parse(await request.json())
+		return Response.json(await rejectContentSubmission((await context.params).id, reason, expectedContentHash), { headers: { 'Cache-Control': 'no-store' } })
 	} catch (error) {
 		return routeErrorResponse(error)
 	}

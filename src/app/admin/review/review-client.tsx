@@ -1,85 +1,102 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useAdminSession } from '@/hooks/use-admin-session'
-import { useMarkdownRender } from '@/hooks/use-markdown-render'
-import type { AgentPostSubmission, SubmissionFinding } from '@/lib/agent-submission-validation'
+import { responseJson } from './review-http'
+import type { AgentPostSubmission } from '@/lib/agent-submission-validation'
+import { ReviewDialog } from './review-dialog'
+import {
+	createReviewDraft,
+	isReviewDirty,
+	receiveReviewDraft,
+	reviewPayload,
+	type ReviewDraft,
+	type Submission,
+	type SubmissionSummary,
+	type SubmissionPage
+} from './review-state'
+import type { ReviewCursor } from '@/lib/review-validation'
 
-type Submission = {
-	id: string
-	type: 'post'
-	status: 'staging' | 'pending' | 'approved' | 'rejected'
-	payload: AgentPostSubmission
-	validationResult: SubmissionFinding[]
-	createdAt: string
-	updatedAt: string
-	reviewedAt?: string | null
-	rejectionReason?: string | null
-	agentName: string
-}
-
-type SubmissionTicket = {
-	id: number
-	label: string
-	scope: 'posts:submit'
-	createdAt: string
-	expiresAt: string
-	usedAt?: string | null
-	revokedAt?: string | null
-}
-
-type CreatedTicket = SubmissionTicket & { token: string }
-
-function ticketStatus(ticket: SubmissionTicket): { label: string; className: string; active: boolean } {
-	if (ticket.usedAt) return { label: '已使用', className: 'text-emerald-700', active: false }
-	if (ticket.revokedAt) return { label: '已撤销', className: 'text-red-600', active: false }
-	if (new Date(ticket.expiresAt).getTime() <= Date.now()) return { label: '已过期', className: 'text-secondary', active: false }
-	return { label: '可使用', className: 'text-amber-700', active: true }
-}
-
-async function responseJson<T>(response: Response): Promise<T> {
-	const body = (await response.json().catch(() => ({}))) as { error?: string } & T
-	if (!response.ok) throw new Error(body.error || `请求失败 (${response.status})`)
-	return body
-}
-
-function MarkdownPreview({ payload }: { payload: AgentPostSubmission }) {
-	const { content, loading } = useMarkdownRender(payload.contentMd)
-	return (
-		<article className='bg-article min-h-[360px] rounded-xl border p-6'>
-			<h1 className='text-2xl font-semibold'>{payload.title}</h1>
-			<p className='text-secondary mt-2 text-sm'>{payload.summary}</p>
-			{loading ? <p className='text-secondary mt-8 text-sm'>渲染中...</p> : <div className='prose mt-6'>{content}</div>}
-		</article>
-	)
-}
+const MarkdownPreview = lazy(() => import('./review-preview'))
+const ReviewTickets = lazy(() => import('./review-tickets'))
 
 export default function ReviewClient() {
 	const { isAuth, loading: authLoading, login } = useAdminSession()
 	const [password, setPassword] = useState('')
-	const [submissions, setSubmissions] = useState<Submission[]>([])
+	const [submissions, setSubmissions] = useState<SubmissionSummary[]>([])
+	const [serverSelected, setServerSelected] = useState<Submission | null>(null)
+	const [detailError, setDetailError] = useState('')
+	const [detailRetry, setDetailRetry] = useState(0)
+	const [cursorStack, setCursorStack] = useState<Array<ReviewCursor | null>>([null])
+	const [pageIndex, setPageIndex] = useState(0)
+	const [nextCursor, setNextCursor] = useState<ReviewCursor | null>(null)
+	const [pageTarget, setPageTarget] = useState<number | null>(null)
+	const cursor = cursorStack[pageIndex]
 	const [selectedId, setSelectedId] = useState<string | null>(null)
-	const [draft, setDraft] = useState<AgentPostSubmission | null>(null)
-	const [tickets, setTickets] = useState<SubmissionTicket[]>([])
-	const [ticketLabel, setTicketLabel] = useState('本地 AI 单篇投稿')
-	const [createdTicket, setCreatedTicket] = useState<CreatedTicket | null>(null)
+	const [edit, setEdit] = useState<ReviewDraft | null>(null)
 	const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
 	const [rejectionReason, setRejectionReason] = useState('')
 	const [tab, setTab] = useState<'review' | 'tickets'>('review')
 	const [busy, setBusy] = useState(false)
+	const busyRef = useRef(false)
+	const loadSequence = useRef(0)
+	const [loadingData, setLoadingData] = useState(true)
+	const [loadError, setLoadError] = useState('')
+	const [switchTarget, setSwitchTarget] = useState<string | null>(null)
+	const [reloadDialog, setReloadDialog] = useState(false)
+	const [approveDialog, setApproveDialog] = useState(false)
+	const draft = edit?.payload || null
+	const dirty = isReviewDirty(edit)
+	const setDraft = (payload: AgentPostSubmission) => setEdit(current => (current ? { ...current, payload } : current))
 
-	const selected = useMemo(() => submissions.find(item => item.id === selectedId) || null, [selectedId, submissions])
+	const summaryHash = submissions.find(item => item.id === selectedId)?.contentHash
+	const selected = (serverSelected?.id === selectedId ? serverSelected : null) || (edit?.source.id === selectedId ? edit.source : null)
+	const conflict =
+		!!edit &&
+		edit.source.id === selectedId &&
+		(!serverSelected ||
+			serverSelected.status !== 'pending' ||
+			serverSelected.contentHash !== edit.source.contentHash ||
+			(!!summaryHash && summaryHash !== edit.source.contentHash))
 
 	const loadData = useCallback(async () => {
-		const [reviewData, ticketData] = await Promise.all([
-			fetch('/api/admin/review?status=pending', { cache: 'no-store' }).then(responseJson<Submission[]>),
-			fetch('/api/admin/submission-tickets', { cache: 'no-store' }).then(responseJson<SubmissionTicket[]>)
-		])
-		setSubmissions(reviewData)
-		setTickets(ticketData)
-		setSelectedId(current => (current && reviewData.some(item => item.id === current) ? current : reviewData[0]?.id || null))
-	}, [])
+		const sequence = ++loadSequence.current
+		try {
+			const reviewData = await fetch(`/api/admin/review?status=pending&limit=20${cursor ? `&cursor=${encodeURIComponent(JSON.stringify(cursor))}` : ''}`, {
+				cache: 'no-store'
+			}).then(responseJson<SubmissionPage>)
+			if (sequence !== loadSequence.current) return
+			setSubmissions(reviewData.items)
+			setNextCursor(reviewData.nextCursor)
+			setSelectedId(current => current || reviewData.items[0]?.id || null)
+			setLoadError('')
+		} catch (error) {
+			if (sequence === loadSequence.current) setLoadError(error instanceof Error ? error.message : '后台数据加载失败')
+			throw error
+		} finally {
+			if (sequence === loadSequence.current) setLoadingData(false)
+		}
+	}, [cursor])
+
+	useEffect(() => {
+		if (!isAuth || !selectedId || busy) return
+		const controller = new AbortController()
+		setDetailError('')
+		fetch(`/api/admin/review/${selectedId}`, { cache: 'no-store', signal: controller.signal })
+			.then(async response => (response.status === 404 ? null : responseJson<Submission>(response)))
+			.then(value => {
+				if (!controller.signal.aborted) {
+					setServerSelected(value)
+					if (!value) setDetailError('投稿不存在，请选择其他投稿')
+					else if (value.status !== 'pending') setDetailError('投稿已经处理，请选择其他投稿')
+				}
+			})
+			.catch(error => {
+				if (!controller.signal.aborted) setDetailError(error instanceof Error ? error.message : '正文加载失败')
+			})
+		return () => controller.abort()
+	}, [isAuth, selectedId, summaryHash, busy, detailRetry])
 
 	useEffect(() => {
 		if (!isAuth) return
@@ -89,23 +106,65 @@ export default function ReviewClient() {
 	useEffect(() => {
 		if (!isAuth) return
 		const timer = window.setInterval(() => {
-			if (document.visibilityState === 'visible') loadData().catch(() => undefined)
+			if (document.visibilityState === 'visible' && !busyRef.current) loadData().catch(() => undefined)
 		}, 15_000)
 		return () => window.clearInterval(timer)
 	}, [isAuth, loadData])
 
 	useEffect(() => {
-		setDraft(selected?.payload || null)
-	}, [selected])
+		if (serverSelected?.id === selectedId && serverSelected.status === 'pending')
+			setEdit(current => receiveReviewDraft(current, serverSelected, busy || rejectDialogOpen || approveDialog))
+	}, [selectedId, serverSelected, busy, rejectDialogOpen, approveDialog])
 
 	useEffect(() => {
-		if (!rejectDialogOpen) return
-		const onKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'Escape' && !busy) setRejectDialogOpen(false)
+		if (!dirty && !busy) return
+		const handler = (event: BeforeUnloadEvent) => {
+			event.preventDefault()
+			event.returnValue = ''
 		}
-		window.addEventListener('keydown', onKeyDown)
-		return () => window.removeEventListener('keydown', onKeyDown)
-	}, [busy, rejectDialogOpen])
+		window.addEventListener('beforeunload', handler)
+		return () => window.removeEventListener('beforeunload', handler)
+	}, [dirty, busy])
+
+	const beginAction = () => {
+		if (busyRef.current) return false
+		busyRef.current = true
+		loadSequence.current += 1 // Ignore any poll started before this mutation.
+		setBusy(true)
+		return true
+	}
+	const endAction = () => {
+		busyRef.current = false
+		setBusy(false)
+	}
+	const chooseSubmission = (id: string) => {
+		if (busyRef.current || id === selectedId) return
+		if (dirty) {
+			setSwitchTarget(id)
+			return
+		}
+		setSelectedId(id)
+		setRejectionReason('')
+	}
+	const goToPage = (index: number) => {
+		if (busyRef.current) return
+		if (dirty) {
+			setPageTarget(index)
+			return
+		}
+		applyPage(index)
+	}
+	const applyPage = (index: number) => {
+		loadSequence.current += 1
+		if (index > pageIndex && nextCursor) setCursorStack(current => [...current.slice(0, pageIndex + 1), nextCursor])
+		setPageIndex(index)
+		setSelectedId(null)
+		setServerSelected(null)
+		setEdit(null)
+		setLoadingData(true)
+		setPageTarget(null)
+		setRejectionReason('')
+	}
 
 	const submitLogin = async (event: React.FormEvent) => {
 		event.preventDefault()
@@ -118,112 +177,81 @@ export default function ReviewClient() {
 	}
 
 	const saveDraft = async () => {
-		if (!selected || !draft) return
-		await responseJson(
-			await fetch(`/api/admin/review/${selected.id}`, {
+		if (!edit) throw new Error('请先选择投稿')
+		const saved = await responseJson<Pick<Submission, 'id' | 'payload' | 'contentHash' | 'updatedAt' | 'validationResult'>>(
+			await fetch(`/api/admin/review/${edit.source.id}`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(draft)
+				body: JSON.stringify({ payload: reviewPayload(edit), expectedContentHash: edit.source.contentHash })
 			})
 		)
+		const source = { ...edit.source, ...saved }
+		setSubmissions(current =>
+			current.map(item => (item.id === source.id ? { ...item, contentHash: source.contentHash, title: source.payload.title, slug: source.payload.slug } : item))
+		)
+		setServerSelected(source)
+		setEdit(createReviewDraft(source))
+		return source
 	}
 
 	const approve = async () => {
-		if (!selected || !draft) return
+		if (!selected || !draft || !beginAction()) return
 		try {
-			setBusy(true)
-			await saveDraft()
-			await responseJson(await fetch(`/api/admin/review/${selected.id}/approve`, { method: 'POST' }))
+			const saved = await saveDraft()
+			await responseJson(
+				await fetch(`/api/admin/review/${saved.id}/approve`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ expectedContentHash: saved.contentHash })
+				})
+			)
 			toast.success('已批准并发布')
-			await loadData()
+			setApproveDialog(false)
+			setSelectedId(null)
+			setEdit(null)
+			await loadData().catch(() => toast.error('已发布，但列表刷新失败，请重试刷新'))
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : '批准失败')
 		} finally {
-			setBusy(false)
+			endAction()
 		}
 	}
 
 	const saveDraftOnly = async () => {
-		if (!selected || !draft) return
+		if (!selected || !draft || !beginAction()) return
 		try {
-			setBusy(true)
 			await saveDraft()
 			toast.success('草稿已保存')
-			await loadData()
+			await loadData().catch(() => toast.error('草稿已保存，但列表刷新失败'))
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : '草稿保存失败')
 		} finally {
-			setBusy(false)
+			endAction()
 		}
 	}
 
 	const reject = async () => {
-		if (!selected) return
+		if (!selected || !edit) return
 		const reason = rejectionReason.trim()
-		if (!reason) return
+		if (!reason || reason.length > 2000 || conflict || !beginAction()) return
 		try {
-			setBusy(true)
 			await responseJson(
 				await fetch(`/api/admin/review/${selected.id}/reject`, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ reason })
+					body: JSON.stringify({ reason, expectedContentHash: edit.source.contentHash })
 				})
 			)
 			toast.success('已拒绝投稿')
 			setRejectDialogOpen(false)
 			setRejectionReason('')
-			await loadData()
+			setSelectedId(null)
+			setEdit(null)
+			await loadData().catch(() => toast.error('已拒绝，但列表刷新失败，请重试刷新'))
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : '拒绝失败')
 		} finally {
-			setBusy(false)
-		}
-	}
-
-	const createTicket = async () => {
-		try {
-			setBusy(true)
-			const result = await responseJson<CreatedTicket>(
-				await fetch('/api/admin/submission-tickets', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ label: ticketLabel })
-				})
-			)
-			setCreatedTicket(result)
-			try {
-				await navigator.clipboard.writeText(result.token)
-				toast.success('一次性投稿码已生成并复制')
-			} catch {
-				toast.success('一次性投稿码已生成，请手动复制')
-			}
-			await loadData()
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : '投稿码生成失败')
-		} finally {
-			setBusy(false)
-		}
-	}
-
-	const copyTicket = async () => {
-		if (!createdTicket) return
-		try {
-			await navigator.clipboard.writeText(createdTicket.token)
-			toast.success('投稿码已复制')
-		} catch {
-			toast.error('浏览器无法访问剪贴板，请手动复制')
-		}
-	}
-
-	const revokeTicket = async (id: number) => {
-		if (!window.confirm('撤销后这个一次性投稿码将立即失效，确定撤销？')) return
-		try {
-			await responseJson(await fetch(`/api/admin/submission-tickets/${id}`, { method: 'DELETE' }))
-			if (createdTicket?.id === id) setCreatedTicket(null)
-			await loadData()
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : '投稿码撤销失败')
+			endAction()
 		}
 	}
 
@@ -264,76 +292,67 @@ export default function ReviewClient() {
 					<h1 className='text-2xl font-semibold'>AI 投稿审批后台</h1>
 					<p className='text-secondary mt-1 text-sm'>AI 只能投稿；批准后内容才会公开。</p>
 				</div>
-				<div className='flex gap-2'>
+				<div className='flex flex-wrap gap-2'>
 					<button
+						disabled={busy}
 						onClick={() => loadData().catch(error => toast.error(error instanceof Error ? error.message : '刷新失败'))}
 						className='rounded-xl border bg-white/60 px-4 py-2 text-sm'>
 						刷新
 					</button>
-					<button onClick={() => setTab('review')} className={tab === 'review' ? 'brand-btn px-4 py-2' : 'rounded-xl border bg-white/60 px-4 py-2 text-sm'}>
-						待审批 ({submissions.length})
+					<button
+						disabled={busy}
+						onClick={() => setTab('review')}
+						className={tab === 'review' ? 'brand-btn px-4 py-2' : 'rounded-xl border bg-white/60 px-4 py-2 text-sm'}>
+						待审批（本页 {submissions.length}）
 					</button>
-					<button onClick={() => setTab('tickets')} className={tab === 'tickets' ? 'brand-btn px-4 py-2' : 'rounded-xl border bg-white/60 px-4 py-2 text-sm'}>
+					<button
+						disabled={busy}
+						onClick={() => setTab('tickets')}
+						className={tab === 'tickets' ? 'brand-btn px-4 py-2' : 'rounded-xl border bg-white/60 px-4 py-2 text-sm'}>
 						一次性投稿码
 					</button>
 				</div>
 			</header>
+			{tab === 'review' && (
+				<nav aria-label='投稿分页' className='mb-4 flex items-center gap-4 text-sm'>
+					<button
+						disabled={busy || loadingData || pageIndex === 0}
+						onClick={() => goToPage(pageIndex - 1)}
+						className='rounded-xl border px-3 py-2 disabled:opacity-40'>
+						上一页
+					</button>
+					<span>第 {pageIndex + 1} 页</span>
+					<button
+						disabled={busy || loadingData || !nextCursor}
+						onClick={() => goToPage(pageIndex + 1)}
+						className='rounded-xl border px-3 py-2 disabled:opacity-40'>
+						下一页
+					</button>
+				</nav>
+			)}
+			{detailError && (
+				<p role='alert' className='mb-4 text-red-600'>
+					正文加载失败：{detailError}{' '}
+					<button onClick={() => setDetailRetry(value => value + 1)} className='underline'>
+						重试正文
+					</button>
+				</p>
+			)}
+			{loadError && (
+				<p role='alert' className='mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700'>
+					加载失败：{loadError}。请点击刷新重试。
+				</p>
+			)}
 
 			{tab === 'tickets' ? (
-				<div className='grid gap-6 lg:grid-cols-[420px_1fr]'>
-					<section className='card static space-y-4 p-6'>
-						<h2 className='font-semibold'>生成单篇投稿码</h2>
-						<input
-							value={ticketLabel}
-							onChange={event => setTicketLabel(event.target.value)}
-							className='w-full rounded-xl border bg-white/70 px-4 py-3 text-sm'
-						/>
-						<p className='text-secondary text-xs'>有效期 30 分钟，只能成功投稿一次，权限固定为 posts:submit。投稿仍只进入待审批队列。</p>
-						<button disabled={busy || !ticketLabel.trim()} onClick={createTicket} className='brand-btn px-5 py-2 disabled:opacity-50'>
-							{busy ? '生成中...' : '生成并复制投稿码'}
-						</button>
-						{createdTicket && (
-							<div className='rounded-xl border border-emerald-300 bg-emerald-50 p-4'>
-								<p className='text-sm font-medium text-emerald-900'>投稿码只显示这一次</p>
-								<p className='mt-1 text-xs text-emerald-800'>刷新页面后无法找回；丢失就撤销并重新生成。</p>
-								<code className='mt-3 block rounded-lg bg-white/70 p-3 font-mono text-xs break-all text-emerald-900'>{createdTicket.token}</code>
-								<button onClick={copyTicket} className='mt-3 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs text-emerald-800'>
-									复制投稿码
-								</button>
-							</div>
-						)}
-					</section>
-					<section className='card static p-6'>
-						<h2 className='mb-4 font-semibold'>最近投稿码</h2>
-						<div className='space-y-3'>
-							{tickets.map(ticket => {
-								const status = ticketStatus(ticket)
-								return (
-									<div key={ticket.id} className='flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white/50 p-4'>
-										<div>
-											<div className='font-medium'>{ticket.label}</div>
-											<div className='text-secondary mt-1 text-xs'>
-												到期：{new Date(ticket.expiresAt).toLocaleString('zh-CN')} · {ticket.scope}
-											</div>
-										</div>
-										<div className='flex items-center gap-3'>
-											<span className={`text-xs ${status.className}`}>{status.label}</span>
-											{status.active ? (
-												<button onClick={() => revokeTicket(ticket.id)} className='rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-600'>
-													撤销
-												</button>
-											) : null}
-										</div>
-									</div>
-								)
-							})}
-							{tickets.length === 0 && <p className='text-secondary text-sm'>还没有生成投稿码。</p>}
-						</div>
-					</section>
-				</div>
-			) : submissions.length === 0 ? (
+				<Suspense fallback={<p>正在加载投稿码管理...</p>}>
+					<ReviewTickets busy={busy} beginAction={beginAction} endAction={endAction} />
+				</Suspense>
+			) : loadingData ? (
+				<p role='status'>正在加载投稿...</p>
+			) : submissions.length === 0 && !edit ? (
 				<div className='card static py-20 text-center'>
-					<p className='text-secondary text-sm'>当前没有待审批投稿。</p>
+					<p className='text-secondary text-sm'>{loadError ? '暂时无法读取待审批列表。' : '当前没有待审批投稿。'}</p>
 				</div>
 			) : (
 				<div className='grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]'>
@@ -341,38 +360,53 @@ export default function ReviewClient() {
 						{submissions.map(item => (
 							<button
 								key={item.id}
-								onClick={() => setSelectedId(item.id)}
+								disabled={busy}
+								onClick={() => chooseSubmission(item.id)}
 								className={`w-full rounded-xl border p-4 text-left ${item.id === selectedId ? 'border-brand bg-white/80' : 'border-transparent bg-white/40'}`}>
-								<div className='truncate font-medium'>{item.payload.title}</div>
+								<div className='truncate font-medium'>{item.title}</div>
 								<div className='text-secondary mt-1 truncate text-xs'>
-									{item.payload.slug} · {item.agentName}
+									{item.slug} · {item.agentName}
 								</div>
 								<div className='text-secondary mt-2 text-xs'>{new Date(item.createdAt).toLocaleString('zh-CN')}</div>
 							</button>
 						))}
 					</aside>
+					{selectedId && edit?.source.id !== selectedId && !detailError && <p role='status'>正在加载所选投稿正文...</p>}
 
-					{selected && draft && (
+					{selected && draft && edit?.source.id === selected.id && (
 						<main className='space-y-6'>
+							<p role='status' className='text-secondary text-sm'>
+								{dirty ? '有未保存修改，自动刷新不会覆盖草稿。' : '草稿已与服务器同步。'}
+							</p>
+							{conflict && (
+								<div role='alert' className='rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900'>
+									投稿已被其他窗口修改或处理。本地编辑仍保留，请先复制需要的内容，再重新加载。
+									<button disabled={busy} onClick={() => setReloadDialog(true)} className='ml-2 underline'>
+										重新加载
+									</button>
+								</div>
+							)}
 							{selected.validationResult.length > 0 && (
 								<div className='rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900'>
-									{selected.validationResult.map(finding => (
-										<div key={finding.code}>{finding.message}</div>
+									{selected.validationResult.map((finding, index) => (
+										<div key={`${finding.code}-${index}`}>{finding.message}</div>
 									))}
 								</div>
 							)}
-							<section className='card static grid gap-4 p-6 md:grid-cols-2'>
-								<label className='text-sm'>
+							<fieldset disabled={busy} className='card static grid min-w-0 gap-4 p-6 md:grid-cols-2'>
+								<label htmlFor='review-title' className='text-sm'>
 									标题
 									<input
+										id='review-title'
 										value={draft.title}
 										onChange={event => setDraft({ ...draft, title: event.target.value })}
 										className='mt-1 w-full rounded-xl border bg-white/70 px-3 py-2'
 									/>
 								</label>
-								<label className='text-sm'>
+								<label htmlFor='review-slug' className='text-sm'>
 									Slug
 									<input
+										id='review-slug'
 										value={draft.slug}
 										onChange={event => setDraft({ ...draft, slug: event.target.value })}
 										className='mt-1 w-full rounded-xl border bg-white/70 px-3 py-2'
@@ -381,6 +415,7 @@ export default function ReviewClient() {
 								<label className='text-sm md:col-span-2'>
 									摘要
 									<textarea
+										aria-label='摘要'
 										value={draft.summary}
 										onChange={event => setDraft({ ...draft, summary: event.target.value })}
 										className='mt-1 h-20 w-full rounded-xl border bg-white/70 p-3'
@@ -397,85 +432,129 @@ export default function ReviewClient() {
 								<label className='text-sm'>
 									标签（逗号分隔）
 									<input
-										value={draft.tags.join(', ')}
-										onChange={event =>
-											setDraft({
-												...draft,
-												tags: event.target.value
-													.split(',')
-													.map(value => value.trim())
-													.filter(Boolean)
-											})
-										}
+										value={edit.tagsText}
+										onChange={event => setEdit(current => (current ? { ...current, tagsText: event.target.value } : current))}
 										className='mt-1 w-full rounded-xl border bg-white/70 px-3 py-2'
 									/>
 								</label>
 								<label className='text-sm md:col-span-2'>
 									Markdown
 									<textarea
+										aria-label='Markdown'
 										value={draft.contentMd}
 										onChange={event => setDraft({ ...draft, contentMd: event.target.value })}
 										className='mt-1 h-[420px] w-full rounded-xl border bg-white/70 p-4 font-mono text-sm'
 									/>
 								</label>
 								<div className='flex flex-wrap gap-3 md:col-span-2'>
-									<button disabled={busy} onClick={saveDraftOnly} className='rounded-xl border bg-white/70 px-5 py-2 text-sm disabled:opacity-50'>
+									<button disabled={busy || conflict} onClick={saveDraftOnly} className='rounded-xl border bg-white/70 px-5 py-2 text-sm disabled:opacity-50'>
 										{busy ? '处理中...' : '保存草稿'}
 									</button>
-									<button disabled={busy} onClick={approve} className='brand-btn px-5 py-2 disabled:opacity-50'>
+									<button disabled={busy || conflict} onClick={() => setApproveDialog(true)} className='brand-btn px-5 py-2 disabled:opacity-50'>
 										{busy ? '处理中...' : '保存并批准发布'}
 									</button>
 									<button
-										disabled={busy}
+										disabled={busy || conflict}
 										onClick={() => setRejectDialogOpen(true)}
 										className='rounded-xl border border-red-200 bg-red-50 px-5 py-2 text-sm text-red-600 disabled:opacity-50'>
 										拒绝
 									</button>
 								</div>
-							</section>
-							<MarkdownPreview payload={draft} />
+							</fieldset>
+							<Suspense fallback={<p>正在加载预览...</p>}>
+								<MarkdownPreview payload={draft} />
+							</Suspense>
 						</main>
 					)}
 				</div>
 			)}
 
 			{rejectDialogOpen && selected && (
-				<div
-					className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4'
-					role='presentation'
-					onMouseDown={event => {
-						if (event.target === event.currentTarget) setRejectDialogOpen(false)
+				<ReviewDialog title='拒绝投稿' busy={busy} onClose={() => setRejectDialogOpen(false)}>
+					{conflict && (
+						<p role='alert' className='mt-3 text-red-600'>
+							投稿已变化，请关闭弹窗并重新加载后审核。
+						</p>
+					)}
+					<p className='mt-2 text-sm break-words'>正在处理：{selected.payload.title}</p>
+					<p className='text-secondary mt-2 text-sm'>请填写拒绝原因，原因会记录到审批结果中。</p>
+					<label htmlFor='reject-reason' className='sr-only'>
+						拒绝原因
+					</label>
+					<textarea
+						id='reject-reason'
+						disabled={busy}
+						maxLength={2000}
+						autoFocus
+						value={rejectionReason}
+						onChange={event => setRejectionReason(event.target.value)}
+						placeholder='例如：内容需要补充来源或存在不准确表述'
+						className='mt-4 min-h-32 w-full resize-y rounded-xl border bg-white/70 p-3 text-sm'
+					/>
+					<div className='mt-5 flex justify-end gap-3'>
+						<button type='button' disabled={busy} onClick={() => setRejectDialogOpen(false)} className='rounded-xl border bg-white/60 px-4 py-2 text-sm'>
+							取消
+						</button>
+						<button
+							type='button'
+							disabled={busy || conflict || !rejectionReason.trim()}
+							onClick={reject}
+							className='rounded-xl bg-red-600 px-4 py-2 text-sm text-white disabled:opacity-50'>
+							{busy ? '处理中...' : '确认拒绝'}
+						</button>
+					</div>
+				</ReviewDialog>
+			)}
+			{approveDialog && selected && (
+				<ReviewDialog title='确认批准发布' busy={busy} onClose={() => setApproveDialog(false)}>
+					<p className='mt-4 text-sm break-words'>将保存当前编辑并公开发布「{draft?.title}」。请确认内容和来源已经审核。</p>
+					<div className='mt-5 flex justify-end gap-3'>
+						<button disabled={busy} onClick={() => setApproveDialog(false)} className='rounded-xl border px-4 py-2'>
+							取消
+						</button>
+						<button disabled={busy || conflict} onClick={approve} className='brand-btn px-4 py-2'>
+							{busy ? '发布中...' : '确认发布'}
+						</button>
+					</div>
+				</ReviewDialog>
+			)}
+			{(switchTarget || reloadDialog || pageTarget !== null) && (
+				<ReviewDialog
+					title='放弃未保存的修改？'
+					busy={busy}
+					onClose={() => {
+						setSwitchTarget(null)
+						setReloadDialog(false)
+						setPageTarget(null)
 					}}>
-					<section role='dialog' aria-modal='true' aria-labelledby='reject-dialog-title' className='card static w-full max-w-lg p-6 shadow-xl'>
-						<h2 id='reject-dialog-title' className='text-lg font-semibold'>
-							拒绝投稿
-						</h2>
-						<p className='text-secondary mt-2 text-sm'>请填写拒绝原因，原因会记录到审批结果中。</p>
-						<label htmlFor='reject-reason' className='sr-only'>
-							拒绝原因
-						</label>
-						<textarea
-							id='reject-reason'
-							autoFocus
-							value={rejectionReason}
-							onChange={event => setRejectionReason(event.target.value)}
-							placeholder='例如：内容需要补充来源或存在不准确表述'
-							className='mt-4 min-h-32 w-full resize-y rounded-xl border bg-white/70 p-3 text-sm'
-						/>
-						<div className='mt-5 flex justify-end gap-3'>
-							<button type='button' onClick={() => setRejectDialogOpen(false)} className='rounded-xl border bg-white/60 px-4 py-2 text-sm'>
-								取消
-							</button>
-							<button
-								type='button'
-								disabled={busy || !rejectionReason.trim()}
-								onClick={reject}
-								className='rounded-xl bg-red-600 px-4 py-2 text-sm text-white disabled:opacity-50'>
-								{busy ? '处理中...' : '确认拒绝'}
-							</button>
-						</div>
-					</section>
-				</div>
+					<p className='mt-4 text-sm'>此操作会替换当前本地草稿。请先保存或复制需要保留的文字。</p>
+					<div className='mt-5 flex justify-end gap-3'>
+						<button
+							onClick={() => {
+								setSwitchTarget(null)
+								setReloadDialog(false)
+								setPageTarget(null)
+							}}
+							className='rounded-xl border px-4 py-2'>
+							继续编辑
+						</button>
+						<button
+							onClick={() => {
+								if (pageTarget !== null) applyPage(pageTarget)
+								else if (switchTarget) setSelectedId(switchTarget)
+								else {
+									setEdit(serverSelected?.status === 'pending' ? createReviewDraft(serverSelected) : null)
+									if (!serverSelected || serverSelected.status !== 'pending') setSelectedId(null)
+								}
+								setRejectionReason('')
+								setSwitchTarget(null)
+								setReloadDialog(false)
+							}}
+							className='rounded-xl bg-red-600 px-4 py-2 text-white'>
+							放弃并继续
+						</button>
+					</div>
+				</ReviewDialog>
 			)}
 		</div>
 	)

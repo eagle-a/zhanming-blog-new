@@ -1,5 +1,5 @@
 import { assertAdminMutationRequest, assertAdminRequest } from '@/lib/admin-auth'
-import { agentPostSubmissionSchema } from '@/lib/agent-submission-validation'
+import { reviewUpdateSchema } from '@/lib/review-validation'
 import { getContentSubmission, updatePendingPostSubmission } from '@/lib/submissions-repository'
 import { routeErrorResponse } from '@/lib/route-errors'
 
@@ -19,8 +19,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> {
 	try {
 		assertAdminMutationRequest(request)
-		const input = agentPostSubmissionSchema.parse(await request.json())
-		return Response.json(await updatePendingPostSubmission((await context.params).id, input), { headers: { 'Cache-Control': 'no-store' } })
+		const input = reviewUpdateSchema.parse(await request.json())
+		return Response.json(await updatePendingPostSubmission((await context.params).id, input.payload, input.expectedContentHash), {
+			headers: { 'Cache-Control': 'no-store' }
+		})
 	} catch (error) {
 		return routeErrorResponse(error)
 	}

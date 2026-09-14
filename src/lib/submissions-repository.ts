@@ -9,6 +9,7 @@ import { lockMediaReferenceMutation, type DatabaseTransaction } from '@/lib/medi
 import { upsertPostInTransaction } from '@/lib/posts-repository'
 import { hashSubmissionTicket } from '@/lib/submission-ticket'
 import { evaluateSubmissionReplay } from '@/lib/submission-replay-policy'
+import type { ReviewCursor } from '@/lib/review-validation'
 
 export class SubmissionConflictError extends Error {
 	constructor(message: string) {
@@ -97,24 +98,37 @@ export async function createPostSubmissionWithTicket(ticket: string, input: Agen
 	})
 }
 
-export async function listContentSubmissions(status?: 'pending' | 'approved' | 'rejected') {
-	return getDb()
+export async function listContentSubmissions(status: 'pending' | 'approved' | 'rejected' = 'pending', limit = 20, cursor?: ReviewCursor) {
+	const rows = await getDb()
 		.select({
 			id: contentSubmissions.id,
 			type: contentSubmissions.type,
 			status: contentSubmissions.status,
-			payload: contentSubmissions.payload,
-			validationResult: contentSubmissions.validationResult,
+			title: sql<string>`${contentSubmissions.payload}->>'title'`,
+			slug: sql<string>`${contentSubmissions.payload}->>'slug'`,
+			contentHash: contentSubmissions.contentHash,
 			createdAt: contentSubmissions.createdAt,
+			// Keep PostgreSQL microseconds in the cursor; JS Date truncates them.
+			cursorCreatedAt: sql<string>`to_char(${contentSubmissions.createdAt} at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
 			updatedAt: contentSubmissions.updatedAt,
-			reviewedAt: contentSubmissions.reviewedAt,
-			rejectionReason: contentSubmissions.rejectionReason,
 			agentName: submissionTickets.label
 		})
 		.from(contentSubmissions)
 		.leftJoin(submissionTickets, eq(contentSubmissions.submissionTicketId, submissionTickets.id))
-		.where(status ? eq(contentSubmissions.status, status) : undefined)
-		.orderBy(desc(contentSubmissions.createdAt))
+		.where(
+			and(
+				eq(contentSubmissions.status, status),
+				cursor ? sql`(${contentSubmissions.createdAt}, ${contentSubmissions.id}) < (${cursor.createdAt}::timestamptz, ${cursor.id})` : undefined
+			)
+		)
+		.orderBy(desc(contentSubmissions.createdAt), desc(contentSubmissions.id))
+		.limit(limit + 1)
+	const items = rows.slice(0, limit)
+	const last = items[items.length - 1]
+	return {
+		items: items.map(({ cursorCreatedAt, ...item }) => item),
+		nextCursor: rows.length > limit && last ? { createdAt: last.cursorCreatedAt, id: last.id } : null
+	}
 }
 
 export async function getContentSubmission(id: string) {
@@ -124,6 +138,7 @@ export async function getContentSubmission(id: string) {
 			type: contentSubmissions.type,
 			status: contentSubmissions.status,
 			payload: contentSubmissions.payload,
+			contentHash: contentSubmissions.contentHash,
 			validationResult: contentSubmissions.validationResult,
 			createdAt: contentSubmissions.createdAt,
 			updatedAt: contentSubmissions.updatedAt,
@@ -138,18 +153,31 @@ export async function getContentSubmission(id: string) {
 	return result || null
 }
 
-export async function updatePendingPostSubmission(id: string, input: AgentPostSubmission) {
+export async function updatePendingPostSubmission(id: string, input: AgentPostSubmission, expectedContentHash: string) {
 	const payload = agentPostSubmissionSchema.parse(input)
 	const validation = scanAgentSubmission(searchableText(payload))
 	if (!validation.accepted) throw Response.json({ error: '投稿包含疑似密钥，已拒绝', findings: validation.findings }, { status: 422 })
-	await getDb().transaction(async tx => {
+	return getDb().transaction(async tx => {
 		await lockMediaReferenceMutation(tx as DatabaseTransaction)
 		const [updated] = await tx
 			.update(contentSubmissions)
 			.set({ payload, contentHash: contentHash(payload), validationResult: validation.findings, updatedAt: new Date() })
-			.where(and(eq(contentSubmissions.id, id), eq(contentSubmissions.status, 'pending'), eq(contentSubmissions.type, 'post')))
-			.returning({ id: contentSubmissions.id })
-		if (!updated) throw new SubmissionConflictError('投稿不存在或已经处理')
+			.where(
+				and(
+					eq(contentSubmissions.id, id),
+					eq(contentSubmissions.status, 'pending'),
+					eq(contentSubmissions.type, 'post'),
+					eq(contentSubmissions.contentHash, expectedContentHash)
+				)
+			)
+			.returning({
+				id: contentSubmissions.id,
+				payload: contentSubmissions.payload,
+				contentHash: contentSubmissions.contentHash,
+				updatedAt: contentSubmissions.updatedAt,
+				validationResult: contentSubmissions.validationResult
+			})
+		if (!updated) throw new SubmissionConflictError('投稿已被修改或处理，请重新加载后审核；本地草稿已保留')
 		await tx.insert(auditEvents).values({
 			actorType: 'admin',
 			actorId: 'session',
@@ -158,17 +186,18 @@ export async function updatePendingPostSubmission(id: string, input: AgentPostSu
 			targetId: id,
 			metadata: { contentHash: contentHash(payload) }
 		})
+		return updated
 	})
-	return getContentSubmission(id)
 }
 
-export async function approvePostSubmission(id: string) {
+export async function approvePostSubmission(id: string, expectedContentHash: string) {
 	const db = getDb()
 	let slug = ''
 	await db.transaction(async tx => {
 		await lockMediaReferenceMutation(tx as DatabaseTransaction)
 		const [submission] = await tx.select().from(contentSubmissions).where(eq(contentSubmissions.id, id)).for('update').limit(1)
 		if (!submission || submission.type !== 'post' || submission.status !== 'pending') throw new SubmissionConflictError('投稿不存在或已经处理')
+		if (submission.contentHash !== expectedContentHash) throw new SubmissionConflictError('投稿已被修改，请重新加载后审核，尚未发布')
 		const payload = agentPostSubmissionSchema.parse(submission.payload)
 		slug = payload.slug
 		await upsertPostInTransaction(
@@ -203,14 +232,14 @@ export async function approvePostSubmission(id: string) {
 	return { id, slug, status: 'approved' as const }
 }
 
-export async function rejectContentSubmission(id: string, reason: string) {
+export async function rejectContentSubmission(id: string, reason: string, expectedContentHash: string) {
 	await getDb().transaction(async tx => {
 		const [rejected] = await tx
 			.update(contentSubmissions)
 			.set({ status: 'rejected', rejectionReason: reason, reviewedAt: new Date(), reviewedBy: 'admin', updatedAt: new Date() })
-			.where(and(eq(contentSubmissions.id, id), eq(contentSubmissions.status, 'pending')))
+			.where(and(eq(contentSubmissions.id, id), eq(contentSubmissions.status, 'pending'), eq(contentSubmissions.contentHash, expectedContentHash)))
 			.returning({ id: contentSubmissions.id })
-		if (!rejected) throw new SubmissionConflictError('投稿不存在或已经处理')
+		if (!rejected) throw new SubmissionConflictError('投稿已被修改或处理，请重新加载后审核')
 		await tx.insert(auditEvents).values({
 			actorType: 'admin',
 			actorId: 'session',

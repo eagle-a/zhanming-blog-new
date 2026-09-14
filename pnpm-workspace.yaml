@@ -9,3 +9,6 @@ overrides:
   mdast-util-to-hast: 13.2.1
   js-yaml: 4.3.0
   svgo: 3.3.4
+  browserslist: 4.28.7
+  'nanoid@<3.3.18': 3.3.18
+  'baseline-browser-mapping@<2.11.0': 2.11.12
