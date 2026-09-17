@@ -21,7 +21,7 @@ import CommentsOutlineSVG from '@/svgs/comments-outline.svg'
 import CommentsFilledSVG from '@/svgs/comments-filled.svg'
 import NewspaperOutlineSVG from '@/svgs/newspaper-outline.svg'
 import NewspaperFilledSVG from '@/svgs/newspaper-filled.svg'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import clsx from 'clsx'
 import { cn } from '@/lib/utils'
 import { useSize } from '@/hooks/use-size'
@@ -33,6 +33,7 @@ const extraSize = 8
 
 export default function NavCard() {
 	const pathname = usePathname()
+	const router = useRouter()
 	const center = useCenterStore()
 	const [show, setShow] = useState(false)
 	const { maxSM } = useSize()
@@ -168,7 +169,7 @@ export default function NavCard() {
 						</>
 					)}
 
-					<Link className='flex items-center gap-3' href='/' aria-label='返回首页'>
+					<Link className='flex items-center gap-3' href='/' prefetch={false} onPointerEnter={() => router.prefetch('/')} aria-label='返回首页'>
 						<Image
 							src={avatarUrl}
 							alt=''
@@ -214,9 +215,13 @@ export default function NavCard() {
 									<Link
 										key={item.href}
 										href={item.href}
+										prefetch={false}
 										aria-label={form === 'icons' ? item.label : undefined}
 										className={cn('text-secondary text-md relative z-10 flex items-center gap-3 rounded-full px-5 py-3', form === 'icons' && 'p-0')}
-										onMouseEnter={() => setHoveredIndex(index)}>
+										onPointerEnter={() => {
+											setHoveredIndex(index)
+											router.prefetch(item.href)
+										}}>
 										<div className='flex h-7 w-7 items-center justify-center'>{renderIcon(item, hoveredIndex === index)}</div>
 										{form !== 'icons' && (
 											<span className={clsx('flex items-center gap-2', index === hoveredIndex && 'text-primary font-medium')}>{item.label}</span>

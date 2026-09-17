@@ -391,7 +391,7 @@ export default function BlogListClient({ initialItems, initialCategories }: { in
 							<ul className='divide-y'>
 								{search.results.map(result => (
 									<li key={result.slug}>
-										<Link href={`/blog/${result.slug}`} className='group flex items-start gap-3 py-3 transition-all hover:translate-x-1'>
+										<Link href={`/blog/${result.slug}`} prefetch={false} className='group flex items-start gap-3 py-3 transition-all hover:translate-x-1'>
 											<span className='text-secondary mt-0.5 w-[60px] shrink-0 text-xs'>{publicationDate(result.date).format('YYYY-MM-DD')}</span>
 											<div className='min-w-0 flex-1'>
 												<div className='group-hover:text-brand truncate text-sm font-medium'>{result.title || result.slug}</div>
@@ -458,6 +458,7 @@ export default function BlogListClient({ initialItems, initialCategories }: { in
 													onMouseEnter={() => onCoverLinkMouseEnter(it.cover)}
 													onMouseLeave={cancelCoverPreview}
 													href={`/blog/${it.slug}`}
+													prefetch={false}
 													key={it.slug}
 													onClick={event => handleItemClick(event, it.slug)}
 													className={cn(
@@ -588,7 +589,10 @@ export default function BlogListClient({ initialItems, initialCategories }: { in
 					</>
 				) : (
 					<>
-						<Link href='/admin/review' className='bg-card rounded-xl border px-4 py-2 text-sm backdrop-blur-sm transition-colors hover:bg-white/80'>
+						<Link
+							href='/admin/review'
+							prefetch={false}
+							className='bg-card rounded-xl border px-4 py-2 text-sm backdrop-blur-sm transition-colors hover:bg-white/80'>
 							AI 审批
 						</Link>
 						{!hideEditButton && (

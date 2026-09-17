@@ -60,7 +60,7 @@ export default function ShareCard() {
 
 				<h2 className='text-secondary text-sm'>随机推荐</h2>
 
-				<Link href='/share' className='mt-2 block space-y-2'>
+				<Link href='/share' prefetch={false} className='mt-2 block space-y-2'>
 					<div className='flex items-center'>
 						<div className='relative mr-3 h-12 w-12 shrink-0 overflow-hidden rounded-xl'>
 							{hasLocalLogo ? (

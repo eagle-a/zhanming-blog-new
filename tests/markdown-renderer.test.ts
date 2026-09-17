@@ -63,8 +63,23 @@ test('image renderer handles external urls without srcset', async () => {
 	assert.doesNotMatch(html, /srcset/)
 })
 
+test('image renderer routes local static photos through responsive Next image optimization', async () => {
+	const { html } = await renderMarkdown('![board](/images/report/board.png)')
+	assert.match(html, /src="\/_next\/image\?url=%2Fimages%2Freport%2Fboard\.png&amp;w=828&amp;q=75"/)
+	assert.match(html, /srcset="[^\"]*w=384[^\"]*384w[^\"]*w=1200[^\"]*1200w"/)
+	assert.match(html, /sizes="\(max-width: 640px\) 100vw, 800px"/)
+})
+
+test('image renderer optimizes Unicode static paths but rejects dot-segment paths', async () => {
+	const { html: unicodeHtml } = await renderMarkdown('![示波器](/images/报告/示波器截图.png)')
+	assert.match(unicodeHtml, /\/_next\/image\?url=%2Fimages%2F%E6%8A%A5%E5%91%8A%2F%E7%A4%BA%E6%B3%A2%E5%99%A8%E6%88%AA%E5%9B%BE\.png/)
+
+	const { html: traversalHtml } = await renderMarkdown('![unsafe](/images/report/../secret.png)')
+	assert.doesNotMatch(traversalHtml, /\/_next\/image/)
+})
+
 test('image renderer migrates the legacy report asset prefix to public static files', async () => {
 	const { html } = await renderMarkdown('![report](assets/half-week-report-2026-09-09/an807-termination-combinations.png)')
-	assert.match(html, /src="\/images\/half-week-report-2026-09-09\/an807-termination-combinations\.png"/)
+	assert.match(html, /url=%2Fimages%2Fhalf-week-report-2026-09-09%2Fan807-termination-combinations\.png/)
 	assert.doesNotMatch(html, /assets\/half-week-report/)
 })

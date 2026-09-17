@@ -4,8 +4,12 @@ import { test, expect } from '@playwright/test'
 test('mobile home defers settings data and code until the settings shortcut is used', async ({ page }, testInfo) => {
 	await page.setViewportSize({ width: 390, height: 844 })
 	const requests = [],
-		errors = []
+		errors = [],
+		rscRequests = []
 	page.on('pageerror', error => errors.push(error.message))
+	page.on('request', request => {
+		if (request.url().includes('_rsc=')) rscRequests.push(request.url())
+	})
 	await page.route('**/api/**', async route => {
 		const pathname = new URL(route.request().url()).pathname
 		requests.push(pathname)
@@ -24,6 +28,11 @@ test('mobile home defers settings data and code until the settings shortcut is u
 	expect(response.status()).toBe(200)
 	await expect(page.getByRole('heading', { name: '最新文章' })).toBeVisible()
 	await expect(page.getByText('暂无文章', { exact: true })).toBeVisible()
+	await expect(page.locator('[data-public-shell]')).toHaveCount(1)
+	await expect(page.locator('[data-static-bubble-background]')).toHaveCount(1)
+	await expect(page.locator('canvas')).toHaveCount(0)
+	await page.waitForTimeout(1000)
+	expect(rscRequests).toEqual([])
 	expect(requests).not.toContain('/api/content/site')
 	expect(requests).not.toContain('/api/content/card-styles')
 	const before = await page.evaluate(() =>

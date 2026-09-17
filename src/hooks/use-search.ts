@@ -8,7 +8,7 @@ type SearchState = {
 	error: string | null
 }
 
-const DEBOUNCE_MS = 300
+const DEBOUNCE_MS = 200
 const MIN_QUERY_LENGTH = 1
 
 export function useBlogSearch() {

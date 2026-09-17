@@ -2,7 +2,7 @@ import { assertValidSlug } from '@/lib/config-validation'
 import { isAdminRequest } from '@/lib/admin-auth'
 import { getCachedPublishedPost, getPost } from '@/lib/posts-repository'
 import { routeErrorResponse } from '@/lib/route-errors'
-import { allowDevelopmentLegacyFallback, readLegacyPost } from '@/lib/legacy-blog-reader'
+import { allowDevelopmentLegacyFallback, hasDatabaseConfiguration, readLegacyPost } from '@/lib/legacy-blog-reader'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -11,7 +11,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
 	const { slug: rawSlug } = await context.params
 	try {
 		const slug = assertValidSlug(rawSlug)
-		if (allowDevelopmentLegacyFallback()) {
+		if (allowDevelopmentLegacyFallback() || !hasDatabaseConfiguration()) {
 			const legacy = readLegacyPost(slug)
 			return legacy
 				? Response.json(legacy, { headers: { 'Cache-Control': 'public, max-age=0, must-revalidate' } })

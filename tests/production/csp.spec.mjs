@@ -24,6 +24,8 @@ for (const route of ['/admin/review', '/write']) {
 		expect(csp).toMatch(/script-src[^;]*'nonce-/)
 		expect(csp.split(';').find(part => part.trim().startsWith('style-src '))).not.toContain('unsafe-inline')
 		await expect(page.getByLabel('管理员密码', { exact: true })).toBeVisible()
+		await expect(page.locator('[data-minimal-shell]')).toHaveCount(1)
+		await expect(page.locator('[data-public-shell], [data-static-bubble-background], canvas')).toHaveCount(0)
 		await page.getByLabel('管理员密码', { exact: true }).fill('fixture-only')
 		await page.getByRole('button', { name: '登录', exact: true }).click()
 		const toast = page.locator('[data-sonner-toast]').filter({ hasText: 'Fixture login denied' })

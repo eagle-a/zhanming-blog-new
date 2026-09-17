@@ -15,6 +15,7 @@ export type ImageDimensionMap = Map<string, { width: number; height: number }>
 // Preserve images from the first local report submission after its assets were
 // promoted to public static files. New submissions should use public URLs.
 const LEGACY_IMAGE_PATHS = [['assets/half-week-report-2026-09-09/', '/images/half-week-report-2026-09-09/']] as const
+const STATIC_IMAGE_WIDTHS = [384, 640, 828, 1200] as const
 
 function normalizeImageHref(href: string): string {
 	const normalized = href.trim().replace(/^\.\//, '')
@@ -22,6 +23,27 @@ function normalizeImageHref(href: string): string {
 		if (normalized.startsWith(legacyPrefix)) return `${publicPrefix}${normalized.slice(legacyPrefix.length)}`
 	}
 	return href
+}
+
+function isOptimizableStaticImage(href: string): boolean {
+	if (!href.startsWith('/images/') || href.includes('#') || href.includes('\\')) return false
+
+	const rawPathname = href.split('?', 1)[0]
+	let decodedPathname: string
+	try {
+		decodedPathname = decodeURIComponent(rawPathname)
+	} catch {
+		return false
+	}
+
+	const segments = decodedPathname.split('/')
+	if (segments.some(segment => segment === '.' || segment === '..') || decodedPathname.includes('\\') || decodedPathname.includes('\0')) return false
+
+	return decodedPathname.startsWith('/images/') && /\.(?:avif|jpe?g|png|webp)$/iu.test(decodedPathname)
+}
+
+function nextImageUrl(href: string, width: number): string {
+	return `/_next/image?url=${encodeURIComponent(href)}&w=${width}&q=75`
 }
 
 function normalizeHeadingText(value: string): string {
@@ -171,6 +193,10 @@ export async function renderMarkdown(markdown: string, imageDimensions?: ImageDi
 				}
 				return `<img src="${escapeHtmlAttribute(href)}" alt="${alt}"${title} width="${dims.width}" height="${dims.height}" ${baseAttrs} />`
 			}
+		}
+		if (isOptimizableStaticImage(href)) {
+			const srcset = STATIC_IMAGE_WIDTHS.map(width => `${nextImageUrl(href, width)} ${width}w`).join(', ')
+			return `<img src="${nextImageUrl(href, 828)}" alt="${alt}"${title} ${baseAttrs} srcset="${srcset}" sizes="(max-width: 640px) 100vw, 800px" />`
 		}
 		return `<img src="${escapeHtmlAttribute(href)}" alt="${alt}"${title} ${baseAttrs} />`
 	}

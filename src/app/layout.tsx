@@ -2,24 +2,20 @@ import '@/styles/globals.css'
 
 import type { Metadata } from 'next'
 import { cache } from 'react'
-import Layout from '@/layout'
 import Head from '@/layout/head'
-import { LanguageProvider } from '@/i18n/context'
-import { RuntimeConfigHydrator } from '@/components/runtime-config-hydrator'
-import { WindowsPlatformClass } from '@/components/windows-platform-class'
-import { AnalyticsTracker } from '@/components/analytics-tracker'
+import { RouteShell } from '@/components/route-shell'
 import { getCachedContentDocument, getFallbackContentDocument } from '@/lib/content-repository'
 import { hasDatabaseConfiguration } from '@/lib/legacy-blog-reader'
 import type { CardStyles, SiteContent } from '@/app/(home)/stores/config-store'
 import { resolvePublicSiteUrl } from '@/lib/config-validation'
 import { resolveSiteDescription } from '@/lib/site-metadata'
 
-// Runtime site configuration comes from Neon and must not be queried while a
-// static build is being generated. This also ensures direct CMS repairs are
-// visible on the next request instead of being frozen into build output.
-export const dynamic = 'force-dynamic'
-
 const SITE_URL = resolvePublicSiteUrl()
+
+// Bound full-page output as well as the tagged repository reads. Tag
+// invalidation handles normal CMS writes; this TTL also makes emergency
+// database repairs visible without waiting on an immutable page cache.
+export const revalidate = 60
 
 const getRuntimeConfig = cache(async (): Promise<{ siteContent: SiteContent; cardStyles: CardStyles }> => {
 	if (!hasDatabaseConfiguration()) {
@@ -73,15 +69,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 			<Head faviconUrl={siteContent.faviconUrl} />
 
 			<body>
-				<RuntimeConfigHydrator siteContent={siteContent} cardStyles={cardStyles} />
-				<WindowsPlatformClass />
-
-				<LanguageProvider>
-					<Layout>{children}</Layout>
-				</LanguageProvider>
-				{/* These same-origin endpoints exist only on Vercel. A local `next start`
-				    is also a production build, but must not request /_vercel/* scripts. */}
-				{process.env.VERCEL === '1' && <AnalyticsTracker />}
+				<RouteShell siteContent={siteContent} cardStyles={cardStyles} analyticsEnabled={process.env.VERCEL === '1'}>
+					{children}
+				</RouteShell>
 			</body>
 		</html>
 	)

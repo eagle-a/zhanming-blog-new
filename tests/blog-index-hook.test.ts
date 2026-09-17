@@ -9,10 +9,16 @@ test('latest-post hook fetches on mount when it has no server fallback', async (
 	assert.match(source, /usePostIndex\('\/api\/posts'\)/)
 })
 
-test('local public APIs select the Git fallback before querying the database', async () => {
-	for (const relativePath of ['../src/app/api/posts/route.ts', '../src/app/api/categories/route.ts', '../src/app/api/posts/[slug]/route.ts']) {
+test('public APIs select the Git fallback when the database is unavailable', async () => {
+	for (const relativePath of [
+		'../src/app/api/posts/route.ts',
+		'../src/app/api/categories/route.ts',
+		'../src/app/api/posts/[slug]/route.ts',
+		'../src/app/api/content/[key]/route.ts'
+	]) {
 		const source = await readFile(new URL(relativePath, import.meta.url), 'utf8')
 		const routeBody = source.slice(source.indexOf('export async function GET'))
 		assert.ok(routeBody.indexOf('allowDevelopmentLegacyFallback()') < routeBody.indexOf('getCached'), relativePath)
+		assert.match(routeBody, /!hasDatabaseConfiguration\(\)/, relativePath)
 	}
 })

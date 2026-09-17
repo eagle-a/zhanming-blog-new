@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import BlogListClient from './blog-list-client'
-import { allowDevelopmentLegacyFallback, readLegacyCategories, readLegacyPosts } from '@/lib/legacy-blog-reader'
+import { allowDevelopmentLegacyFallback, hasDatabaseConfiguration, readLegacyCategories, readLegacyPosts } from '@/lib/legacy-blog-reader'
 import { getCachedCategories, getCachedPublishedPosts } from '@/lib/posts-repository'
 
 export const metadata: Metadata = {
@@ -10,15 +10,13 @@ export const metadata: Metadata = {
 	openGraph: { title: '文章', description: '按时间与分类浏览站内文章。', url: '/blog' }
 }
 
-// Blog content lives in the database; prerendering /blog at build time would
-// require DATABASE_URL in every CI/Preview environment. Render at request time
-// instead — unstable_cache still keeps the underlying query result cached.
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export default async function BlogPage() {
-	const [items, categories] = allowDevelopmentLegacyFallback()
-		? [readLegacyPosts(false), readLegacyCategories()]
-		: await Promise.all([getCachedPublishedPosts(), getCachedCategories()])
+	const [items, categories] =
+		allowDevelopmentLegacyFallback() || !hasDatabaseConfiguration()
+			? [readLegacyPosts(false), readLegacyCategories()]
+			: await Promise.all([getCachedPublishedPosts(), getCachedCategories()])
 
 	return <BlogListClient initialItems={items} initialCategories={categories} />
 }

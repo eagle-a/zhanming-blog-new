@@ -47,7 +47,7 @@ export default function HiCard() {
 						/>
 					</>
 				)}
-				<Link href='/live2d'>
+				<Link href='/live2d' prefetch={false}>
 					<img
 						src={siteContent.avatarUrl || '/images/avatar.png'}
 						alt='avatar'

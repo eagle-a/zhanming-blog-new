@@ -34,6 +34,17 @@ test('about page has one Git-backed content source in every environment', async 
 	assert.doesNotMatch(page, /getCachedContentDocument|DATABASE_URL|editable=/)
 })
 
+test('public CMS reads use tagged cross-request caches with a bounded repair delay', async () => {
+	const content = await readFile(new URL('../src/lib/content-repository.ts', import.meta.url), 'utf8')
+	const posts = await readFile(new URL('../src/lib/posts-repository.ts', import.meta.url), 'utf8')
+	const rootLayout = await readFile(new URL('../src/app/layout.tsx', import.meta.url), 'utf8')
+	assert.match(content, /unstable_cache\([\s\S]*tags: \[`content:\$\{key\}`\][\s\S]*revalidate: 60/)
+	assert.match(posts, /unstable_cache\(\(\) => listPosts\(false\)[\s\S]*tags: \['posts'\][\s\S]*revalidate: 60/)
+	assert.match(posts, /tags: \['posts', `post:\$\{slug\}`\]/)
+	assert.match(posts, /tags: \['post-categories'\]/)
+	assert.match(rootLayout, /export const revalidate = 60/)
+})
+
 test('legacy article fallback is explicit and old public URLs are blocked', async () => {
 	const legacyReader = await readFile(new URL('../src/lib/legacy-blog-reader.ts', import.meta.url), 'utf8')
 	const runner = await readFile(new URL('../scripts/run-local-next.mjs', import.meta.url), 'utf8')
