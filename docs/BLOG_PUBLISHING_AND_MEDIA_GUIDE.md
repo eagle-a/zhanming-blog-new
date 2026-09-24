@@ -1,6 +1,6 @@
 # 博客发布与图片存储规范
 
-本文记录当前项目真实生效的发布链路。读它是为了解决两个反复出现的问题：文章正文存在哪里，以及正文里的图片存在哪里。最后附 2026-09-23 周报图片 404 的复盘。
+本文记录当前项目真实生效的发布链路。读它是为了解决两个反复出现的问题：文章正文存在哪里，以及正文里的图片存在哪里。第 6 节是 2026-09-24 媒体索引补齐的记录，第 8 节是 2026-09-23 周报图片 404 的复盘。
 
 ## 1. 数据落在哪里
 
@@ -32,6 +32,9 @@
 4. `POST /api/admin/media/upload` 是另一条路：`@vercel/blob/client` 的客户端直传。它生成上传令牌时**只认 `BLOB_READ_WRITE_TOKEN`**，不认 OIDC，所以该变量缺失或指错存储时必然 500。仓库里保留它是因为 `scripts/smoke-test-cms.ts` 用它，生产环境现在也配了正确的令牌。
 5. `scripts/migrate-static-media.ts`（`pnpm media:migrate-static`）把 `public/images/<slug>/` 里的本地图片搬到 Blob，并把正文引用改成 `/api/media/...`。它用 `/api/admin/session` 登录、用 `/api/admin/posts/<slug>/revisions[/<version>]` 读正文，图片交给 `/api/admin/media/store`，最后由 `/api/admin/media/migrate-static` 在同一事务里改写正文。
 6. `src/app/api/media/[...pathname]/route.ts` 用 `access: 'private'` 读 Blob。只接受 `blog/<slug>/` 和 `content/(site|bloggers|projects|shares|pictures|migrated)/` 两类路径，其他一律 404。
+7. 只有 `RESPONSIVE_MEDIA_WIDTHS`（480/800/1200/1920）是合法的 `?w=` 值，其他宽度返回 400；图片本身比请求宽度小时不做放大，直接回原图。
+8. `media` 表是 Blob 的索引，不是 Blob 本身。缺行不影响图片可读，但页面拿不到 `width`/`height`，也就不会生成 `srcset`。写索引依赖 `width`/`height` 两列，缺列时每次上传都在这一步失败。
+9. 本机（校园网）到 Neon 的 WebSocket 通道不通，`scripts/lib/database.ts` 默认给非 loopback 主机选的 `neon-serverless` 驱动连不上。维护脚本加 `$env:BLOG_SCRIPT_DATABASE_DRIVER='pg'` 会改走 `pg` 的 TCP 通道。
 
 ## 4. 标准发布流程
 
@@ -94,7 +97,40 @@ pnpm media:migrate-static --slug half-week-report-2026-09-09,half-week-report-20
 2. 确认正文里已经没有 `/images/<slug>/` 残留。
 3. 再删除 `public/images/<slug>/` 静态副本并提交。
 
-## 6. 部署与验证
+## 6. 补齐已经发布内容的媒体索引
+
+图片进 Blob 和「媒体登记进 `media` 表」是两件事。正文里写着 `/api/media/...` 只证明图片可读；`media` 表没有对应行时，文章页拿不到 `width`/`height`，不会输出 `srcset`，`pnpm media:maintain --action=plan` 也会一直把它列成「索引缺失」。
+
+2026-09-24 核对生产库发现 `media` 表缺 `width`、`height` 两列，`drizzle/0011_responsive_media_dimensions.sql` 从未在生产执行。后果有两层：
+
+1. 任何一次上传都在写索引时失败。`dd4d64a` 起这一步已降级为不致命，接口返回 `indexed: false`，图片仍然可读，所以问题被藏住了。
+2. 60 张已经迁进 Blob 的图片（4 篇周报 43 张 + `readme` 17 张）只有 Blob 对象，`media` 表里没有行。
+
+补齐分两步。第一步补 schema，本地 `.env.local` 里已经有生产 `DATABASE_URL`：
+
+```powershell
+node --env-file=.env.local node_modules/drizzle-kit/bin.cjs migrate
+```
+
+改 schema 之前先导出一次受影响表的完整快照（`media`、`posts`、`content_documents`、`drizzle.__drizzle_migrations`），写到仓库外；`ALTER TABLE ... ADD COLUMN` 本身不动数据，但这张表是唯一记录「哪些字节被引用」的地方，值得先留底。
+
+第二步把已发布内容的图片重新交给服务端登记。这一步有两个看起来能用、实际不能用的命令：
+
+- `pnpm media:migrate-static` 按「正文里的静态引用」找图片，而这批正文早就改写成 `/api/media/...`，它会报没有静态引用；
+- `pnpm media:maintain --action=backfill` 语义正好，但按设计拒绝在生产执行。
+
+对已经发布的内容，经过授权且自带校验的生产登记路径是 `/api/admin/media/store`：把 Blob 里已经存在的字节再提交一次。pathname 按内容寻址，`put()` 遇到已存在对象会复用，随后服务端 `sharp` 读出真实尺寸写进索引。注意四点：
+
+- 字节从线上读回后先在本地算 SHA-256，必须等于 pathname 里的那一段，否则立即中止；
+- 单张超过 4 MB 会被服务端拒绝，需要另行压缩处理；
+- 同一个 URL 重复提交是幂等的，所以中断可以直接重跑；
+- `storeAdminMedia` 只接受 `blog|content` 与 `site|bloggers|projects|shares|pictures` 命名空间。`content/migrated/` 不在其中，这类行只能本地算尺寸后补 `width`/`height`。
+
+登记出来的行初始状态是 `pending`，语义是「已上传、还没有被内容写入引用」。这批 pathname 已经被已发布正文引用，正确状态是 `committed`，字段与 `markMediaReferencesCommitted()` 写的完全一致：`state='committed'`、`pending_at=null`、`committed_at=now()`、`last_seen_at=now()`、`orphaned_at=null`、`deleted_at=null`。改状态和补尺寸放在一个事务里，提交前断言「所有 `blog/*` 行都是 committed 且有尺寸、所有 `content/migrated/*` 非 SVG 行都有尺寸」，不满足就回滚。
+
+2026-09-24 的结果：`pnpm media:reconcile --include-blobs` 报告 88 条引用 = `media` 表 88 行，全部 `committed`，`pendingMedia`、`missingDatabaseRows`、`missingBlobObjects`、`unreferencedDatabaseRows` 均为 0；Blob 里有 91 个对象，多出的 3 个是没有任何引用的 `blog/readme/*.webp` 残留；7 条只有 SVG 没有尺寸，属于预期。
+
+## 7. 部署与验证
 
 ### CI 是部署闸门
 
@@ -122,7 +158,7 @@ curl.exe -I https://zhanmingblog.cc.cd/api/media/blog/<slug>/<sha256>.<ext>
 
 文章页返回 200 不代表图片存在，每张图片必须单独确认 200 且 `Content-Type` 是 `image/*`。
 
-## 7. 2026-09-23 周报图片 404 复盘
+## 8. 2026-09-23 周报图片 404 复盘
 
 现象：`/blog/weekly-report-2026-09-23` 正常打开，11 张图片全部 404。
 
@@ -143,7 +179,7 @@ curl.exe -I https://zhanmingblog.cc.cd/api/media/blog/<slug>/<sha256>.<ext>
 
 教训：跑完 `pnpm format:check`、`pnpm test`、`pnpm typecheck` 再提交；CI 红了先修 CI，再谈图片通道。
 
-## 8. 禁止的做法
+## 9. 禁止的做法
 
 - 不把 `C:\Users\...`、`../...` 或工作区绝对路径写进投稿正文。
 - 不把 `public/images` 路径当作 Blob 地址。
@@ -153,12 +189,14 @@ curl.exe -I https://zhanmingblog.cc.cd/api/media/blog/<slug>/<sha256>.<ext>
 - 不用任意工作区直接跑 `vercel deploy --prod`，那会绕过提交校验。
 - 不把「文章进了数据库」当成「图片已经上线」。
 
-## 9. 发布前检查表
+## 10. 发布前检查表
 
 - [ ] `pnpm test`、`pnpm typecheck`、`pnpm format:check` 全部通过。
 - [ ] frontmatter 的 `title`、`slug`、`summary`、`date`、`category`、`tags` 完整。
 - [ ] 正文没有本机绝对路径、投稿码、Token 或数据库连接串。
 - [ ] 每个图片引用都能在目标环境返回 200。
+- [ ] `pnpm media:reconcile --include-blobs` 的 `missingDatabaseRows` 与 `missingBlobObjects` 都是 0。
+- [ ] 文章页的 `<img>` 带 `width`、`height` 与 `srcset`（没带就说明 `media` 表缺行或缺尺寸）。
 - [ ] GitHub Actions `verify` 为 success。
 - [ ] 使用 `node scripts/deploy-production.mjs` 部署。
 - [ ] 部署后再次检查文章页和全部图片 URL。

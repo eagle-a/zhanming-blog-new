@@ -355,6 +355,8 @@ pnpm assets:audit
 
 `media:maintain --action=plan` 列出历史索引回填候选、超过宽限期的孤儿候选和已删除但可恢复的行。写操作按 `backfill → mark → delete` 分阶段，删除前会重新核验引用、宽限期和 ETag，并强制写出 Blob 恢复归档；中断状态 `deleting` 也可由 `recover` 判断对象是否仍存在并恢复。内容写入、上传 pathname 预留和 GC 共用 PostgreSQL 事务级 advisory lock，防止最终引用检查后又被并发引用。上传完成回调重新读取 Blob 并核验实际 SHA-256、大小和 MIME，不信任客户端自报元数据。所有媒体维护写操作拒绝 `BLOG_RESOURCE_ENV=production`，生产执行必须由管理员在已确认的资源上运行。
 
+维护脚本默认给非 loopback 主机选 `neon-serverless`（WebSocket）驱动。在 WebSocket 被网络拦掉、但 `*.neon.tech:5432` 可以直连的机器上，加 `$env:BLOG_SCRIPT_DATABASE_DRIVER='pg'` 切到 `pg` 的 TCP 通道即可。
+
 ## 12. 当前数据核对
 
 2026-08-08 本地 PostgreSQL 只读核对：
@@ -367,6 +369,14 @@ pnpm assets:audit
 - 保留 1 张已撤销且已过期票据及其审计事件，这是无效授权和正常审计残留，不是文章数据。
 
 仓库仍有 11 个旧 Markdown 文章文件未被清理；原先的硬件资料已完整移出仓库，存放在本机 Downloads。
+
+2026-09-24 生产只读核对（`pnpm media:reconcile --include-blobs`）：
+
+- 正文引用 88 个媒体 pathname，`media` 表 88 行，两者完全一致；
+- `media` 表全部 `committed`，`pendingMedia`、`missingDatabaseRows`、`missingBlobObjects`、`unreferencedDatabaseRows`、`orphanCandidates` 均为 0；
+- Blob 里有 91 个对象，多出的 3 个是没有任何引用的 `blog/readme/*.webp` 残留；
+- 81 行有 `width`/`height`，剩下 7 行是 SVG，按设计不算候选；
+- 生产已执行 `drizzle/0011_responsive_media_dimensions.sql`，`drizzle.__drizzle_migrations` 共 12 行，与仓库迁移目录一致。
 
 ## 13. 已验证问题与已知限制
 
@@ -381,6 +391,7 @@ pnpm assets:audit
 - 已加入 GitHub Actions、带 Blob 字节归档的 CMS 备份/恢复演练、媒体四方对账和可恢复 GC；
 - `RuntimeConfigHydrator` 改为浏览器绘制前同步配置，避免先显示 Git 回退配置再闪变；
 - 修订历史 UI 已完成：列表、详情、恢复流程，恢复时同步更新所有元数据（标题、摘要、标签、分类、发布时间），不会丢失历史字段；
+- 生产 `media` 表补上 `width`/`height`（迁移 0011 从未在生产执行，导致每次上传都在写索引时失败）；88 条引用与 88 行索引对齐，81 行有真实像素尺寸，文章页恢复输出 `width`/`height` 与 `srcset`；
 - 文章搜索已完成：ILIKE 全文搜索 + 标签匹配 + DISTINCT 去重，防抖 + 内容片段展示；
 - 阅读进度条已完成：rAF 节流 + 短文章 100% 处理；
 - 自定义 404 页面已完成。
