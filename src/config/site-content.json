@@ -14,21 +14,21 @@
 		"colorCard": "#ffffff66",
 		"colorArticle": "#ffffffcc"
 	},
-	"faviconUrl": "/api/media/content/migrated/413b98caca37e136254e2a4a0c31e39b6e20ce441a7e053de1045b8673176a44.png",
-	"avatarUrl": "/api/media/content/migrated/56735121ad4835ca150cc42a7c0b0d177064ceddca1faa6060c397817bd934bf.png",
+	"faviconUrl": "/favicon.png",
+	"avatarUrl": "/images/avatar.png",
 	"backgroundColors": ["#EDDD62", "#9EE7D1", "#84D68A", "#EDDD62", "#88E6E5", "#a7f3d0"],
 	"artImages": [
 		{
 			"id": "cat",
-			"url": "/api/media/content/migrated/45f4a54d2ed824fde9417e6d4e86f3d2ad89fb0ce212ccd8d8a02fd6d23855f2.png"
+			"url": "/images/art/cat.png"
 		},
 		{
 			"id": "a46372ff45bc5524",
-			"url": "/api/media/content/migrated/a46372ff45bc5524cd11b71fbc17c9819c255a87fe37b829e100c52bb440a51b.jpg"
+			"url": "/images/art/a46372ff45bc5524.jpg"
 		},
 		{
 			"id": "1c7b726fe720679b",
-			"url": "/api/media/content/migrated/1c7b726fe720679b7b90ce5ed51a0da57401c4f0cdb9965a5c28cb2fe3815a35.jpg"
+			"url": "/images/art/1c7b726fe720679b.jpg"
 		}
 	],
 	"currentArtImageId": "1c7b726fe720679b",
