@@ -28,3 +28,36 @@ export function describeRemaining(remainingMs: number): string {
 	const restHours = hours % 24
 	return restHours === 0 ? `${days} 天` : `${days} 天 ${restHours} 小时`
 }
+
+// Local wall-clock form of a publish time, without a timezone suffix. Used for
+// datetime-local inputs and for messages that must match what the submitter
+// typed in frontmatter (Node parses a bare "2026-09-24T21:00" as local time).
+export function toLocalDateTimeInput(value: string | Date): string {
+	const date = value instanceof Date ? value : new Date(value)
+	if (Number.isNaN(date.getTime())) return ''
+	const pad = (part: number) => String(part).padStart(2, '0')
+	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+export function fromLocalDateTimeInput(value: string): string | null {
+	if (!value) return null
+	const date = new Date(value)
+	return Number.isNaN(date.getTime()) ? null : date.toISOString()
+}
+
+export function formatLocalDateTime(value: string | Date): string {
+	return toLocalDateTimeInput(value).replace('T', ' ') || String(value)
+}
+
+// Refusing by default is the point: a future frontmatter date used to produce an
+// approved post that stayed 404 until the clock caught up, which reads exactly
+// like a broken publish. Scheduled publishing now has to be asked for.
+export function scheduledSubmissionError(schedule: PublicationSchedule, publishedAt: string, allowScheduled: boolean): string | null {
+	if (!schedule.scheduled || allowScheduled) return null
+	return [
+		`发布时间 ${publishedAt}（本机 ${formatLocalDateTime(publishedAt)}）还在未来，约 ${describeRemaining(schedule.remainingMs)}后才公开。`,
+		'默认不接受未来时间：批准之后文章仍然是 404，看起来就像发布失败。',
+		'  · 想立刻发布：把 Markdown frontmatter 的 date 删掉或改成当前时间，再投一次。',
+		'  · 确实要排期：加 --schedule 再投一次，例如 pnpm agent:submit <article.md> -- --schedule'
+	].join('\n')
+}

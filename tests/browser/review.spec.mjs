@@ -332,7 +332,13 @@ test('review preserves drafts and enforces modal and version boundaries', async 
 })
 test('review surfaces a scheduled publish time instead of implying immediate visibility', async ({ page, context }) => {
 	const future = new Date(Date.now() + 80 * 60_000).toISOString()
-	const past = new Date(Date.now() - 60_000).toISOString()
+	const past = new Date(Date.now() - 60 * 60_000).toISOString()
+	const localInput = value => {
+		const date = new Date(value)
+		const pad = part => String(part).padStart(2, '0')
+		return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+	}
+	const saved = []
 	const rows = ['later', 'past'].map((id, index) => ({
 		id,
 		type: 'post',
@@ -363,13 +369,26 @@ test('review surfaces a scheduled publish time instead of implying immediate vis
 				}
 			})
 		const row = rows.find(item => item.id === url.pathname.split('/')[4])
-		return route.fulfill(row ? { json: structuredClone(row) } : { status: 404, json: { error: 'Missing' } })
+		if (!row) return route.fulfill({ status: 404, json: { error: 'Missing' } })
+		if (route.request().method() === 'PATCH') {
+			row.payload = route.request().postDataJSON().payload
+			row.contentHash = 'b'.repeat(64)
+			saved.push(row.payload.publishedAt)
+		}
+		return route.fulfill({ json: structuredClone(row) })
 	})
 	await page.goto(fixture.url)
-	await expect(page.getByText(/定时发布，约 1 小时 20 分钟后才公开/)).toBeVisible()
+	await expect(page.getByText(/定时发布：约 1 小时 20 分钟后才公开/)).toBeVisible()
+	await expect(page.locator('#review-published-at')).toHaveValue(localInput(future))
 	await page.getByRole('button', { name: '保存并批准发布' }).click()
 	await expect(page.getByRole('dialog')).toContainText('这是定时发布')
 	await page.keyboard.press('Escape')
+	await page.locator('#review-published-at').fill(localInput(past))
+	await expect(page.getByText('批准后立即公开')).toBeVisible()
+	await page.getByRole('button', { name: '保存草稿', exact: true }).click()
+	await expect(page.getByText('草稿已与服务器同步。')).toBeVisible()
+	// The field is minute precision, which is what frontmatter dates use too.
+	assert.deepEqual(saved, [new Date(localInput(past)).toISOString()])
 	await page.getByRole('button', { name: /Article past/ }).click()
 	await expect(page.getByText(/批准后立即公开/)).toBeVisible()
 })

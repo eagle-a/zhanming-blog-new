@@ -3,14 +3,19 @@ import { readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { parseMarkdownImport } from '../src/lib/markdown-import.ts'
 import { agentPostSubmissionSchema } from '../src/lib/agent-submission-validation.ts'
-import { describeRemaining, publicationSchedule } from '../src/lib/publication-schedule.ts'
+import { describeRemaining, publicationSchedule, scheduledSubmissionError } from '../src/lib/publication-schedule.ts'
 import { isSubmissionTicket } from '../src/lib/submission-ticket.ts'
 
 const args = process.argv.slice(2)
 let fileArgument: string | undefined
 let apiUrlArgument: string | undefined
+let allowScheduled = false
 for (let index = 0; index < args.length; index += 1) {
 	const argument = args[index]
+	if (argument === '--schedule') {
+		allowScheduled = true
+		continue
+	}
 	if (argument === '--api-url') {
 		apiUrlArgument = args[index + 1]
 		index += 1
@@ -21,7 +26,7 @@ for (let index = 0; index < args.length; index += 1) {
 	fileArgument = argument
 }
 
-if (!fileArgument) throw new Error('Usage: pnpm agent:submit <article.md> [--api-url https://your-site.example]')
+if (!fileArgument) throw new Error('Usage: pnpm agent:submit <article.md> [--api-url https://your-site.example] [--schedule]')
 if (args.includes('--api-url') && (!apiUrlArgument || apiUrlArgument.startsWith('--'))) throw new Error('--api-url requires an origin')
 
 function normalizeApiOrigin(value: string): string {
@@ -109,14 +114,12 @@ const payload = agentPostSubmissionSchema.parse({
 const body = JSON.stringify(payload)
 const idempotencyKey = `post:${payload.slug}:${createHash('sha256').update(body).digest('hex').slice(0, 24)}`
 const schedule = publicationSchedule(payload.publishedAt)
-if (schedule.scheduled) {
-	// Warn before the ticket prompt: the submitter may still want to fix the date.
-	process.stderr.write(
-		`\n注意：发布时间 ${payload.publishedAt} 在未来，约 ${describeRemaining(schedule.remainingMs)}后才公开。\n` +
-			'这是定时发布：批准之后访客打开文章链接仍然只会看到 404，直到那个时刻为止。\n' +
-			'想批准后立刻可见，把 Markdown frontmatter 的 date 改成当前时间再投一次。\n\n'
-	)
-}
+const scheduleError = scheduledSubmissionError(schedule, payload.publishedAt, allowScheduled)
+// Checked before the ticket prompt: the submitter can still fix the date without
+// burning a one-time submission code.
+if (scheduleError) throw new Error(scheduleError)
+if (schedule.scheduled)
+	process.stderr.write(`\n注意：这是排期投稿（--schedule），约 ${describeRemaining(schedule.remainingMs)}后才会公开，之前访客看到 404。\n\n`)
 const ticket = await readTicketFromTerminal()
 if (!isSubmissionTicket(ticket)) throw new Error('Invalid one-time submission code')
 

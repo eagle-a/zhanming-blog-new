@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { useAdminSession } from '@/hooks/use-admin-session'
 import { responseJson } from './review-http'
 import type { AgentPostSubmission } from '@/lib/agent-submission-validation'
-import { describeRemaining, publicationSchedule } from '@/lib/publication-schedule'
+import { describeRemaining, fromLocalDateTimeInput, publicationSchedule, toLocalDateTimeInput } from '@/lib/publication-schedule'
 import { ReviewDialog } from './review-dialog'
 import {
 	createReviewDraft,
@@ -47,6 +47,7 @@ export default function ReviewClient() {
 	const [switchTarget, setSwitchTarget] = useState<string | null>(null)
 	const [reloadDialog, setReloadDialog] = useState(false)
 	const [approveDialog, setApproveDialog] = useState(false)
+	const [publishedAtText, setPublishedAtText] = useState('')
 	const draft = edit?.payload || null
 	const dirty = isReviewDirty(edit)
 	const schedule = draft ? publicationSchedule(draft.publishedAt) : null
@@ -127,6 +128,12 @@ export default function ReviewClient() {
 		window.addEventListener('beforeunload', handler)
 		return () => window.removeEventListener('beforeunload', handler)
 	}, [dirty, busy])
+
+	// The publish-time field keeps its own text buffer: a half-typed datetime-local
+	// value reports an empty string, and that must never overwrite the stored time.
+	useEffect(() => {
+		if (draft?.publishedAt) setPublishedAtText(toLocalDateTimeInput(draft.publishedAt))
+	}, [draft?.publishedAt])
 
 	const beginAction = () => {
 		if (busyRef.current) return false
@@ -396,14 +403,32 @@ export default function ReviewClient() {
 								</div>
 							)}
 							<fieldset disabled={busy} className='card static grid min-w-0 gap-4 p-6 md:grid-cols-2'>
-								<p className='text-sm md:col-span-2'>
-									发布时间：<span className='font-medium'>{new Date(draft.publishedAt).toLocaleString('zh-CN')}</span>
-									{schedule?.scheduled ? (
-										<span className='text-amber-700'>{` · 定时发布，约 ${describeRemaining(schedule.remainingMs)}后才公开，之前文章页是 404`}</span>
-									) : (
-										<span className='text-secondary'> · 批准后立即公开</span>
-									)}
-								</p>
+								<div className='md:col-span-2'>
+									<label htmlFor='review-published-at' className='text-sm'>
+										发布时间（本机时区，改成当前时间就能立刻公开）
+										<input
+											id='review-published-at'
+											type='datetime-local'
+											value={publishedAtText}
+											onChange={event => {
+												const text = event.target.value
+												setPublishedAtText(text)
+												const nextPublishedAt = fromLocalDateTimeInput(text)
+												if (nextPublishedAt) setDraft({ ...draft, publishedAt: nextPublishedAt })
+											}}
+											className='mt-1 w-full rounded-xl border bg-white/70 px-3 py-2'
+										/>
+									</label>
+									<p className='mt-1 text-sm'>
+										{!fromLocalDateTimeInput(publishedAtText) ? (
+											<span className='text-amber-700'>时间填写不完整，保存时会保留原来的发布时间</span>
+										) : schedule?.scheduled ? (
+											<span className='text-amber-700'>{`定时发布：约 ${describeRemaining(schedule.remainingMs)}后才公开，之前文章页是 404`}</span>
+										) : (
+											<span className='text-secondary'>批准后立即公开</span>
+										)}
+									</p>
+								</div>
 								<label htmlFor='review-title' className='text-sm'>
 									标题
 									<input
@@ -520,7 +545,7 @@ export default function ReviewClient() {
 					<p className='mt-4 text-sm break-words'>将保存当前编辑并公开发布「{draft?.title}」。请确认内容和来源已经审核。</p>
 					{schedule?.scheduled && draft && (
 						<p role='alert' className='mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900'>
-							{`这是定时发布：批准后要到 ${new Date(draft.publishedAt).toLocaleString('zh-CN')}（约 ${describeRemaining(schedule.remainingMs)}后）才公开，在那之前访客看到的是 404。`}
+							{`这是定时发布：批准后要到 ${new Date(draft.publishedAt).toLocaleString('zh-CN')}（约 ${describeRemaining(schedule.remainingMs)}后）才公开，在那之前访客看到的是 404。想立刻公开，先在编辑区把发布时间改成当前时间。`}
 						</p>
 					)}
 					<div className='mt-5 flex justify-end gap-3'>
