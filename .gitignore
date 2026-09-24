@@ -56,4 +56,6 @@ dist/
 2025-blog-public/
 
 # Local research and review artifacts are not deployment inputs.
-/reports/
+/reports/*
+# 例外：投稿源件是可复现的正文存档，必须进版本库；其余报告保持本地。
+!/reports/weekly-reports/
