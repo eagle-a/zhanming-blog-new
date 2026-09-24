@@ -272,12 +272,13 @@ async function uploadImage(origin: URL, cookie: string, slug: string, file: stri
 	for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt += 1) {
 		try {
 			const form = new FormData()
+			form.append('kind', 'blog')
 			form.append('slug', slug)
 			form.append('file', file)
 			form.append('sha256', sha256)
 			form.append('bytes', new Blob([new Uint8Array(bytes)], { type: mimeType }), file)
 
-			const response = await fetchWithRetry(new URL('/api/admin/media/migrate-static', origin), {
+			const response = await fetchWithRetry(new URL('/api/admin/media/store', origin), {
 				method: 'POST',
 				headers: { Cookie: cookie, Origin: origin.origin },
 				body: form,

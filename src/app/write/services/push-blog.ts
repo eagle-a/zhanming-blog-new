@@ -1,11 +1,8 @@
-import { upload } from '@vercel/blob/client'
 import { mutate } from 'swr'
-import { hashFileSHA256 } from '@/lib/file-utils'
+import { uploadAdminMedia } from '@/lib/admin-media-client'
 import type { ImageItem } from '../types'
-import { getFileExt } from '@/lib/utils'
 import { formatDateTimeLocal } from '../stores/write-store'
 import { assertValidSlug } from '@/lib/config-validation'
-import { mediaProxyUrl } from '@/lib/media-url'
 
 export type PushBlogParams = {
 	form: {
@@ -50,21 +47,7 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
 
 	const uploadedImages = await Promise.all(
 		Array.from(localImages, async ([id, image]) => {
-			const sha256 = image.hash || (await hashFileSHA256(image.file))
-			const pathname = `blog/${slug}/${sha256}${getFileExt(image.file.name)}`
-			const blob = await upload(pathname, image.file, {
-				access: 'private',
-				handleUploadUrl: '/api/admin/media/upload',
-				contentType: image.file.type || 'application/octet-stream',
-				multipart: image.file.size > 5 * 1024 * 1024,
-				clientPayload: JSON.stringify({
-					slug,
-					sha256,
-					mimeType: image.file.type || 'image/png',
-					size: image.file.size
-				})
-			})
-			return { id, url: mediaProxyUrl(blob.pathname) }
+			return { id, url: await uploadAdminMedia({ kind: 'blog', slug }, image.file) }
 		})
 	)
 

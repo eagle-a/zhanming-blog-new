@@ -1,10 +1,7 @@
 'use client'
 
-import { upload } from '@vercel/blob/client'
 import { mutate } from 'swr'
-import { hashFileSHA256 } from '@/lib/file-utils'
-import { mediaProxyUrl } from '@/lib/media-url'
-import { getFileExt } from '@/lib/utils'
+import { uploadAdminMedia } from '@/lib/admin-media-client'
 import type { ContentDocumentKey } from '@/lib/content-validation'
 
 export type ClientContentDocument<T = unknown> = {
@@ -60,14 +57,5 @@ export async function saveContentDocuments(
 export type ContentMediaNamespace = 'site' | 'bloggers' | 'projects' | 'shares' | 'pictures'
 
 export async function uploadContentImage(namespace: ContentMediaNamespace, file: File): Promise<string> {
-	const sha256 = await hashFileSHA256(file)
-	const pathname = `content/${namespace}/${sha256}${getFileExt(file.name)}`
-	const blob = await upload(pathname, file, {
-		access: 'private',
-		handleUploadUrl: '/api/admin/media/upload',
-		contentType: file.type || 'image/png',
-		multipart: file.size > 5 * 1024 * 1024,
-		clientPayload: JSON.stringify({ namespace, sha256, mimeType: file.type || 'image/png', size: file.size })
-	})
-	return mediaProxyUrl(blob.pathname)
+	return uploadAdminMedia({ kind: 'content', namespace }, file)
 }
