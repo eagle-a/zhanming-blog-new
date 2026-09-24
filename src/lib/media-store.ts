@@ -25,7 +25,12 @@ const SHA256_PATTERN = /^[a-f0-9]{64}$/
 
 export type StoreAdminMediaTarget = { kind: 'blog'; slug: string } | { kind: 'content'; namespace: string }
 
-export type StoreAdminMediaResult = { pathname: string; url: string }
+export type StoreAdminMediaResult = {
+	pathname: string
+	url: string
+	/** False when the image is stored but the media index row could not be written. */
+	indexed: boolean
+}
 
 export class MediaStoreError extends Error {
 	constructor(message: string) {
@@ -86,13 +91,23 @@ export async function storeAdminMedia(target: StoreAdminMediaTarget, input: { fi
 		url = existing.url
 	}
 
-	await registerPendingMedia({
-		blobUrl: url,
-		pathname,
-		sha256: input.sha256,
-		mimeType,
-		size: input.bytes.length,
-		...(await readDimensions(input.bytes, mimeType))
-	})
-	return { pathname, url: mediaProxyUrl(pathname) }
+	let indexed = true
+	try {
+		await registerPendingMedia({
+			blobUrl: url,
+			pathname,
+			sha256: input.sha256,
+			mimeType,
+			size: input.bytes.length,
+			...(await readDimensions(input.bytes, mimeType))
+		})
+	} catch (error) {
+		// The image is already stored and readable, so a media-index failure must
+		// not make the upload look failed. This is what an outdated `media` table
+		// looks like from here: `width`/`height` arrive in migration 0011, and
+		// until that runs every insert of an image row fails.
+		indexed = false
+		console.error(`Media index registration failed for ${pathname}:`, error)
+	}
+	return { pathname, url: mediaProxyUrl(pathname), indexed }
 }
