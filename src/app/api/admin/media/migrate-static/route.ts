@@ -83,7 +83,7 @@ export async function POST(request: Request): Promise<Response> {
 			for (const reference of references) {
 				let status: number | string
 				try {
-					const response = await fetch(new URL(reference.href, origin), {
+					const response = await fetch(new URL(reference.staticPath, origin), {
 						method: 'HEAD',
 						signal: AbortSignal.timeout(20_000)
 					})
@@ -91,7 +91,7 @@ export async function POST(request: Request): Promise<Response> {
 				} catch (error) {
 					status = error instanceof Error ? error.message : 'unknown'
 				}
-				plan.push({ file: reference.file, from: reference.href, staticStatus: status })
+				plan.push({ file: reference.file, from: reference.href, staticPath: reference.staticPath, staticStatus: status })
 			}
 			return Response.json({ slug: post.slug, dryRun: true, references: references.length, version: post.version, plan })
 		}
@@ -107,7 +107,7 @@ export async function POST(request: Request): Promise<Response> {
 				continue
 			}
 
-			const response = await fetch(new URL(reference.href, origin), { signal: AbortSignal.timeout(30_000) })
+			const response = await fetch(new URL(reference.staticPath, origin), { signal: AbortSignal.timeout(30_000) })
 			if (!response.ok) {
 				skipped.push({ file: reference.file, reason: `静态文件返回 ${response.status}` })
 				continue

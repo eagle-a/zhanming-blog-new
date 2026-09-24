@@ -158,7 +158,7 @@ type MigrationPlan = {
 	dryRun: true
 	references: number
 	version: number
-	plan: { file: string; from: string; staticStatus: number | string }[]
+	plan: { file: string; from: string; staticPath: string; staticStatus: number | string }[]
 }
 
 type MigrationResult = {

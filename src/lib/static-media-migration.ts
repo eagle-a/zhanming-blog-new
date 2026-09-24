@@ -14,6 +14,8 @@ export type StaticMediaReference = {
 	file: string
 	/** Exact text that appears in the Markdown body, still URL-encoded. */
 	href: string
+	/** Path to fetch the same bytes from the live deployment. */
+	staticPath: string
 }
 
 export type StaticMediaMigration = {
@@ -57,6 +59,19 @@ export function staticMediaHref(slug: string, file: string): string {
 	return `/images/${slug}/${file.split('/').map(encodeURIComponent).join('/')}`
 }
 
+/**
+ * Bodies written before the assets were promoted to `public/` still reference
+ * `assets/<slug>/<file>`. `src/lib/markdown-renderer.ts` maps that prefix to
+ * `/images/<slug>/`, so the migration has to read the promoted path while
+ * replacing the original text.
+ */
+export function staticMediaSourcePrefixes(slug: string): { hrefPrefix: string; staticPrefix: string }[] {
+	return [
+		{ hrefPrefix: `/images/${slug}/`, staticPrefix: `/images/${slug}/` },
+		{ hrefPrefix: `assets/${slug}/`, staticPrefix: `/images/${slug}/` }
+	]
+}
+
 /** Pathname extracted from a same-origin `/api/media/...` reference. */
 export function migratedPathnameFromUrl(url: string): string | null {
 	const marker = '/api/media/'
@@ -74,30 +89,31 @@ export function migratedPathnameFromUrl(url: string): string | null {
  * Duplicate references collapse into one entry because the rewrite is textual.
  */
 export function findStaticMediaReferences(contentMd: string, slug: string): StaticMediaReference[] {
-	const prefix = `/images/${slug}/`
 	const references = new Map<string, StaticMediaReference>()
-	let index = contentMd.indexOf(prefix)
 
-	while (index !== -1) {
-		const rest = contentMd.slice(index + prefix.length)
-		const stop = rest.search(REFERENCE_TERMINATORS)
-		const rawName = stop === -1 ? rest : rest.slice(0, stop)
-		const end = stop === -1 ? contentMd.length : index + prefix.length + stop
-		const href = contentMd.slice(index, end)
+	for (const { hrefPrefix, staticPrefix } of staticMediaSourcePrefixes(slug)) {
+		let index = contentMd.indexOf(hrefPrefix)
+		while (index !== -1) {
+			const rest = contentMd.slice(index + hrefPrefix.length)
+			const stop = rest.search(REFERENCE_TERMINATORS)
+			const rawName = stop === -1 ? rest : rest.slice(0, stop)
+			const end = stop === -1 ? contentMd.length : index + hrefPrefix.length + stop
+			const href = contentMd.slice(index, end)
 
-		if (rawName) {
-			let file = rawName
-			try {
-				file = decodeURIComponent(rawName)
-			} catch {
-				// Keep the raw name; a malformed escape sequence cannot match a real file.
+			if (rawName) {
+				let file = rawName
+				try {
+					file = decodeURIComponent(rawName)
+				} catch {
+					// Keep the raw name; a malformed escape sequence cannot match a real file.
+				}
+				if (!references.has(href) && extensionFromFileName(file)) {
+					references.set(href, { file, href, staticPath: `${staticPrefix}${rawName}` })
+				}
 			}
-			if (!references.has(href) && extensionFromFileName(file)) {
-				references.set(href, { file, href })
-			}
+
+			index = contentMd.indexOf(hrefPrefix, end)
 		}
-
-		index = contentMd.indexOf(prefix, end)
 	}
 
 	return [...references.values()]

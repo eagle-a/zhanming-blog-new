@@ -37,7 +37,15 @@ test('decodes escaped file names without losing the original reference text', ()
 	const [reference] = findStaticMediaReferences(content, SLUG)
 	assert.equal(reference.file, 'scope shot.png')
 	assert.equal(reference.href, '/images/weekly-report-2026-09-23/scope%20shot.png')
+	assert.equal(reference.staticPath, '/images/weekly-report-2026-09-23/scope%20shot.png')
 	assert.equal(staticMediaHref(SLUG, reference.file), reference.href)
+})
+
+test('reads legacy assets/<slug>/ references from the promoted static path', () => {
+	const content = '![端接波形](assets/half-week-report-2026-09-09/an807-termination-combinations.png)'
+	const [reference] = findStaticMediaReferences(content, 'half-week-report-2026-09-09')
+	assert.equal(reference.href, 'assets/half-week-report-2026-09-09/an807-termination-combinations.png')
+	assert.equal(reference.staticPath, '/images/half-week-report-2026-09-09/an807-termination-combinations.png')
 })
 
 test('ignores unsupported file extensions', () => {
