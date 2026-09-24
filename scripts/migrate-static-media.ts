@@ -1,14 +1,13 @@
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { upload } from '@vercel/blob/client'
 import { mediaProxyUrl } from '../src/lib/media-url.ts'
 import {
 	buildMigratedPathname,
 	extensionFromFileName,
 	findStaticMediaReferences,
+	migratedPathnameFromUrl,
 	mimeTypeForExtension,
-	rewriteStaticMedia,
 	type StaticMediaMigration,
 	type StaticMediaReference
 } from '../src/lib/static-media-migration.ts'
@@ -18,13 +17,45 @@ import {
  *
  * Everything goes through endpoints the running site already serves, so this
  * needs no deployment: log in as administrator, read the article body from its
- * latest revision, upload each local file with the same Blob client protocol the
- * `/write` editor uses, then patch the article body to the `/api/media/...`
- * URLs. The command never reads Blob or database credentials.
+ * latest revision, hand each local file to the server-side migration route,
+ * then ask that route to rewrite the article body to the `/api/media/...` URLs.
+ * The command never reads Blob or database credentials.
+ *
+ * The upload goes through `/api/admin/media/migrate-static` instead of the
+ * client-token flow in `/api/admin/media/upload`, because the latter requires
+ * `BLOB_READ_WRITE_TOKEN`, which production does not define; the migration route
+ * stores images with `put()`, which uses the store id plus the runtime OIDC
+ * token.
  */
 
 const DEFAULT_ORIGIN = 'https://zhanmingblog.cc.cd'
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024
+const RETRY_ATTEMPTS = 5
+const RETRY_DELAY_MS = 2000
+
+function delay(ms: number): Promise<void> {
+	return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+/**
+ * Campus and mobile networks drop connections to the site often enough that a
+ * single transient timeout used to abort the whole migration. Retry network
+ * failures and server-side 5xx/429 responses; never retry a 4xx decision.
+ */
+async function fetchWithRetry(url: URL, init: RequestInit, attempts = RETRY_ATTEMPTS): Promise<Response> {
+	let lastError: unknown
+	for (let attempt = 1; attempt <= attempts; attempt += 1) {
+		try {
+			const response = await fetch(url, init)
+			if (response.status < 500 && response.status !== 429) return response
+			lastError = new Error(`HTTP ${response.status}`)
+		} catch (error) {
+			lastError = error
+		}
+		if (attempt < attempts) await delay(RETRY_DELAY_MS * attempt)
+	}
+	throw lastError instanceof Error ? lastError : new Error(String(lastError))
+}
 
 const USAGE = `Usage: pnpm media:migrate-static --slug <slug>[,<slug>...] [options]
 
@@ -170,7 +201,7 @@ async function readPassword(passwordFromStdin: boolean): Promise<string> {
 }
 
 async function login(origin: URL, password: string): Promise<string> {
-	const response = await fetch(new URL('/api/admin/session', origin), {
+	const response = await fetchWithRetry(new URL('/api/admin/session', origin), {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json', Origin: origin.origin },
 		body: JSON.stringify({ password }),
@@ -185,7 +216,7 @@ async function login(origin: URL, password: string): Promise<string> {
 }
 
 async function requestJson<T>(origin: URL, pathname: string, init: { method?: string; cookie: string; body?: unknown }): Promise<T> {
-	const response = await fetch(new URL(pathname, origin), {
+	const response = await fetchWithRetry(new URL(pathname, origin), {
 		method: init.method || 'GET',
 		headers: {
 			Cookie: init.cookie,
@@ -229,6 +260,46 @@ type MigrationOutcome = {
 	skipped: { file: string; reason: string }[]
 }
 
+/** A readable blob at this pathname proves the bytes are already published. */
+async function isPublished(origin: URL, pathname: string): Promise<boolean> {
+	const response = await fetchWithRetry(new URL(mediaProxyUrl(pathname), origin), { signal: AbortSignal.timeout(30_000) }, 2).catch(() => null)
+	return Boolean(response?.ok)
+}
+
+async function uploadImage(origin: URL, cookie: string, slug: string, file: string, bytes: Buffer, mimeType: string, sha256: string): Promise<void> {
+	const pathname = buildMigratedPathname(slug, sha256, extensionFromFileName(file) || '')
+	let lastError: unknown
+	for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt += 1) {
+		try {
+			const form = new FormData()
+			form.append('slug', slug)
+			form.append('file', file)
+			form.append('sha256', sha256)
+			form.append('bytes', new Blob([new Uint8Array(bytes)], { type: mimeType }), file)
+
+			const response = await fetchWithRetry(new URL('/api/admin/media/migrate-static', origin), {
+				method: 'POST',
+				headers: { Cookie: cookie, Origin: origin.origin },
+				body: form,
+				signal: AbortSignal.timeout(120_000)
+			})
+			if (response.ok) return
+
+			const payload = (await response.json().catch(() => ({}))) as { error?: string }
+			const reason = new Error(payload.error || `HTTP ${response.status}`)
+			if (response.status < 500 && response.status !== 429) throw reason
+			lastError = reason
+		} catch (error) {
+			lastError = error
+			// Both a rerun and a retry after a lost response leave readable bytes
+			// behind, because the pathname is content-addressed.
+			if (await isPublished(origin, pathname)) return
+		}
+		if (attempt < RETRY_ATTEMPTS) await delay(RETRY_DELAY_MS * attempt)
+	}
+	throw new Error(`上传 ${file} 失败：${lastError instanceof Error ? lastError.message : String(lastError)}`)
+}
+
 async function uploadImages(origin: URL, cookie: string, slug: string, references: StaticMediaReference[]): Promise<MigrationOutcome> {
 	const migrations: StaticMediaMigration[] = []
 	const skipped: { file: string; reason: string }[] = []
@@ -254,23 +325,8 @@ async function uploadImages(origin: URL, cookie: string, slug: string, reference
 		}
 
 		const sha256 = createHash('sha256').update(bytes).digest('hex')
-		const pathname = buildMigratedPathname(slug, sha256, extension)
-		try {
-			await upload(pathname, bytes, {
-				access: 'private',
-				contentType: mimeType,
-				handleUploadUrl: new URL('/api/admin/media/upload', origin).toString(),
-				clientPayload: JSON.stringify({ slug, sha256, mimeType, size: bytes.length }),
-				headers: { Cookie: cookie, Origin: origin.origin }
-			})
-		} catch (error) {
-			// Pathnames are content-addressed and the upload route refuses
-			// overwrites, so a rerun hits "already exists". Treat an existing,
-			// readable object as success instead of failing the whole migration.
-			const existing = await fetch(new URL(mediaProxyUrl(pathname), origin), { signal: AbortSignal.timeout(30_000) }).catch(() => null)
-			if (!existing?.ok) throw error
-		}
-		migrations.push({ file: reference.file, href: reference.href, target: mediaProxyUrl(pathname) })
+		await uploadImage(origin, cookie, slug, reference.file, bytes, mimeType, sha256)
+		migrations.push({ file: reference.file, href: reference.href, target: mediaProxyUrl(buildMigratedPathname(slug, sha256, extension)) })
 	}
 
 	return { migrations, skipped }
@@ -280,7 +336,7 @@ async function verifyTargets(origin: URL, migrations: readonly StaticMediaMigrat
 	const failures: string[] = []
 	for (const migration of migrations) {
 		try {
-			const response = await fetch(new URL(migration.target, origin), { signal: AbortSignal.timeout(30_000) })
+			const response = await fetchWithRetry(new URL(migration.target, origin), { signal: AbortSignal.timeout(30_000) })
 			const contentType = response.headers.get('content-type') || ''
 			if (!response.ok) failures.push(`${migration.file}: HTTP ${response.status}`)
 			else if (!contentType.startsWith('image/')) failures.push(`${migration.file}: Content-Type ${contentType}`)
@@ -294,9 +350,11 @@ async function verifyTargets(origin: URL, migrations: readonly StaticMediaMigrat
 async function migrateSlug(origin: URL, cookie: string, slug: string, apply: boolean): Promise<number> {
 	const revision = await latestRevision(origin, cookie, slug)
 	const snapshot = revision.metadataSnapshot || {}
-	if (!snapshot.publishedAt) throw new Error(`${slug} 的修订里没有发布时间，拒绝改写以免改动文章日期`)
-	const coverReferences = snapshot.coverUrl ? findStaticMediaReferences(snapshot.coverUrl, slug) : []
-	const references = dedupeReferences([...findStaticMediaReferences(revision.contentMd, slug), ...coverReferences])
+	const references = dedupeReferences(findStaticMediaReferences(revision.contentMd, slug))
+
+	if (snapshot.coverUrl?.startsWith(`/images/${slug}/`)) {
+		console.log(`\n[${slug}] 警告：封面仍指向静态路径 ${snapshot.coverUrl}，本命令不迁移封面，需要在后台手动换掉`)
+	}
 
 	console.log(`\n[${slug}] 修订 ${revision.version}，正文引用 ${references.length} 张静态图片`)
 	if (references.length === 0) return 0
@@ -321,28 +379,25 @@ async function migrateSlug(origin: URL, cookie: string, slug: string, apply: boo
 		return skipped.length
 	}
 
-	const rewritten = rewriteStaticMedia(revision.contentMd, migrations)
-	const rewrittenCover = snapshot.coverUrl ? rewriteStaticMedia(snapshot.coverUrl, migrations).contentMd : null
-	const updated = await requestJson<{ version?: number }>(origin, `/api/admin/posts/${encodeURIComponent(slug)}`, {
-		method: 'PATCH',
+	// The route rewrites the body itself so the read-modify-write stays inside
+	// one transaction and a concurrently edited article is rejected by version.
+	const updated = await requestJson<{ version?: number; replaced?: number; remaining?: string[] }>(origin, '/api/admin/media/migrate-static', {
+		method: 'POST',
 		cookie,
 		body: {
 			slug,
-			title: snapshot.title || '',
-			summary: snapshot.summary || '',
-			contentMd: rewritten.contentMd,
-			coverUrl: rewrittenCover,
-			category: snapshot.category ?? null,
-			tags: snapshot.tags || [],
-			status: snapshot.status === 'published' ? 'published' : 'draft',
-			publishedAt: snapshot.publishedAt,
-			expectedVersion: revision.version
+			expectedVersion: revision.version,
+			replacements: migrations.map(migration => ({ href: migration.href, pathname: migratedPathnameFromUrl(migration.target) || '' }))
 		}
 	})
 
-	console.log(`  已上传 ${migrations.length} 张，正文替换 ${rewritten.replaced} 处，新版本 ${updated.version ?? '-'}`)
+	console.log(`  已上传 ${migrations.length} 张，正文替换 ${updated.replaced ?? 0} 处，新版本 ${updated.version ?? '-'}`)
 	for (const migration of migrations) console.log(`  ok   ${migration.file} -> ${migration.target}`)
 	for (const item of skipped) console.log(`  skip ${item.file}: ${item.reason}`)
+	if (updated.remaining?.length) {
+		console.log('  正文里仍有静态引用未处理：')
+		for (const href of updated.remaining) console.log(`  LEFT ${href}`)
+	}
 
 	const verificationFailures = await verifyTargets(origin, migrations)
 	for (const failure of verificationFailures) console.log(`  FAIL ${failure}`)
