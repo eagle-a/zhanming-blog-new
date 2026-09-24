@@ -110,15 +110,13 @@ pnpm audit --prod --registry https://registry.npmjs.org
 
 ### AI 投稿审批
 
-**自动代理投稿目前受阻：** `AGENTS.md` 要求命名管道，但当前 CLI 是 HTTP 实现。以下命令只能由人类用户手动执行；AI 可以准备文章，不能用现有 CLI 绕过管道限制。详情见投稿指南开头的限制说明。
-
-本地 AI 可以读取并生成 Markdown，但不能直接公开发布。管理员在 `/admin/review` 生成一张 30 分钟有效、只能成功使用一次的投稿码；CLI 把一篇文章送入 `pending` 队列，管理员预览、修改并批准后才写入正式文章表。
+本地 AI 可以读取并生成 Markdown，但不能直接公开发布，也不能自己生成投稿码或批准投稿。管理员在 `/admin/review` 生成一张 30 分钟有效、只能成功使用一次的投稿码；CLI 把一篇文章送入 `pending` 队列，管理员预览、修改并批准后才写入正式文章表。
 
 ```powershell
 pnpm agent:submit C:\path\to\article.md
 ```
 
-投稿码通过 CLI 隐藏输入粘贴，不放进环境变量、命令行参数或 Git。数据库只保存投稿码哈希。详细操作与安全边界见 [`docs/AI_SUBMISSION_GUIDE.md`](docs/AI_SUBMISSION_GUIDE.md)。
+投稿码通过 CLI 隐藏输入粘贴，不放进环境变量、命令行参数或 Git。数据库只保存投稿码哈希。完整流程见 [`docs/PUBLISHING_GUIDE.md`](docs/PUBLISHING_GUIDE.md)。
 
 当前 AI 范围只有“文章投稿 → 后台审批 → 批准发布”。早期 Agent key、nonce 和报告枚举已由带数据保护检查的迁移清理。
 
@@ -130,22 +128,24 @@ pnpm media:reconcile -- --include-blobs
 pnpm media:maintain -- --action=plan
 ```
 
-备份和任何媒体写操作必须使用仓库外目录。恢复只允许空目标库，媒体删除必须先生成候选清单和恢复归档；完整命令及环境保护见 [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md)。
+备份和任何媒体写操作必须使用仓库外目录。恢复只允许空目标库，媒体删除必须先生成候选清单和恢复归档；这些脚本会拒绝 `production` 环境，并额外要求显式的恢复输入。
 
 ## 文档导航
 
-- [项目整体说明](docs/PROJECT_OVERVIEW.md)：当前架构、页面、数据、API、安全、迁移、部署和已知限制；
-- [本地 AI 一次性投稿指南](docs/AI_SUBMISSION_GUIDE.md)：当前可用的文章投稿操作；
-- [Vercel CMS 迁移与回滚](docs/vercel-cms-migration.md)：数据库、Blob、上线和回滚流程。
-- [周报与评审报告](reports/)：投稿源件（`reports/weekly-reports/`）与历次综合评审记录。`docs/` 只放项目文档，不放文章正文。
+- [提交文章与图片](docs/PUBLISHING_GUIDE.md)：后台发文、命令行投稿、图片存放位置和发布后自检；
+- [用 Vercel 部署](docs/DEPLOYMENT_GUIDE.md)：部署前提、本地质量门禁、回滚和环境变量。
+
+评审报告放在 `reports/`（本地，不进 Git）；投稿源件放在 `reports/weekly-reports/`（进 Git，作为文章存档）。
 
 ## 部署
 
 只支持 Vercel。`vercel.json` 禁止 `main` 的 Git 自动部署，其他分支仍可生成 Preview；日常文章和站点内容更新不需要推送代码。
 
-生产发布使用 `pnpm deploy:production`：先提交并推送 `main`，等待 GitHub CI 成功，再运行该命令。它检查干净工作区、实时远端 SHA、该 SHA 最新 CI 和关闭自动部署的配置，只上传 `git archive` 导出的提交快照，并写入 `releaseCommit` 元数据。本机忽略的 `.env`、未提交修改和本地资料不会被带入发布。认证、网络或 CI 状态无法核实会阻止发布。
+生产发布使用 `pnpm deploy:production`，部署者和门禁都在本机：先检查工作区干净、在 `main`、Git 集成自动部署仍关闭，再跑 `pnpm check`（`test` / `typecheck` / `format:check` / `db:check` / `build`），然后用 `git archive` 导出该提交的快照交给 Vercel CLI 发布，并写入 `releaseCommit` 元数据。被忽略的 `.env`、未提交修改和本地资料不会进发布包。
 
-注意：拥有 Vercel 发布权限的人仍可通过 Dashboard、直接 CLI 或修改配置绕过仓库流程；此门禁不是平台权限隔离。日常生产发布不要绕开包装脚本，紧急回滚由项目所有者在平台执行并记录部署 ID。
+**发布链路上没有 GitHub**：推送只作源码备份，未推送时脚本只给警告，GitHub Actions 是事后信号而非发布前提。想跳过本地校验必须显式写 `pnpm deploy:production --skip-check`。完整说明见 [用 Vercel 部署](docs/DEPLOYMENT_GUIDE.md)。
+
+注意：拥有 Vercel 发布权限的人仍可通过 Dashboard、直接 CLI 或修改配置绕过这套流程；它不是平台权限隔离。日常生产发布不要绕开包装脚本，紧急回滚由项目所有者在平台执行并记录部署 ID。
 
 ### 审稿回归测试
 
@@ -161,4 +161,4 @@ Sonner 2.0.8 使用 `patches/sonner@2.0.8.patch` 禁止运行时注入内联 CSS
 
 Cloudflare/OpenNext 执行链路已经移除。仓库中的 `.open-next`、`.wrangler`、Cloudflare Worker 配置或部署脚本都不应恢复。
 
-详细上线和回滚流程见 [`docs/vercel-cms-migration.md`](docs/vercel-cms-migration.md)。
+详细上线和回滚流程见 [`docs/DEPLOYMENT_GUIDE.md`](docs/DEPLOYMENT_GUIDE.md)。
