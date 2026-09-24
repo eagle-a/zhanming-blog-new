@@ -394,7 +394,7 @@ pnpm assets:audit
 - 生产 `media` 表补上 `width`/`height`（迁移 0011 从未在生产执行，导致每次上传都在写索引时失败）；88 条引用与 88 行索引对齐，81 行有真实像素尺寸，文章页恢复输出 `width`/`height` 与 `srcset`；
 - `/blog/[id]` 改为 `generateStaticParams` 预渲染 + `revalidate = 60`：此前构建输出是 `ƒ Dynamic`，每次访问都实时渲染并查库，响应头退化成 `private, no-store`，没有任何 CDN 缓存；
 - `/api/media` 的 `?w=` 变体对 JPEG/PNG 输出 WebP，并在编码结果不小于原图时回退原始字节（PNG 图表重编码会膨胀，实测有图像 +53%）。同一篇 24 图文章：`w=1200` 从 2.63 MB 降到 1.66 MB，`w=800` 从 1.40 MB 降到 1.02 MB；
-- `/about` 的 4 张证书图从 `public/about/certificates/images/` 换成 Blob 路径，补上 `width`/`height` 与 `srcset`（此前内联 `style` 被 HTML 过滤器丢弃，网格布局是失效的，现改由 `src/styles/article.css` 承担）；
+- `/about` 的 4 张证书图从 `public/about/certificates/images/` 换成 Blob 路径，补上 `width`/`height` 与 `srcset`（此前内联 `style` 被 HTML 过滤器丢弃，网格布局是失效的，现改由 `src/styles/article.css` 承担）；仓库里的 4 个本地副本已于 2026-09-24 删除（逐字节核对与 Blob 一致，页面只引用 Blob），`public/` 保留的图片现在只有站点外壳素材；
 - 文章搜索已完成：ILIKE 全文搜索 + 标签匹配 + DISTINCT 去重，防抖 + 内容片段展示；
 - 阅读进度条已完成：rAF 节流 + 短文章 100% 处理；
 - 自定义 404 页面已完成。
