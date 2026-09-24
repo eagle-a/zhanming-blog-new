@@ -31,6 +31,29 @@ test('preserves code block metadata but strips unrelated data attributes', () =>
 	assert.doesNotMatch(output, /data-secret/)
 })
 
+test('decodes already-escaped attribute values before re-escaping them', () => {
+	// 渲染器交过来的属性值已经转义过一次；这里必须解码后再转义，否则浏览器只解一层，
+	// 页面上会残留字面量实体（代码块复制因此粘贴出 &amp;#39; 而不是 '）。
+	const output = sanitizeHtml('<pre data-code="a&#39;b&lt;c&amp;d&quot;e"><code>x</code></pre>')
+
+	assert.match(output, /data-code="a'b<c&amp;d&quot;e"/)
+	assert.doesNotMatch(output, /&amp;#39;|&amp;lt;|&amp;amp;|&amp;quot;/)
+})
+
+test('keeps ampersands in alt text decodable exactly once', () => {
+	const output = sanitizeHtml('<img src="/a.png" alt="tom &amp; jerry">')
+
+	assert.match(output, /alt="tom &amp; jerry"/)
+	assert.doesNotMatch(output, /&amp;amp;/)
+})
+
+test('decodes a single layer only, matching HTML parsing rules', () => {
+	const output = sanitizeHtml('<pre data-code="&amp;lt;script&amp;gt;"><code>x</code></pre>')
+
+	// &amp;lt; 是「字面量 &lt;」，不能塌缩成 <
+	assert.match(output, /data-code="&amp;lt;script&amp;gt;"/)
+})
+
 test('falls back safely when a DOM implementation returns no body', () => {
 	const originalDomParser = globalThis.DOMParser
 	globalThis.DOMParser = class {

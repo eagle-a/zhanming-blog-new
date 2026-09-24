@@ -54,6 +54,32 @@ function isSafeUrl(value: string): boolean {
 	return SAFE_PROTOCOLS.test(value.trim())
 }
 
+const HTML_ENTITY_PATTERN = /&(?:#(\d{1,7})|#[xX]([0-9a-fA-F]{1,6})|(amp|lt|gt|quot|apos|nbsp));/g
+const NAMED_ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00a0' }
+
+/**
+ * Renderers hand us attribute values that are already escaped. The regex fallback has no
+ * HTML parser, so it must undo that one layer before re-escaping — otherwise escaping is
+ * applied twice, the browser decodes once, and values keep a literal entity: code blocks
+ * ended up with `&#39;` in `data-code`, so "copy code" pasted `&amp;#39;` instead of `'`.
+ *
+ * Decoding happens in a single non-overlapping pass, matching HTML's own rule, so
+ * `&amp;lt;` stays `&lt;` rather than collapsing to `<`.
+ */
+function decodeHtmlEntities(value: string): string {
+	return value.replace(HTML_ENTITY_PATTERN, (match, decimal?: string, hex?: string, named?: string) => {
+		if (decimal) {
+			const codePoint = Number.parseInt(decimal, 10)
+			return Number.isInteger(codePoint) && codePoint >= 0 && codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : match
+		}
+		if (hex) {
+			const codePoint = Number.parseInt(hex, 16)
+			return Number.isInteger(codePoint) && codePoint >= 0 && codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : match
+		}
+		return (named && NAMED_ENTITIES[named.toLowerCase()]) || match
+	})
+}
+
 function sanitizeAttribute(tag: string, name: string, value: string): string {
 	const normalizedName = name.toLowerCase()
 	if (normalizedName === 'class' || normalizedName === 'id' || normalizedName === 'title') {
@@ -93,7 +119,7 @@ function sanitizeAttributes(tag: string, attributes: string): string {
 		/\s+([:\w-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/gi,
 		(match, name: string, doubleQuoted = '', singleQuoted = '', bare = '') => {
 			const normalizedName = name.toLowerCase()
-			const value = doubleQuoted || singleQuoted || bare
+			const value = decodeHtmlEntities(doubleQuoted || singleQuoted || bare)
 			const safeValue = sanitizeAttribute(tag, normalizedName, value)
 			if (!safeValue) return ''
 			if (tag === 'input' && (normalizedName === 'checked' || normalizedName === 'disabled')) return ` ${normalizedName}`

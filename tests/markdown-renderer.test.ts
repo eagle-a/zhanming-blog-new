@@ -102,3 +102,20 @@ test('image renderer strips a leading dot-slash from relative image paths', asyn
 	const { html } = await renderMarkdown('![report](./images/report/scope.png)')
 	assert.match(html, /url=%2Fimages%2Freport%2Fscope\.png/)
 })
+
+test('code blocks carry copyable source text without HTML entities', async () => {
+	const code = "curl.exe -I --noproxy '*' https://zhanmingblog.cc.cd/api/media/blog/<slug>/<sha256>.png"
+	const { html } = await renderMarkdown(['```powershell', code, '```'].join('\n'))
+	const attribute = /<pre\s+data-code="([^"]*)"/.exec(html)?.[1]
+
+	assert.ok(attribute, 'code block should expose data-code')
+	// 浏览器只解码一层，所以属性文本解一次必须等于原始代码。
+	const decoded = attribute
+		.replace(/&quot;/g, '"')
+		.replace(/&#39;/g, "'")
+		.replace(/&lt;/g, '<')
+		.replace(/&gt;/g, '>')
+		.replace(/&amp;/g, '&')
+	assert.equal(decoded, code)
+	assert.doesNotMatch(html, /&amp;#39;|&amp;lt;|&amp;gt;|&amp;quot;|&amp;amp;/)
+})
