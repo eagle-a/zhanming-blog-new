@@ -6,6 +6,10 @@ import { promisify } from 'node:util'
 import { MUSIC_LIST } from '../src/config/music-list.ts'
 
 const execFileAsync = promisify(execFile)
+// 128 kbps 是历史遗留的默认值，对首页背景音乐过大；96 kbps 是这里的收敛点。
+// 阈值取目标码率 + 8 kbps slack，保证重复运行时已转码的文件不会被反复重编码。
+const TARGET_BITRATE = 96_000
+const TRANSCODE_THRESHOLD = TARGET_BITRATE + 8_000
 const apply = process.argv.includes('--apply')
 const archiveArgument = process.argv.find(argument => argument.startsWith('--archive='))?.slice('--archive='.length)
 const root = path.resolve(process.cwd())
@@ -36,7 +40,7 @@ const plan = await Promise.all(
 			bytes: (await stat(file)).size,
 			bitRate: Number(format.bit_rate || 0),
 			durationSeconds: Number(format.duration || 0),
-			transcode: Number(format.bit_rate || 0) > 160_000
+			transcode: Number(format.bit_rate || 0) > TRANSCODE_THRESHOLD
 		}
 	})
 )
@@ -84,7 +88,20 @@ for (const item of plan) {
 		continue
 	}
 	const temporary = `${item.file}.optimized.mp3`
-	await execFileAsync('ffmpeg', ['-v', 'error', '-i', item.file, '-map_metadata', '0', '-vn', '-codec:a', 'libmp3lame', '-b:a', '128k', temporary])
+	await execFileAsync('ffmpeg', [
+		'-v',
+		'error',
+		'-i',
+		item.file,
+		'-map_metadata',
+		'0',
+		'-vn',
+		'-codec:a',
+		'libmp3lame',
+		'-b:a',
+		`${TARGET_BITRATE / 1000}k`,
+		temporary
+	])
 	const optimizedBytes = (await stat(temporary)).size
 	if (optimizedBytes <= 0 || optimizedBytes >= original.length) throw new Error(`音乐转码没有产生有效缩减: ${path.basename(item.file)}`)
 	await unlink(item.file)
