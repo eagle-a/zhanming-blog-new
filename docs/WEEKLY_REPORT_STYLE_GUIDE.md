@@ -153,20 +153,20 @@ date: 2026-09-18
 图片不是装饰，必须服务于一个明确结论。三次投稿形成的统一规则如下：
 
 1. 图片紧跟在对应段落后面，不把所有图片堆到文章末尾；
-2. 图片路径使用线上绝对路径，例如 `/images/weekly-report-2026-09-18/adc_waveform_and_spectrum.png`；
+2. 图片路径使用线上绝对路径，例如 `/api/media/blog/weekly-report-2026-09-18/cf496319720762f3e4f7917ab42f946efdea90548f3c4f0bf980557f317966c9.png`；
 3. 每张图片必须有图注，格式统一为：`图 N：说明画面内容、测试条件或能支持的结论。`；
 4. 图注同时说明证据边界，例如“设计渲染，不代表实板焊接质量”“仿真结果，不能替代实测”“整条测量链结果，不是单机指标”；
 5. 图号从 1 开始连续，不能重复、跳号或引用不存在的文件；
 6. 原理图、PCB 渲染、示波器截图、实物照片和数据分析图要在图注中明确区分；
 7. 已删除的图片不要在文章或投稿资源中恢复；
-8. 原图保留在研究资料目录，网站资源使用可接受大小的副本，避免把数 MB 原图直接提交到仓库；
+8. 图片上传到 Blob 后统一用 `/api/media/blog/<slug>/<sha256>.<ext>` 引用，仓库里不再保留副本；原图留在研究资料目录；
 9. 图片文件名使用 ASCII、小写和短横线或下划线，避免空格、中文和括号；
 10. 图片必须实际存在，投稿前逐一检查 Markdown 路径和线上资源路径。
 
 推荐图注：
 
 ```markdown
-![ADC 100 帧稳定性结果](/images/weekly-report-2026-09-18/adc_100frame_stability.png)
+![ADC 100 帧稳定性结果](/api/media/blog/weekly-report-2026-09-18/e077aad88b60311a5b56194f544a63359b4de52c32a399c2265a0bf0f7391a13.png)
 
 图 12：100 帧测试中的频率、幅度、SNR、SINAD、THD 和 SFDR。该图反映当前固件和测试条件下的整条采集链结果，不能直接作为 AD9251 单芯片指标。
 ```
@@ -229,8 +229,10 @@ weekly-report-YYYY-MM-DD.md
 slug: weekly-report-YYYY-MM-DD
 ```
 
-同一篇文章的图片统一放在：
+同一篇文章的图片统一由 Blob 提供，路径形如：
 
 ```text
-/images/weekly-report-YYYY-MM-DD/
+/api/media/blog/weekly-report-YYYY-MM-DD/<sha256>.png
 ```
+
+仓库中不保留这些图片的副本；投稿图片先上传到 Blob，再在 Markdown 里引用返回的 `/api/media/...` 路径。

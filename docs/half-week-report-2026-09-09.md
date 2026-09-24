@@ -18,11 +18,11 @@
 
 当负载为高阻、接收端在线路末端时，通常使源端总输出阻抗接近 `Z0`，采用源端串联端接。这样可以利用高阻负载的正反射恢复电压，同时吸收返回源端的反射，功耗也低于负载并联端接。但端接方式还要结合上升时间、传播延迟、负载电容和接收器数量判断，不能只按“高阻”一个条件决定。
 
-![AN-807 不同端接组合的波形](/images/half-week-report-2026-09-09/an807-termination-combinations.png)
+![AN-807 不同端接组合的波形](/api/media/blog/half-week-report-2026-09-09/788f87f093a3f5114ded45a3eb2de9cd1247b6545caedec7e8568025696de647.png)
 
 图 1：AN-807 对不同 `Rs`、`Z0`、`RL` 组合的比较。可以看到，源端和负载都不匹配时反射明显；源端匹配而负载高阻时，返回波被源端吸收，适合单个末端接收器。
 
-![LTspice 负载失配反射仿真](/images/half-week-report-2026-09-09/load-mismatch-reflection.png)
+![LTspice 负载失配反射仿真](/api/media/blog/half-week-report-2026-09-09/85c32017951c11e823bdca34723b3a8e30e509be91d58fba6c43c6d5d551f78f.png)
 
 图 2：`Load_Mismatch_Reflection.asc` 的 LTspice 仿真。通过改变负载与传输线阻抗的比例，观察负载端过冲、下冲和反射返回。该图验证了反射系数对波形的影响，但仍属于理想化训练模型，不能替代实际 PCB 测量。
 
@@ -46,7 +46,7 @@ SNRjitter = -20 log10(2π · fIN · tj,rms)
 
 DAC 后级需要同时考虑输出类型、I/V 转换、重构滤波、运放带宽、压摆率、输出电流和负载条件。高阻负载与 50 Ω 负载的幅度和电流要求不同，不能共用一个结论。
 
-![AD9767 高速 DAC 后级驱动仿真](/images/half-week-report-2026-09-09/ad9767-highspeed-dac.png)
+![AD9767 高速 DAC 后级驱动仿真](/api/media/blog/half-week-report-2026-09-09/3ae3b1270311c5ad1e39cac8e5c97811317916feffb69637d2e6771339ddb614.png)
 
 图 3：`AD9767_highspeed_DAC.asc` 的高速 DAC 后级仿真。图中包括 AD9767 电流型 DAC、OPA2652 电流到电压级和 AD8066 后级。我的主要收获是：DAC 输出必须经过合适的转换和缓冲；后级反馈电容会限制带宽；高阻和 50 Ω 负载必须分别核算。该图用于说明电路工作关系，不能直接作为 SFDR、THD 或实板输出能力的保证。
 

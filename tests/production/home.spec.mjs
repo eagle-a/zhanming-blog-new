@@ -1,6 +1,15 @@
 import { readFile } from 'node:fs/promises'
 import { test, expect } from '@playwright/test'
 
+// The public shell loads content images from `/api/media`, which needs Blob
+// credentials that this fixture deliberately omits. Answer those requests with a
+// 1x1 PNG so the spec keeps testing deferred settings, layout, and CSP without
+// reaching the network.
+const STUB_PNG = Buffer.from(
+	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==',
+	'base64'
+)
+
 test('mobile home defers settings data and code until the settings shortcut is used', async ({ page }, testInfo) => {
 	await page.setViewportSize({ width: 390, height: 844 })
 	const requests = [],
@@ -22,6 +31,7 @@ test('mobile home defers settings data and code until the settings shortcut is u
 			const file = key === 'site' ? 'site-content' : 'card-styles'
 			return route.fulfill({ json: { data: JSON.parse(await readFile(`src/config/${file}.json`, 'utf8')), version: 1 } })
 		}
+		if (pathname.startsWith('/api/media/')) return route.fulfill({ contentType: 'image/png', body: STUB_PNG })
 		throw new Error(`Unexpected API request ${pathname}`)
 	})
 	const response = await page.goto('/')

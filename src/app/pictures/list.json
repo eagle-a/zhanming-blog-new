@@ -3,15 +3,15 @@
 		"id": "1772960888204-f4f91339785748",
 		"uploadedAt": "2026-03-08T09:08:08.204Z",
 		"images": [
-			"/images/pictures/6f187d1a5f560865.webp",
-			"/images/pictures/b1e19dac9b70d30d.webp",
-			"/images/pictures/d87c8714bf8b1881.webp",
-			"/images/pictures/fa2f4a10bac81fc2.webp",
-			"/images/pictures/df27cf08957e02db.webp",
-			"/images/pictures/2ca1750180e601a8.webp",
-			"/images/pictures/543970a885602740.webp",
-			"/images/pictures/e027a20b7ce7da74.webp",
-			"/images/pictures/737e890397986de1.webp"
+			"/api/media/content/migrated/6f187d1a5f560865ecad2fbb3c39488c03e54db476e36100e0a7f1b173cbbc44.jpg",
+			"/api/media/content/migrated/b1e19dac9b70d30d734586c72a8ce432f611d9829192a62c4a77a838621ba3e0.jpg",
+			"/api/media/content/migrated/d87c8714bf8b188132044a3ccb2bb22b1575ba2e9e8cb3b8f3118798feba74e7.jpg",
+			"/api/media/content/migrated/fa2f4a10bac81fc226a72c5602756718b0abe72e883bcdc2c10620f766193a97.jpg",
+			"/api/media/content/migrated/df27cf08957e02dbdf605221a5c72de5ab16da50e0784bfc479662e369add2cc.jpg",
+			"/api/media/content/migrated/2ca1750180e601a821eb9694a0151302402cc8f9d18fff76da5d8917cf2b3c88.jpg",
+			"/api/media/content/migrated/543970a885602740b2b4b5eff9686e45ecf57df3bd0eb2d59444e4ec3b9ca0f8.jpg",
+			"/api/media/content/migrated/e027a20b7ce7da74f0d901cac20c90cbcdf24e2188a615889eaffae0cc68d660.png",
+			"/api/media/content/migrated/737e890397986de19c0877fe8da15e6b6ee24ec6f2efb0a6aeacd20ccc819a2b.png"
 		]
 	}
 ]

@@ -25,11 +25,11 @@ date: 2026-09-13T09:00
 
 焊接后检查时发现 3.3 V 与 GND 导通异常。我通过万用表测量、分段排查电源网络并核对器件选型，最终确认有源晶振被误买成无源晶体，器件类型与电路需求不匹配。这次排查让我认识到，焊接完成后必须先做电源短路检查，并逐项核对器件型号、封装和功能。
 
-![新板焊接实物](/images/half-week-report-2026-09-13/soldering-board.jpg)
+![新板焊接实物](/api/media/blog/half-week-report-2026-09-13/693efa158abd80654c61c526cca25b426ad94c602c99daf5a8db50f35e6741e3.jpg)
 
 图 1：新板焊接后的板面实物，记录了使用加热台和钢网完成大部分器件装配后的状态。
 
-![焊接细节](/images/half-week-report-2026-09-13/soldering-detail.jpg)
+![焊接细节](/api/media/blog/half-week-report-2026-09-13/dcb3961a6a6bc660b27b6f748842ba37a99e3546d6bc63691a3fa0b7d28b0f6a.jpg)
 
 图 2：焊接细节照片，用于观察器件贴装和焊点状态。后续仍需结合万用表、电源限流和上电测试确认电路。
 
@@ -37,15 +37,15 @@ date: 2026-09-13T09:00
 
 使用 GPT-6 辅助完成 `LM2596_buck_5v3a` 降压模块的 KiCad 设计，包括原理图整理、器件布局、功率走线和设计规则检查。该板输入为 9–24 V，输出目标约 5 V，3 A 目前只是设计目标，尚未完成连续负载、纹波、温升和 EMI 实测。
 
-![LM2596 降压模块原理图](/images/half-week-report-2026-09-13/lm2596-schematic.png)
+![LM2596 降压模块原理图](/api/media/blog/half-week-report-2026-09-13/fc74e952e3cbb729660fe217cb5d42bfc3d3db57183d7975956dc8010f15e893.png)
 
 图 3：LM2596 降压模块原理图。图中可看到输入保护、开关功率级、电感输出滤波以及反馈分压网络，体现的是电路连接关系。
 
-![LM2596 PCB 布局](/images/half-week-report-2026-09-13/lm2596-pcb-layout.png)
+![LM2596 PCB 布局](/api/media/blog/half-week-report-2026-09-13/fe622f9d7b9af3b9654c60c5b9f0a9cc52891a1fa8f39f6b086b0dc2129eb1cf.png)
 
 图 4：PCB 布局截图。重点检查了输入回路、开关节点、电感和输出电容的相对位置，以及反馈线和地平面的布置。
 
-![KiCad 校验结果](/images/half-week-report-2026-09-13/lm2596-verification.png)
+![KiCad 校验结果](/api/media/blog/half-week-report-2026-09-13/12c982e01af32caa5ab7cc63d8ac35135ec2a021e3231521784ac92847e432a8.png)
 
 图 5：KiCad 校验结果截图，说明当前工程的 DRC/ERC 和网络连接检查已通过。该结果只代表 CAD 规则和连接层面的检查通过，不代表实物已经满足 5 V、3 A、纹波、温升或稳定性指标。
 

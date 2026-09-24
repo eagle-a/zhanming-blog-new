@@ -1,7 +1,7 @@
 [
 	{
 		"name": "阮一峰的网络日志",
-		"avatar": "/images/blogger/fe25259da8e3609b.png",
+		"avatar": "/api/media/content/migrated/fe25259da8e3609b63bae4db11a067c33be80d84aab74322aa8a6d55dfc2fb0a.png",
 		"url": "https://www.ruanyifeng.com/blog/archives.html",
 		"description": "经典必看，每周更新。无聊是看新闻、还是学习、还是拓展眼界，都是能其中获取到乐趣的。还有很多网友的每周留言。这就是 blog 的含金量。",
 		"stars": 5
@@ -115,7 +115,7 @@
 	{
 		"name": "Chrome Blog",
 		"url": "https://web.dev/blog?hl=zh-cn",
-		"avatar": "/images/blogger/2fe46db88bd43683.svg",
+		"avatar": "/api/media/content/migrated/7b96d940de919792f0e1c7edc1756ab67502b286adab105ecf38e14d74aa863a.svg",
 		"description": "技术团队 blog，咨询、动态、故事。我觉得页面感受还不错。",
 		"stars": 4
 	},
@@ -232,7 +232,7 @@
 	},
 	{
 		"name": "ElysiumStack",
-		"avatar": "/images/avatar.png",
+		"avatar": "/api/media/content/migrated/56735121ad4835ca150cc42a7c0b0d177064ceddca1faa6060c397817bd934bf.png",
 		"url": "https://www.elysium-stack.cn/",
 		"description": "UI 设计师 blogger，少见，blog 设计的很棒。一股游戏感铺面而来，25 年开始的内容。",
 		"stars": 3

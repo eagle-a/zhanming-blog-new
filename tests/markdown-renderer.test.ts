@@ -98,8 +98,7 @@ test('image renderer optimizes Unicode static paths but rejects dot-segment path
 	assert.doesNotMatch(traversalHtml, /\/_next\/image/)
 })
 
-test('image renderer migrates the legacy report asset prefix to public static files', async () => {
-	const { html } = await renderMarkdown('![report](assets/half-week-report-2026-09-09/an807-termination-combinations.png)')
-	assert.match(html, /url=%2Fimages%2Fhalf-week-report-2026-09-09%2Fan807-termination-combinations\.png/)
-	assert.doesNotMatch(html, /assets\/half-week-report/)
+test('image renderer strips a leading dot-slash from relative image paths', async () => {
+	const { html } = await renderMarkdown('![report](./images/report/scope.png)')
+	assert.match(html, /url=%2Fimages%2Freport%2Fscope\.png/)
 })
