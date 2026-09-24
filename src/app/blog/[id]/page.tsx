@@ -10,13 +10,29 @@ import { calculateBlogStats } from '@/lib/load-blog'
 import { renderMarkdown, stripLeadingDuplicateHeading } from '@/lib/markdown-renderer'
 import { extractMediaPathnameFromUrl, getMediaDimensions, type MediaDimensions } from '@/lib/media-dimensions'
 import { extractMediaPathnames } from '@/lib/media-references'
-import { getCachedPublishedPost, type PostRecord } from '@/lib/posts-repository'
+import { getCachedPublishedPost, getCachedPublishedPosts, type PostRecord } from '@/lib/posts-repository'
 
 type BlogPageProps = {
 	params: Promise<{ id: string }>
 }
 
 export const revalidate = 60
+
+/**
+ * Prerender the published articles at build time so a visit is served from the
+ * ISR cache instead of rendering the page and querying Neon on every request.
+ * A build without database credentials (CI) returns no params; the route then
+ * renders on demand, which still enables ISR at runtime.
+ */
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+	if (allowDevelopmentLegacyFallback() || !hasDatabaseConfiguration()) return []
+	try {
+		const posts = await getCachedPublishedPosts()
+		return posts.map(post => ({ id: post.slug }))
+	} catch {
+		return []
+	}
+}
 
 const loadPublishedPost = cache(async (rawSlug: string) => {
 	let slug: string

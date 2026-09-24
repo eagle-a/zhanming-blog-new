@@ -19,7 +19,7 @@
 | -------- | --------------------------------------- | -------------------------------------------- |
 | 生效条件 | 必须 commit + push + CI 通过 + 生产部署 | 上传后立即可用，不需要部署                   |
 | 仓库体积 | 每次加图都会永久增大仓库                | 不占仓库                                     |
-| 页面渲染 | 走 `/_next/image`，PNG 会转成 WebP/AVIF | 走代理 `?w=` 生成 srcset，回原格式           |
+| 页面渲染 | 走 `/_next/image`，PNG 会转成 WebP/AVIF | 走代理 `?w=` 生成 srcset，JPEG/PNG 转 WebP   |
 | 谁能写   | 任何能提交代码的会话                    | 只有管理员会话                               |
 
 两条通道都受支持，选择取决于什么时候要让图片生效。**新周报的推荐做法**是先把图片放进 `public/images/<slug>/` 并随文章一起部署，等页面确认正常，再用第 5 节的命令搬到 Blob 并删掉静态副本。
@@ -32,9 +32,13 @@
 4. `POST /api/admin/media/upload` 是另一条路：`@vercel/blob/client` 的客户端直传。它生成上传令牌时**只认 `BLOB_READ_WRITE_TOKEN`**，不认 OIDC，所以该变量缺失或指错存储时必然 500。仓库里保留它是因为 `scripts/smoke-test-cms.ts` 用它，生产环境现在也配了正确的令牌。
 5. `scripts/migrate-static-media.ts`（`pnpm media:migrate-static`）把 `public/images/<slug>/` 里的本地图片搬到 Blob，并把正文引用改成 `/api/media/...`。它用 `/api/admin/session` 登录、用 `/api/admin/posts/<slug>/revisions[/<version>]` 读正文，图片交给 `/api/admin/media/store`，最后由 `/api/admin/media/migrate-static` 在同一事务里改写正文。
 6. `src/app/api/media/[...pathname]/route.ts` 用 `access: 'private'` 读 Blob。只接受 `blog/<slug>/` 和 `content/(site|bloggers|projects|shares|pictures|migrated)/` 两类路径，其他一律 404。
-7. 只有 `RESPONSIVE_MEDIA_WIDTHS`（480/800/1200/1920）是合法的 `?w=` 值，其他宽度返回 400；图片本身比请求宽度小时不做放大，直接回原图。
-8. `media` 表是 Blob 的索引，不是 Blob 本身。缺行不影响图片可读，但页面拿不到 `width`/`height`，也就不会生成 `srcset`。写索引依赖 `width`/`height` 两列，缺列时每次上传都在这一步失败。
-9. 本机（校园网）到 Neon 的 WebSocket 通道不通，`scripts/lib/database.ts` 默认给非 loopback 主机选的 `neon-serverless` 驱动连不上。维护脚本加 `$env:BLOG_SCRIPT_DATABASE_DRIVER='pg'` 会改走 `pg` 的 TCP 通道。
+7. 只有 `RESPONSIVE_MEDIA_WIDTHS`（480/800/1200/1920）是合法的 `?w=` 值，其他宽度返回 400；图片本身比请求宽度小时不做放大，编码宽度上限就是原图宽度。
+8. `?w=` 变体对 `image/jpeg` 与 `image/png` 一律编码成 WebP（`src/lib/media-transform.ts`）。格式只由 URL 决定，不看 `Accept`，所以缓存里不存在"给不支持 WebP 的客户端发 WebP"的风险：这类浏览器请求的是不带 `?w=` 的原始 URL，那个 URL 永远返回原始字节。
+9. 重编码可能比原图更大（PNG 图表尤其明显），所以编码结果一旦不比自己已经存着的字节小，就回退成原始字节。`?w=` 变体因此永远不会比原图更费流量。
+10. `/blog/[id]` 用 `generateStaticParams` 预渲染全部已发布文章（构建输出里是 `● SSG`），配 `revalidate = 60`。少了这一步，每一次文章访问都是一次实时渲染 + 查库，`Cache-Control` 会退化成 `private, no-store`。
+11. `media` 表是 Blob 的索引，不是 Blob 本身。缺行不影响图片可读，但页面拿不到 `width`/`height`，也就不会生成 `srcset`。写索引依赖 `width`/`height` 两列，缺列时每次上传都在这一步失败。
+12. 本机（校园网）到 Neon 的 WebSocket 通道不通，`scripts/lib/database.ts` 默认给非 loopback 主机选的 `neon-serverless` 驱动连不上。维护脚本加 `$env:BLOG_SCRIPT_DATABASE_DRIVER='pg'` 会改走 `pg` 的 TCP 通道。
+13. 正文 HTML 会被 `src/lib/sanitize-html.ts` 过滤，`style` 属性一律丢弃：写在 Markdown 里的内联样式根本到不了浏览器，观感要改就改样式表（`/about` 的证书网格就是这样落到 `src/styles/article.css` 的）。
 
 ## 4. 标准发布流程
 
@@ -197,6 +201,8 @@ curl.exe -I https://zhanmingblog.cc.cd/api/media/blog/<slug>/<sha256>.<ext>
 - [ ] 每个图片引用都能在目标环境返回 200。
 - [ ] `pnpm media:reconcile --include-blobs` 的 `missingDatabaseRows` 与 `missingBlobObjects` 都是 0。
 - [ ] 文章页的 `<img>` 带 `width`、`height` 与 `srcset`（没带就说明 `media` 表缺行或缺尺寸）。
+- [ ] `?w=800` 返回 `Content-Type: image/webp`，且字节数小于原图 URL。
+- [ ] 文章页的响应头是 ISR 缓存（`s-maxage` 或 `x-vercel-cache: HIT/STALE`），不是 `private, no-store`。
 - [ ] GitHub Actions `verify` 为 success。
 - [ ] 使用 `node scripts/deploy-production.mjs` 部署。
 - [ ] 部署后再次检查文章页和全部图片 URL。

@@ -1,6 +1,26 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 import { renderMarkdown, stripLeadingDuplicateHeading } from '../src/lib/markdown-renderer.ts'
+
+test('renders the about page certificates from Blob with dimensions and srcset', async () => {
+	const markdown = await readFile(new URL('../public/about/content.md', import.meta.url), 'utf8')
+	const { html } = await renderMarkdown(markdown)
+	const images = html.match(/<img\b[^>]*>/g) || []
+
+	assert.equal(images.length, 4)
+	for (const image of images) {
+		assert.match(image, /src="\/api\/media\/content\/migrated\/[a-f0-9]{64}\.jpg"/)
+		assert.match(image, /width="\d+"/)
+		assert.match(image, /height="\d+"/)
+		assert.match(image, /srcset="[^"]*\?w=480 480w[^"]*\?w=800 800w"/)
+	}
+	// Inline styles never survive sanitization, so the gallery layout lives in
+	// `src/styles/article.css` and the class has to reach the browser intact.
+	assert.match(html, /class="about-certificate-grid"/)
+	assert.doesNotMatch(html, /style="/)
+	assert.doesNotMatch(html, /\/about\/certificates\/images\//)
+})
 
 test('removes only a leading heading that duplicates the article title', () => {
 	assert.equal(stripLeadingDuplicateHeading('# Article title\n\nBody', 'Article title'), 'Body')

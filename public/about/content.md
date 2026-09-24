@@ -98,17 +98,17 @@ description: "孙召顺的个人简介、教育经历、专业技能、项目与
 - 2024 中国大学生数学建模竞赛省级一等奖（2024.10）
 - 2023 中国大学生数学建模竞赛省级一等奖（2023.09）
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 15px 0;">
+<div class="about-certificate-grid">
   <div>
-    <img src="/about/certificates/images/哈尔滨工程大学_孙召顺_一等奖_50580038_page1.jpg" alt="数学建模竞赛一等奖" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <img src="/api/media/content/migrated/1f31533d5d3736d968d217e7658bc401813de2fcea39f6a8006f8e242491cd63.jpg" alt="数学建模竞赛一等奖" width="2481" height="3508" loading="lazy" decoding="async" srcset="/api/media/content/migrated/1f31533d5d3736d968d217e7658bc401813de2fcea39f6a8006f8e242491cd63.jpg?w=480 480w, /api/media/content/migrated/1f31533d5d3736d968d217e7658bc401813de2fcea39f6a8006f8e242491cd63.jpg?w=800 800w" sizes="(max-width: 640px) 100vw, 320px">
   </div>
   <div>
-    <img src="/about/certificates/images/2404650_page1.jpg" alt="美国数学建模竞赛M奖" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <img src="/api/media/content/migrated/622114718966bf2c48c0e7a61d1919cbda323560dc3aaab844f63943d2ef21d7.jpg" alt="美国数学建模竞赛M奖" width="3300" height="2550" loading="lazy" decoding="async" srcset="/api/media/content/migrated/622114718966bf2c48c0e7a61d1919cbda323560dc3aaab844f63943d2ef21d7.jpg?w=480 480w, /api/media/content/migrated/622114718966bf2c48c0e7a61d1919cbda323560dc3aaab844f63943d2ef21d7.jpg?w=800 800w" sizes="(max-width: 640px) 100vw, 320px">
   </div>
   <div>
-    <img src="/about/certificates/images/哈尔滨工程大学_孙召顺_一等奖_24414986_page1.jpg" alt="智能车竞赛一等奖" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <img src="/api/media/content/migrated/719076727392b4679b367e6808624d909b248f49bcaa8d174ddefdb5ccf5f69c.jpg" alt="智能车竞赛一等奖" width="2481" height="3508" loading="lazy" decoding="async" srcset="/api/media/content/migrated/719076727392b4679b367e6808624d909b248f49bcaa8d174ddefdb5ccf5f69c.jpg?w=480 480w, /api/media/content/migrated/719076727392b4679b367e6808624d909b248f49bcaa8d174ddefdb5ccf5f69c.jpg?w=800 800w" sizes="(max-width: 640px) 100vw, 320px">
   </div>
-    <div>
-    <img src="/about/certificates/images/2022041222_1747130163338_sign_page1.jpg" alt="荣誉证书1" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+  <div>
+    <img src="/api/media/content/migrated/c90c098615293ca8825ed299e866460a65093c32c5aa23362c7bc0edf286fbeb.jpg" alt="荣誉证书1" width="2480" height="3509" loading="lazy" decoding="async" srcset="/api/media/content/migrated/c90c098615293ca8825ed299e866460a65093c32c5aa23362c7bc0edf286fbeb.jpg?w=480 480w, /api/media/content/migrated/c90c098615293ca8825ed299e866460a65093c32c5aa23362c7bc0edf286fbeb.jpg?w=800 800w" sizes="(max-width: 640px) 100vw, 320px">
   </div>
 </div>

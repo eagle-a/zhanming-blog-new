@@ -1,12 +1,11 @@
 import { get } from '@vercel/blob'
+import { isTransformableMediaType, planMediaDerivative, WEBP_QUALITY } from '@/lib/media-transform'
 import { isAllowedMediaPathname } from '@/lib/media-url'
 import { parseResponsiveMediaWidth } from '@/lib/responsive-media'
 import { routeErrorResponse } from '@/lib/route-errors'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-const IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'])
 
 export async function GET(request: Request, context: { params: Promise<{ pathname: string[] }> }): Promise<Response> {
 	try {
@@ -36,25 +35,33 @@ export async function GET(request: Request, context: { params: Promise<{ pathnam
 
 		// Only resize raster images when an explicit width is requested.
 		// SVG, video and other non-raster types always pass through unchanged.
-		if (targetWidth !== null && IMAGE_MIME_TYPES.has(contentType)) {
+		if (targetWidth !== null && isTransformableMediaType(contentType)) {
 			const { default: sharp } = await import('sharp')
 			const bytes = Buffer.from(await new Response(result.stream).arrayBuffer())
 			const image = sharp(bytes, { animated: contentType === 'image/gif' })
 			const metadata = await image.metadata()
-			// Do not upscale beyond the original width.
-			const effectiveWidth = Math.min(targetWidth, metadata.width || targetWidth)
-			if (effectiveWidth < (metadata.width || 0)) {
-				const format = (metadata.format || contentType.split('/')[1] || 'webp') as keyof import('sharp').FormatEnum
-				const resized = await image.resize({ width: effectiveWidth, withoutEnlargement: true }).toFormat(format, { quality: 82 }).toBuffer()
-				return new Response(resized, {
-					headers: {
-						...baseHeaders,
-						'Content-Type': contentType,
-						ETag: `${result.blob.etag}-w${effectiveWidth}-q82-v1`
-					}
-				})
+			const derivative = planMediaDerivative({ contentType, requestedWidth: targetWidth, sourceWidth: metadata.width })
+
+			if (derivative) {
+				const pipeline = derivative.width < (metadata.width || 0) ? image.resize({ width: derivative.width, withoutEnlargement: true }) : image
+				const encoded = derivative.toWebp
+					? await pipeline.webp({ quality: WEBP_QUALITY }).toBuffer()
+					: await pipeline.toFormat((metadata.format || contentType.split('/')[1] || 'webp') as keyof import('sharp').FormatEnum, { quality: 82 }).toBuffer()
+				// Re-encoding can grow a file — PNG charts in particular — so never
+				// ship a variant that is larger than the bytes already stored.
+				if (encoded.length < bytes.length) {
+					return new Response(encoded, {
+						headers: {
+							...baseHeaders,
+							'Content-Type': derivative.toWebp ? 'image/webp' : contentType,
+							ETag: `${result.blob.etag}-w${derivative.width}-${derivative.toWebp ? 'webp' : 'src'}${WEBP_QUALITY}-v2`
+						}
+					})
+				}
 			}
-			// Original is not larger than requested; fall through to serve as-is.
+
+			// The stored bytes are already the best option: either the image is not
+			// wider than the requested width, or re-encoding only made it bigger.
 			return new Response(bytes, { headers: { ...baseHeaders, 'Content-Type': contentType } })
 		}
 
