@@ -29,6 +29,7 @@
 		"backup:restore": "node --env-file-if-exists=.env.local --no-warnings --experimental-strip-types scripts/restore-cms-backup.ts",
 		"media:reconcile": "node --env-file-if-exists=.env.local --no-warnings --experimental-strip-types scripts/reconcile-media.ts",
 		"media:maintain": "node --env-file-if-exists=.env.local --no-warnings --experimental-strip-types scripts/maintain-media.ts",
+		"media:migrate-static": "node --no-warnings --experimental-strip-types scripts/migrate-static-media.ts",
 		"assets:audit": "node --no-warnings --experimental-strip-types scripts/audit-public-assets.ts",
 		"assets:optimize-pictures": "node --no-warnings --experimental-strip-types scripts/optimize-picture-assets.ts",
 		"assets:optimize-music": "node --no-warnings --experimental-strip-types scripts/optimize-music-assets.ts",
