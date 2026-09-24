@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useAdminSession } from '@/hooks/use-admin-session'
 import { responseJson } from './review-http'
 import type { AgentPostSubmission } from '@/lib/agent-submission-validation'
+import { describeRemaining, publicationSchedule } from '@/lib/publication-schedule'
 import { ReviewDialog } from './review-dialog'
 import {
 	createReviewDraft,
@@ -48,6 +49,7 @@ export default function ReviewClient() {
 	const [approveDialog, setApproveDialog] = useState(false)
 	const draft = edit?.payload || null
 	const dirty = isReviewDirty(edit)
+	const schedule = draft ? publicationSchedule(draft.publishedAt) : null
 	const setDraft = (payload: AgentPostSubmission) => setEdit(current => (current ? { ...current, payload } : current))
 
 	const summaryHash = submissions.find(item => item.id === selectedId)?.contentHash
@@ -394,6 +396,14 @@ export default function ReviewClient() {
 								</div>
 							)}
 							<fieldset disabled={busy} className='card static grid min-w-0 gap-4 p-6 md:grid-cols-2'>
+								<p className='text-sm md:col-span-2'>
+									发布时间：<span className='font-medium'>{new Date(draft.publishedAt).toLocaleString('zh-CN')}</span>
+									{schedule?.scheduled ? (
+										<span className='text-amber-700'>{` · 定时发布，约 ${describeRemaining(schedule.remainingMs)}后才公开，之前文章页是 404`}</span>
+									) : (
+										<span className='text-secondary'> · 批准后立即公开</span>
+									)}
+								</p>
 								<label htmlFor='review-title' className='text-sm'>
 									标题
 									<input
@@ -508,6 +518,11 @@ export default function ReviewClient() {
 			{approveDialog && selected && (
 				<ReviewDialog title='确认批准发布' busy={busy} onClose={() => setApproveDialog(false)}>
 					<p className='mt-4 text-sm break-words'>将保存当前编辑并公开发布「{draft?.title}」。请确认内容和来源已经审核。</p>
+					{schedule?.scheduled && draft && (
+						<p role='alert' className='mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900'>
+							{`这是定时发布：批准后要到 ${new Date(draft.publishedAt).toLocaleString('zh-CN')}（约 ${describeRemaining(schedule.remainingMs)}后）才公开，在那之前访客看到的是 404。`}
+						</p>
+					)}
 					<div className='mt-5 flex justify-end gap-3'>
 						<button disabled={busy} onClick={() => setApproveDialog(false)} className='rounded-xl border px-4 py-2'>
 							取消

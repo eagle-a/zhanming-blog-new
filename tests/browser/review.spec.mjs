@@ -330,3 +330,46 @@ test('review preserves drafts and enforces modal and version boundaries', async 
 	// The deliberately simulated HTTP 503 is expected; other console failures are not.
 	assert.equal(errors.filter(e => !e.includes('503')).length, 0)
 })
+test('review surfaces a scheduled publish time instead of implying immediate visibility', async ({ page, context }) => {
+	const future = new Date(Date.now() + 80 * 60_000).toISOString()
+	const past = new Date(Date.now() - 60_000).toISOString()
+	const rows = ['later', 'past'].map((id, index) => ({
+		id,
+		type: 'post',
+		status: 'pending',
+		contentHash: 'a'.repeat(64),
+		validationResult: [],
+		createdAt: '2026-09-14T00:00:00Z',
+		updatedAt: '2026-09-14T00:00:00Z',
+		agentName: 'Fixture',
+		payload: {
+			title: `Article ${id}`,
+			slug: id,
+			contentMd: 'Fixture body',
+			summary: '',
+			tags: [],
+			category: null,
+			coverUrl: '',
+			publishedAt: index === 0 ? future : past
+		}
+	}))
+	await context.route('**/api/admin/**', async route => {
+		const url = new URL(route.request().url())
+		if (url.pathname === '/api/admin/review')
+			return route.fulfill({
+				json: {
+					items: rows.map(({ payload, validationResult, ...row }) => ({ ...row, title: payload.title, slug: payload.slug })),
+					nextCursor: null
+				}
+			})
+		const row = rows.find(item => item.id === url.pathname.split('/')[4])
+		return route.fulfill(row ? { json: structuredClone(row) } : { status: 404, json: { error: 'Missing' } })
+	})
+	await page.goto(fixture.url)
+	await expect(page.getByText(/定时发布，约 1 小时 20 分钟后才公开/)).toBeVisible()
+	await page.getByRole('button', { name: '保存并批准发布' }).click()
+	await expect(page.getByRole('dialog')).toContainText('这是定时发布')
+	await page.keyboard.press('Escape')
+	await page.getByRole('button', { name: /Article past/ }).click()
+	await expect(page.getByText(/批准后立即公开/)).toBeVisible()
+})

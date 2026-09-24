@@ -3,6 +3,7 @@ import { readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { parseMarkdownImport } from '../src/lib/markdown-import.ts'
 import { agentPostSubmissionSchema } from '../src/lib/agent-submission-validation.ts'
+import { describeRemaining, publicationSchedule } from '../src/lib/publication-schedule.ts'
 import { isSubmissionTicket } from '../src/lib/submission-ticket.ts'
 
 const args = process.argv.slice(2)
@@ -107,6 +108,15 @@ const payload = agentPostSubmissionSchema.parse({
 })
 const body = JSON.stringify(payload)
 const idempotencyKey = `post:${payload.slug}:${createHash('sha256').update(body).digest('hex').slice(0, 24)}`
+const schedule = publicationSchedule(payload.publishedAt)
+if (schedule.scheduled) {
+	// Warn before the ticket prompt: the submitter may still want to fix the date.
+	process.stderr.write(
+		`\n注意：发布时间 ${payload.publishedAt} 在未来，约 ${describeRemaining(schedule.remainingMs)}后才公开。\n` +
+			'这是定时发布：批准之后访客打开文章链接仍然只会看到 404，直到那个时刻为止。\n' +
+			'想批准后立刻可见，把 Markdown frontmatter 的 date 改成当前时间再投一次。\n\n'
+	)
+}
 const ticket = await readTicketFromTerminal()
 if (!isSubmissionTicket(ticket)) throw new Error('Invalid one-time submission code')
 
@@ -129,6 +139,8 @@ console.log(
 		{
 			submissionId: responseBody.id,
 			status: responseBody.status,
+			publishedAt: payload.publishedAt,
+			scheduled: schedule.scheduled,
 			reviewUrl: new URL('/admin/review', apiOrigin).toString()
 		},
 		null,
