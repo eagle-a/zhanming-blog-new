@@ -28,8 +28,9 @@
 
 1. `scripts/submit-ai-post.ts` 只读一个 Markdown 文件并提交 JSON，**没有任何文件上传逻辑**。AI 投稿不会上传图片，这是设计边界。
 2. `src/app/write/services/push-blog.ts` 才会调 `@vercel/blob/client`：本地图片按 `blog/<slug>/<sha256>.<ext>` 上传，再把正文里的 `local-image:<id>` 占位符换成 `/api/media/blog/<slug>/<sha256>.<ext>`。注意只有 `type: 'file'` 的图片会触发上传，粘贴的 URL 图片不会。
-3. `scripts/migrate-static-media.ts`（`pnpm media:migrate-static`）把 `public/images/<slug>/` 里的本地图片搬到 Blob，并把正文引用改成 `/api/media/...`。它只用线上已经存在的接口：`/api/admin/session` 登录、`/api/admin/posts/<slug>/revisions[/<version>]` 读正文、`/api/admin/media/upload` 上传、`PATCH /api/admin/posts/<slug>` 写回。**因此它不需要任何部署**。
-4. `src/app/api/media/[...pathname]/route.ts` 用 `access: 'private'` 读 Blob。只接受 `blog/<slug>/` 和 `content/(site|bloggers|projects|shares|pictures|migrated)/` 两类路径，其他一律 404。
+3. `scripts/migrate-static-media.ts`（`pnpm media:migrate-static`）把 `public/images/<slug>/` 里的本地图片搬到 Blob，并把正文引用改成 `/api/media/...`。它用 `/api/admin/session` 登录、用 `/api/admin/posts/<slug>/revisions[/<version>]` 读正文，再把图片和替换清单交给 `/api/admin/media/migrate-static`；该路由用 `put()` 写 Blob、在同一事务里改写正文。
+4. **生产环境没有 `BLOB_READ_WRITE_TOKEN`**，只有 `BLOB_STORE_ID`。`get()`/`put()` 能用 store id 加运行时 OIDC 令牌工作，但 `/api/admin/media/upload` 的客户端上传令牌生成只认 `BLOB_READ_WRITE_TOKEN`，所以它必然返回 500。`/write` 编辑器的图片上传目前就是坏的，原因在此。
+5. `src/app/api/media/[...pathname]/route.ts` 用 `access: 'private'` 读 Blob。只接受 `blog/<slug>/` 和 `content/(site|bloggers|projects|shares|pictures|migrated)/` 两类路径，其他一律 404。
 
 ## 4. 标准发布流程
 
@@ -59,7 +60,9 @@ pnpm --dir C:\Users\zm\Desktop\project\zhanming-blog-new agent:submit C:\path\to
 
 ## 5. 把静态图片迁到 Blob
 
-迁移命令会登录管理员会话，读取文章最新修订里的正文，把本地 `public/images/<slug>/` 的图片逐张上传到 Blob，改写正文，再逐张回读线上图片。**不需要部署，也不需要 CI**，因为用到的接口线上都已经在跑。
+迁移命令会登录管理员会话，读取文章最新修订里的正文，把本地 `public/images/<slug>/` 的图片逐张交给服务端写进 Blob，然后由服务端改写正文，最后逐张回读线上图片确认 200。它不需要 CI，只需要目标版本已经部署过 `/api/admin/media/migrate-static`。
+
+上传走服务端 `put()`，不走 `/api/admin/media/upload` 的客户端令牌流程，因为后者依赖生产环境缺失的 `BLOB_READ_WRITE_TOKEN`（见第 3 节第 4 条）。
 
 先预演，只报告不改动：
 
@@ -129,10 +132,11 @@ curl.exe -I https://zhanmingblog.cc.cd/api/media/blog/<slug>/<sha256>.<ext>
 3. 部署脚本按设计拒绝部署 CI 未通过的提交，生产站因此停留在 `cdeacf0`（2026-09-18）。第 3 周图片属于 `cdeacf0`，所以正常；第 4 周图片属于 `55c6d9e`，从未上线。
 4. 正文早已通过审批进入 Neon，图片却还在仓库里等部署，于是出现「文章在、图片全 404」。
 
-修复有两条路，任选其一：
+修复分三层：
 
-- 让静态通道生效：`3a2154c` 只做格式化，`verify` 变绿后再部署，`/images/weekly-report-2026-09-23/...` 就能返回 200。
-- 直接走 Blob：执行第 5 节的迁移命令，图片进 Blob，正文改写成 `/api/media/...`，**不需要部署**。
+1. `3a2154c` 只做格式化，`verify` 变绿；部署 `dac0fbe` 后 `/images/weekly-report-2026-09-23/...` 立即返回 200。
+2. 执行第 5 节的迁移命令，四篇周报共 43 张图片进入 Blob，正文改写成 `/api/media/...`，线上复查每张都是 200，页面里已无 `/images/<slug>/` 引用。
+3. 顺带发现更深的坑：生产环境缺少 `BLOB_READ_WRITE_TOKEN`，`/write` 的图片上传一直是 500。要么在 Vercel 重新连接 Blob 存储注入该变量，要么把上传改成像迁移路由一样走服务端 `put()`。
 
 教训：跑完 `pnpm format:check`、`pnpm test`、`pnpm typecheck` 再提交；CI 红了先修 CI，再谈图片通道。
 
