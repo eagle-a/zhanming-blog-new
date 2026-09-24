@@ -2,6 +2,21 @@ import { execFileSync } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
 import path from 'node:path'
 
+/**
+ * GitHub allows only 60 unauthenticated Actions API requests per hour per IP, and
+ * shared or proxied networks exhaust that budget quickly. Send a token when the
+ * environment provides one. This changes nothing about what is verified below;
+ * it only keeps the verification from failing because of a third-party quota.
+ */
+function githubRequestHeaders() {
+	const token = process.env.GITHUB_TOKEN?.trim() || process.env.GH_TOKEN?.trim()
+	return {
+		Accept: 'application/vnd.github+json',
+		'User-Agent': 'blog-release-check',
+		...(token ? { Authorization: `Bearer ${token}` } : {})
+	}
+}
+
 /** @param {{exec?: (file: string, args: string[], options: import('node:child_process').ExecFileSyncOptionsWithStringEncoding) => string, request?: typeof fetch}} dependencies */
 export async function checkReleaseState({ exec = execFileSync, request = fetch } = {}) {
 	const options = { encoding: 'utf8', timeout: 30_000, windowsHide: true }
@@ -25,7 +40,7 @@ export async function checkReleaseState({ exec = execFileSync, request = fetch }
 	const response = await request(
 		`https://api.github.com/repos/${owner}/${repo}/actions/workflows/ci.yml/runs?head_sha=${sha}&branch=main&event=push&per_page=1`,
 		{
-			headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'blog-release-check' },
+			headers: githubRequestHeaders(),
 			signal: AbortSignal.timeout(30_000)
 		}
 	)

@@ -14,6 +14,7 @@ function fixture(
 		http?: number
 		autoDeploy?: boolean
 		remoteChanged?: boolean
+		expectAuthorization?: string
 	} = {}
 ) {
 	let statusReads = 0
@@ -34,8 +35,11 @@ function fixture(
 			}
 			throw new Error(`Unexpected command ${args}`)
 		},
-		request: (async (url: string) => {
+		request: (async (url: string, init?: { headers?: Record<string, string> }) => {
 			assert.match(url, /workflows\/ci.yml\/runs\?head_sha=/)
+			if (options.expectAuthorization !== undefined) {
+				assert.equal(init?.headers?.Authorization, options.expectAuthorization)
+			}
 			return new Response(
 				JSON.stringify({
 					workflow_runs: [
@@ -72,5 +76,16 @@ test('release gate refuses dirty, wrong branch, unpushed, failed CI, and stale C
 		{ remoteChanged: true }
 	]) {
 		await assert.rejects(checkReleaseState(fixture(options)), /Release refused/)
+	}
+})
+
+test('release gate authenticates the CI lookup when a token is configured', async () => {
+	const previous = process.env.GITHUB_TOKEN
+	process.env.GITHUB_TOKEN = 'test-token'
+	try {
+		await checkReleaseState(fixture({ expectAuthorization: 'Bearer test-token' }))
+	} finally {
+		if (previous === undefined) delete process.env.GITHUB_TOKEN
+		else process.env.GITHUB_TOKEN = previous
 	}
 })
